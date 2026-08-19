@@ -3,8 +3,8 @@ using UnityEngine;
 public class CameraFollow : MonoBehaviour
 {
     [SerializeField] private Transform player;
-    [SerializeField] private float smoothSpeed = 5f;
-    [SerializeField] private float groundY = 0f;
+    [SerializeField] private float smoothSpeed = 10f;
+    [SerializeField] private float groundY = -5f;
 
     private UnityEngine.Camera cam;
 
