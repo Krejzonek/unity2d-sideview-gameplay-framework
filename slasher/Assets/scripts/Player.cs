@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,9 +16,14 @@ public class Player : MonoBehaviour
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float jumpForce = 10f;
 
+    [SerializeField] private int lvl = 0;
+    [SerializeField] private int currentEXP;
+
     [Header("UI")]
     [SerializeField] private Slider healthSlider;
     [SerializeField] private Slider staminaSlider;
+    [SerializeField] private Slider expSlider;
+    [SerializeField] private TMP_Text lvlText;
 
     [Header("Floor")]
     [SerializeField] private Transform floorCheck;
@@ -44,6 +50,8 @@ public class Player : MonoBehaviour
         healthSlider.value = health;
         staminaSlider.maxValue = maxStamina;
         staminaSlider.value = stamina;
+        expSlider.maxValue = (lvl + 1) * 100;
+        expSlider.value = currentEXP;
     }
     private void Update()
     {
@@ -58,6 +66,26 @@ public class Player : MonoBehaviour
         else StundUp();
 
         RegenerateStamina();
+        expSlider.value = currentEXP;
+        LvlUp();
+    }
+
+    public void GetEXP(int exp)
+    {
+        currentEXP += exp;
+        expSlider.value = currentEXP;
+        LvlUp();
+    }
+    private void LvlUp()
+    {
+        if(currentEXP >= (lvl+1) * 100)
+        {
+            lvl += 1;
+            currentEXP -= lvl * 100;
+            lvlText.text = $"Lvl {lvl}";
+            expSlider.maxValue = (lvl + 1) * 100;
+            expSlider.value = currentEXP;
+        }
     }
     private void UiUpdate()
     {
