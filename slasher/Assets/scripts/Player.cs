@@ -44,6 +44,7 @@ public class Player : MonoBehaviour
         stats = GetComponent<Stats>();
         normalColliderSize = playerCollider.size;
         normalColliderOffset = playerCollider.offset;
+
         rb.freezeRotation = true;
         healthSlider.maxValue = stats.health;
         healthSlider.value = health;
@@ -51,6 +52,7 @@ public class Player : MonoBehaviour
         staminaSlider.value = stamina;
         expSlider.maxValue = (lvl + 1) * 100;
         expSlider.value = currentEXP;
+        moveSpeed = stats.speed;
     }
     private void Update()
     {
@@ -85,7 +87,7 @@ public class Player : MonoBehaviour
             expSlider.maxValue = (lvl + 1) * 100;
             expSlider.value = currentEXP;
             stats.freePoint += 1;
-            stats.HealthAdd();
+            
         }
     }
     private void UiUpdate()
