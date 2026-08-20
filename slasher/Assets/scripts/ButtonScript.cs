@@ -7,6 +7,10 @@ public class ButtonScript : MonoBehaviour
     [SerializeField] private GameObject statsPanel;
 
     private bool statsPanelVisible = false;
+    private void Start()
+    {
+        statsPanel.SetActive(false);
+    }
     public void StatsButton()
     {
         if (!statsPanelVisible)
