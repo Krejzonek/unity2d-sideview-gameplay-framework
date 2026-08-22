@@ -6,9 +6,11 @@ public class ButtonScript : MonoBehaviour
 {
     [SerializeField] private GameObject statsPanel;
     [SerializeField] private GameObject eqPanel;
+    [SerializeField] private GameObject selectPanel;
 
     private bool statsPanelVisible = false;
     private bool eqPanelVisible = false;
+   
     private void Start()
     {
         statsPanel.SetActive(false);
@@ -40,5 +42,9 @@ public class ButtonScript : MonoBehaviour
             eqPanelVisible = false;
         }
 
+    }
+    public void SelectButton()
+    {
+        selectPanel.SetActive(false);     
     }
 }
