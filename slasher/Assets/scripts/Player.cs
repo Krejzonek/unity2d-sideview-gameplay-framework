@@ -9,7 +9,7 @@ public class Player : MonoBehaviour
     [Header("Stats")]
     [SerializeField] private float health;
 
-    [SerializeField] private float stamina = 100f;
+    [SerializeField] private float stamina;
 
     [SerializeField] private float moveSpeed;
     [SerializeField] private float jumpForce = 10f;
@@ -46,13 +46,14 @@ public class Player : MonoBehaviour
         normalColliderOffset = playerCollider.offset;
 
         rb.freezeRotation = true;
+        moveSpeed = stats.speed;
         healthSlider.maxValue = stats.health;
         healthSlider.value = health;
         staminaSlider.maxValue = stats.stamina;
         staminaSlider.value = stamina;
         expSlider.maxValue = (lvl + 1) * 100;
         expSlider.value = currentEXP;
-        moveSpeed = stats.speed;
+        
     }
     private void Update()
     {
