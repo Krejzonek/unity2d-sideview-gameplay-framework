@@ -13,7 +13,7 @@ public class Stats : MonoBehaviour
     public float luck;
     public int freePoint;
 
-    private void Start()
+    private void Awake()
     {
 
         health = 100f;
