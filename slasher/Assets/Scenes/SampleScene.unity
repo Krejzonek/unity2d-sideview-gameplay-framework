@@ -4890,6 +4890,7 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1
   player: {fileID: 1635490035}
+  playerScript: {fileID: 1635490031}
 --- !u!70 &1224729273
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -5992,6 +5993,9 @@ MonoBehaviour:
   jumpForce: 10
   lvl: 0
   currentEXP: 0
+  attackCooldown: 1
+  attackRange: 1.5
+  defenseDamageReduction: 0.5
   healthSlider: {fileID: 1401616335}
   staminaSlider: {fileID: 2049743970}
   expSlider: {fileID: 771540214}
