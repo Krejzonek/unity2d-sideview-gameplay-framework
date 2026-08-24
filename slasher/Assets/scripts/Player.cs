@@ -8,14 +8,16 @@ public class Player : MonoBehaviour
 {
     [Header("Stats")]
     [SerializeField] private float health;
-
     [SerializeField] private float stamina;
-
     [SerializeField] private float moveSpeed;
     [SerializeField] private float jumpForce = 10f;
-
     [SerializeField] private int lvl = 0;
-    [SerializeField] private int currentEXP;
+    public int currentEXP;
+
+    [Header("Combat")]
+    [SerializeField] private float attackCooldown = 1f;
+    [SerializeField] private float attackRange = 1.5f;
+    [SerializeField] private float defenseDamageReduction = 0.5f;
 
     [Header("UI")]
     [SerializeField] private Slider healthSlider;
@@ -38,6 +40,8 @@ public class Player : MonoBehaviour
     private Rigidbody2D rb;
     private float moveInput;
     private Stats stats;
+    private float attackTimer;
+    private bool isDefending;
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -67,6 +71,12 @@ public class Player : MonoBehaviour
         staminaSlider.maxValue = stats.stamina;
         if (Input.GetKey(KeyCode.LeftShift)) Crouch();
         else StundUp();
+        attackTimer -= Time.deltaTime;
+        
+        if (Input.GetMouseButtonDown(0))Attack();
+
+        if (Input.GetMouseButton(1))StartDefense();
+        else StopDefense();
 
         RegenerateStamina();
         LvlUp();
@@ -129,8 +139,39 @@ public class Player : MonoBehaviour
             playerCollider.offset = normalColliderOffset;
         }
     }
+    private void StartDefense()
+    {
+        if (isDefending)return;
+        isDefending = true;
+      
+    }
+
+    private void StopDefense()
+    {
+        isDefending = false;
+    }
+    private void Attack()
+    {
+        if (attackTimer > 0f)return;
+        if (isDefending)return;
+        float currentCooldown = Mathf.Max(attackCooldown / stats.speed,0.1f);
+        attackTimer = currentCooldown;
+        Collider2D[] enemies = Physics2D.OverlapCircleAll(transform.position,attackRange);
+        foreach (Collider2D enemy in enemies)
+        {
+            EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
+            if (enemyAI != null)
+            {
+                enemyAI.TakeDamage(stats.attack);
+            }
+        }
+    }
     public void TakeDamage(float damage)
     {
+        if (isDefending)
+        {
+            damage *= 1f - defenseDamageReduction;
+        }
         health -= damage;
         health = Mathf.Clamp(health, 0f, stats.health);
         if(health <= 0f)

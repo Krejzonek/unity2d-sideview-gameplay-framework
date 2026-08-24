@@ -43,6 +43,7 @@ public class EnemyAI : MonoBehaviour
 
     [Header("Target")]
     [SerializeField] private Transform player;
+    [SerializeField] private Player playerScript;
 
     private Rigidbody2D rb;
     private float attackTimer;
@@ -211,12 +212,7 @@ public class EnemyAI : MonoBehaviour
     }
     private void Attack()
     {
-        if (attackTimer > 0f)
-            return;
-
-        Player playerScript =
-            player.GetComponent<Player>();
-
+        if (attackTimer > 0f)return;
         if (playerScript != null) playerScript.TakeDamage(damage);
         attackTimer = attackCooldown;
     }
@@ -239,20 +235,18 @@ public class EnemyAI : MonoBehaviour
     }
     private void Die()
     {
+        playerScript.currentEXP += 100;
         Destroy(gameObject);
     }
-    private void OnDrawGizmosSelected()
+   /* private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
 
-        Gizmos.DrawWireSphere(
-            transform.position,
-            detectionRange
-        );
+        Gizmos.DrawWireSphere(transform.position,detectionRange);
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(
             transform.position,
             attackRange
         );
-    }
+    }*/
 }
