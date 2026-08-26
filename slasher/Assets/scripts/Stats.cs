@@ -1,70 +1,132 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+
+public enum CharacterClass
+{
+    None,
+    Warrior,
+    Archer,
+    Mage
+}
+public enum StatType
+{
+    Health,
+    Stamina,
+    Speed,
+    Attack,
+    ExpBonus
+}
 
 public class Stats : MonoBehaviour
 {
-    
-    [Header("Stats")]
+    [Header("Class")]
+    public Class characterClass;
+
+    [Header("Base Stats")]
+    [SerializeField] private float baseHealth = 100f;
+    [SerializeField] private float baseStamina = 100f;
+    [SerializeField] private float baseSpeed = 5f;
+    [SerializeField] private float baseAttack = 10f;
+    [SerializeField] private float baseLuck = 1f;
+
+    [Header("Points")]
+    public int freePoint;
+
+    private float healthPoint;
+    private float staminaPoint;
+    private float speedPoint;
+    private float attackPoint;
+    private float luckPoint;
+
+    [Header("Final Stats")]
     public float health;
     public float stamina;
     public float speed;
     public float attack;
     public float luck;
-    public int freePoint;
+    public float expBonus;
 
     private void Awake()
     {
-
-        health = 100f;
-        stamina = 100f;
-        speed = 5f;
-        attack = 10f;
-        luck = 1f;
+        UpdateStats();
     }
 
-    public void HealthAdd(){
-        if(freePoint > 0)
+    public void UpdateStats()
+    {
+        health = baseHealth + healthPoint;
+        stamina = baseStamina + staminaPoint;
+        speed = baseSpeed + speedPoint;
+        attack = baseAttack + attackPoint;
+        luck = baseLuck + luckPoint;
+
+        expBonus = 0f;
+
+        if (characterClass != null)
         {
-            health += 50;
-            freePoint -= 1;
+            health += characterClass.healthBonus;
+            stamina += characterClass.staminaBonus;
+            speed += characterClass.speedBonus;
+            attack += characterClass.attackBonus;
         }
-        
     }
+
+    public void HealthAdd()
+    {
+        if (freePoint <= 0)
+            return;
+
+        healthPoint += 50;
+        freePoint--;
+
+        UpdateStats();
+    }
+
     public void StaminaAdd()
     {
-        if(freePoint > 0)
-        {
-            stamina += 25;
-            freePoint -= 1;
-        }
-        
+        if (freePoint <= 0)
+            return;
+
+        staminaPoint += 25;
+        freePoint--;
+
+        UpdateStats();
     }
+
     public void SpeedAdd()
     {
-        if (freePoint > 0)
-        {
-            speed += 1;
-            freePoint -= 1;
-        }
-        
+        if (freePoint <= 0)
+            return;
+
+        speedPoint += 1;
+        freePoint--;
+
+        UpdateStats();
     }
+
     public void AttackAdd()
     {
-        if (freePoint > 0)
-        {
-            attack += 10;
-            freePoint -= 1;
-        }
-        
+        if (freePoint <= 0)
+            return;
+
+        attackPoint += 10;
+        freePoint--;
+
+        UpdateStats();
     }
+
     public void LuckAdd()
     {
-        if(freePoint > 0)
-        {
-            luck += 1;
-            freePoint -= 1;
-        }
-        
+        if (freePoint <= 0)
+            return;
+
+        luckPoint += 1;
+        freePoint--;
+
+        UpdateStats();
+    }
+
+    public void SetClass(Class newClass)
+    {
+        characterClass = newClass;
+        UpdateStats();
     }
 }
