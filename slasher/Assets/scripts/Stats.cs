@@ -45,6 +45,9 @@ public class Stats : MonoBehaviour
     public float luck;
     public float expBonus;
 
+    [Header("First Door")]
+    [SerializeField] private GameObject firstDoor;
+
     private void Awake()
     {
         UpdateStats();
@@ -67,6 +70,7 @@ public class Stats : MonoBehaviour
             speed += characterClass.speedBonus;
             attack += characterClass.attackBonus;
         }
+        
     }
 
     public void HealthAdd()
@@ -127,6 +131,7 @@ public class Stats : MonoBehaviour
     public void SetClass(Class newClass)
     {
         characterClass = newClass;
+        firstDoor.SetActive(false);
         UpdateStats();
     }
 }
