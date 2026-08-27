@@ -47,6 +47,7 @@ public class EnemyAI : MonoBehaviour
 
     private Rigidbody2D rb;
     private float attackTimer;
+    private Room room;
 
     private void Start()
     {
@@ -54,7 +55,7 @@ public class EnemyAI : MonoBehaviour
 
         health = maxHealth;
         attackTimer = 0f;
-
+        room = GetComponentInParent<Room>();
         rb.freezeRotation = true;
         if (player == null)
         {
@@ -236,6 +237,10 @@ public class EnemyAI : MonoBehaviour
     private void Die()
     {
         playerScript.currentEXP += 100;
+        if (room != null)
+        {
+            room.EnemyKilled();
+        }
         Destroy(gameObject);
     }
    /* private void OnDrawGizmosSelected()
