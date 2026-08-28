@@ -12,27 +12,36 @@ public class Room : MonoBehaviour
     [Header("Exit")]
     [SerializeField] private GameObject exit;
 
+    [Header("Camera")]
+    [SerializeField] private Collider2D mapBounds;
+
     private int enemiesAlive;
 
     private void Start()
     {
         enemiesAlive = enemyParent.childCount;
-        if (exit != null) exit.SetActive(true);
 
-        if (enemiesAlive == 0) RoomCleared();
+        if (exit != null)
+            exit.SetActive(true);
+
+        if (enemiesAlive == 0)
+            RoomCleared();
     }
 
     public void EnemyKilled()
     {
         enemiesAlive--;
-        if (enemiesAlive <= 0) RoomCleared();
+
+        if (enemiesAlive <= 0)
+            RoomCleared();
     }
 
     private void RoomCleared()
     {
         enemiesAlive = 0;
 
-        if (exit != null) exit.SetActive(false);
+        if (exit != null)
+            exit.SetActive(false);
     }
 
     public bool IsCleared()
@@ -49,5 +58,10 @@ public class Room : MonoBehaviour
     {
         roomNumber = number;
         isBossRoom = number % 10 == 0;
+    }
+
+    public Collider2D GetMapBounds()
+    {
+        return mapBounds;
     }
 }
