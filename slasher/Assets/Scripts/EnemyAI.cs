@@ -52,7 +52,8 @@ public class EnemyAI : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-
+        player = GameObject.FindWithTag("Player").transform;
+        playerScript = GameObject.FindWithTag("Player").GetComponent<Player>();
         health = maxHealth;
         attackTimer = 0f;
         room = GetComponentInParent<Room>();
