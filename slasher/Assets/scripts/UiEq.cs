@@ -14,6 +14,6 @@ public class UiEq : MonoBehaviour
 
     private void Update()
     {
-        statsText.text = " HP   " + stats.health + "<pos=50%>STA   " + stats.stamina + "\n" + " SPD  " + stats.speed + "<pos=50%>ATK   " + stats.attack + "\n" + " LCK  " + stats.luck + "<pos=50%>EXP   " + stats.expBonus + "\n";
+        statsText.text = " HP   " + stats.health + "<pos=50%>STA  " + stats.stamina + "\n" +" SPD  " + stats.speed + "<pos=50%>ATK  " + stats.attack + "\n" +" DEF  " + stats.defence + "<pos=50%>LCK  " + stats.luck + "\n" +" EXP  " + stats.expBonus;
     }
 }
