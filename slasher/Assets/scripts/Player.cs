@@ -84,7 +84,7 @@ public class Player : MonoBehaviour
 
     public void GetEXP(int exp)
     {
-        currentEXP += exp;
+        currentEXP += Mathf.RoundToInt(exp * stats.expBonus);
         expSlider.value = currentEXP;
         LvlUp();
     }

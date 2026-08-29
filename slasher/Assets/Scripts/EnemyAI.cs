@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 public enum EnemyElement
@@ -44,6 +45,7 @@ public class EnemyAI : MonoBehaviour
     [Header("Target")]
     [SerializeField] private Transform player;
     [SerializeField] private Player playerScript;
+   
 
     private Rigidbody2D rb;
     private float attackTimer;
@@ -54,6 +56,7 @@ public class EnemyAI : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         player = GameObject.FindWithTag("Player").transform;
         playerScript = GameObject.FindWithTag("Player").GetComponent<Player>();
+       
         health = maxHealth;
         attackTimer = 0f;
         room = GetComponentInParent<Room>();
@@ -237,7 +240,7 @@ public class EnemyAI : MonoBehaviour
     }
     private void Die()
     {
-        playerScript.currentEXP += 100;
+        playerScript.GetEXP(100);
         if (room != null)
         {
             room.EnemyKilled();
