@@ -61,7 +61,7 @@ public class Stats : MonoBehaviour
         attack = baseAttack + attackPoint;
         luck = baseLuck + luckPoint;
 
-        expBonus = 0f;
+        expBonus = 1f;
 
         if (characterClass != null)
         {
