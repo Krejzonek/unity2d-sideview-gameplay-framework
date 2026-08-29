@@ -23,6 +23,7 @@ public class Stats : MonoBehaviour
 
     [Header("Base Stats")]
     [SerializeField] private float baseHealth = 100f;
+    [SerializeField] private float baseDefence = 0f;
     [SerializeField] private float baseStamina = 100f;
     [SerializeField] private float baseSpeed = 5f;
     [SerializeField] private float baseAttack = 10f;
@@ -39,6 +40,7 @@ public class Stats : MonoBehaviour
 
     [Header("Final Stats")]
     public float health;
+    public float defence;
     public float stamina;
     public float speed;
     public float attack;
@@ -56,6 +58,7 @@ public class Stats : MonoBehaviour
     public void UpdateStats()
     {
         health = baseHealth + healthPoint;
+        defence = baseDefence;
         stamina = baseStamina + staminaPoint;
         speed = baseSpeed + speedPoint;
         attack = baseAttack + attackPoint;
@@ -131,7 +134,6 @@ public class Stats : MonoBehaviour
     public void SetClass(Class newClass)
     {
         characterClass = newClass;
-        firstDoor.SetActive(false);
         UpdateStats();
     }
 }
