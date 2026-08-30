@@ -15,3 +15,9 @@ MonoBehaviour:
   itemName: Copper Helmet
   icon: {fileID: 0}
   equipmentType: 1
+  healthBonus: 5
+  defenceBonus: 5
+  staminaBonus: 25
+  speedBonus: 0
+  attackBonus: 0
+  expBonus: 0

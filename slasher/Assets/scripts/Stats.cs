@@ -7,12 +7,15 @@ public enum CharacterClass
     Archer,
     Mage
 }
+
 public enum StatType
 {
     Health,
     Stamina,
     Speed,
     Attack,
+    Defence,
+    Luck,
     ExpBonus
 }
 
@@ -47,8 +50,13 @@ public class Stats : MonoBehaviour
     public float luck;
     public float expBonus;
 
+    [Header("Equipment")]
+    [SerializeField] private ItemData[] equippedItems;
+
     [Header("First Door")]
     [SerializeField] private GameObject firstDoor;
+
+    [SerializeField] private EquipmentSlot[] equipmentSlots;
 
     private void Awake()
     {
@@ -73,7 +81,24 @@ public class Stats : MonoBehaviour
             speed += characterClass.speedBonus;
             attack += characterClass.attackBonus;
         }
-        
+
+        foreach (EquipmentSlot slot in equipmentSlots)
+        {
+            if (slot == null)
+                continue;
+
+            ItemData item = slot.EquippedItem;
+
+            if (item == null)
+                continue;
+
+            health += item.healthBonus;
+            defence += item.defenceBonus;
+            stamina += item.staminaBonus;
+            speed += item.speedBonus;
+            attack += item.attackBonus;
+            expBonus += item.expBonus;
+        }
     }
 
     public void HealthAdd()
