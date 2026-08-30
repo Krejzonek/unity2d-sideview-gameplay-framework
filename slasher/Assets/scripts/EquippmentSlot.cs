@@ -30,8 +30,16 @@ public class EquipmentSlot : MonoBehaviour
         {
             EquipmentManager.Instance.AddToInventory(equippedItem);
         }
+
         equippedItem = item;
+
         EquipmentManager.Instance.RemoveFromInventory(item);
+
+        Stats stats = FindFirstObjectByType<Stats>();
+
+        if (stats != null)
+            stats.UpdateStats();
+
         //icon.sprite = item.icon;
         //icon.enabled = true;
     }

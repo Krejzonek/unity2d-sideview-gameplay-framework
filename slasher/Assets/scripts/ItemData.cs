@@ -7,4 +7,12 @@ public class ItemData : ScriptableObject
     public Sprite icon;
 
     public EquipmentType equipmentType;
+
+    [Header("Stat Bonuses")]
+    public float healthBonus;
+    public float defenceBonus;
+    public float staminaBonus;
+    public float speedBonus;
+    public float attackBonus;
+    public float expBonus;
 }

@@ -168,6 +168,7 @@ public class Player : MonoBehaviour
     }
     public void TakeDamage(float damage)
     {
+        damage *= 100f / (100f + stats.defence);
         if (isDefending)
         {
             damage *= 1f - defenseDamageReduction;

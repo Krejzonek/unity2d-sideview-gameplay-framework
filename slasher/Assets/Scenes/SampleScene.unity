@@ -7360,18 +7360,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characterClass: {fileID: 0}
   baseHealth: 100
+  baseDefence: 0
   baseStamina: 100
   baseSpeed: 5
   baseAttack: 10
   baseLuck: 1
   freePoint: 0
   health: 0
+  defence: 0
   stamina: 0
   speed: 0
   attack: 0
   luck: 0
   expBonus: 0
+  equippedItems: []
   firstDoor: {fileID: 1823991289}
+  equipmentSlots:
+  - {fileID: 362995111}
+  - {fileID: 1899023607}
+  - {fileID: 816028017}
+  - {fileID: 673515984}
+  - {fileID: 121322878}
 --- !u!1 &1649404998
 GameObject:
   m_ObjectHideFlags: 0
