@@ -183,7 +183,7 @@ public class Player : MonoBehaviour
         UiUpdate();
     }
 
-    private void Heal(float amount)
+    public void Heal(float amount)
     {
         health += amount;
         health = Mathf.Clamp(health, 0f, stats.health);

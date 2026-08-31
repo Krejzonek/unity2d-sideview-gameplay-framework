@@ -9,15 +9,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c53f63f110b72f94c85f817f16a8eacb, type: 3}
-  m_Name: CopperHelmet
+  m_Script: {fileID: 11500000, guid: 2888fe4a24ee7554a83a4a1ec8f391dd, type: 3}
+  m_Name: Apple
   m_EditorClassIdentifier: 
-  itemName: Copper Helmet
+  itemName: Apple
   icon: {fileID: 0}
-  equipmentType: 1
-  healthBonus: 5
-  defenceBonus: 5
-  staminaBonus: 25
-  speedBonus: 0
-  attackBonus: 0
-  expBonus: 0
+  consumableType: 1
+  healAmount: 0
+  buffDuration: 0
+  effects: []
+  regenerationAmount: 20
+  regenerationDuration: 5
