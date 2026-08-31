@@ -7,9 +7,12 @@ public class ButtonScript : MonoBehaviour
     [SerializeField] private GameObject statsPanel;
     [SerializeField] private GameObject eqPanel;
     [SerializeField] private GameObject selectPanel;
+    [SerializeField] private GameObject consumablePanel;
 
     private bool statsPanelVisible = false;
     private bool eqPanelVisible = false;
+    public bool consumablePanelVisible = false;
+    
    
     private void Start()
     {
@@ -47,4 +50,19 @@ public class ButtonScript : MonoBehaviour
     {
         selectPanel.SetActive(false);     
     }
+    public void ConsumableButton()
+    {
+        if (!consumablePanelVisible) 
+        {
+            consumablePanel.SetActive(true);
+            consumablePanelVisible = true;
+        }
+        else
+        {
+            consumablePanel.SetActive(false);
+            consumablePanelVisible = false;
+        }
+    }
+
+    
 }
