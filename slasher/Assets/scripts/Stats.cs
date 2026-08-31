@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum CharacterClass
@@ -57,6 +59,7 @@ public class Stats : MonoBehaviour
     [SerializeField] private GameObject firstDoor;
 
     [SerializeField] private EquipmentSlot[] equipmentSlots;
+    private List<StatEffect> activeEffects = new();
 
     private void Awake()
     {
@@ -98,6 +101,39 @@ public class Stats : MonoBehaviour
             speed += item.speedBonus;
             attack += item.attackBonus;
             expBonus += item.expBonus;
+        }
+        foreach (StatEffect effect in activeEffects)
+        {
+            switch (effect.statType)
+            {
+                case StatType.Health:
+                    health += effect.amount;
+                    break;
+
+                case StatType.Stamina:
+                    stamina += effect.amount;
+                    break;
+
+                case StatType.Speed:
+                    speed += effect.amount;
+                    break;
+
+                case StatType.Attack:
+                    attack += effect.amount;
+                    break;
+
+                case StatType.Defence:
+                    defence += effect.amount;
+                    break;
+
+                case StatType.Luck:
+                    luck += effect.amount;
+                    break;
+
+                case StatType.ExpBonus:
+                    expBonus += effect.amount;
+                    break;
+            }
         }
     }
 
@@ -159,6 +195,28 @@ public class Stats : MonoBehaviour
     public void SetClass(Class newClass)
     {
         characterClass = newClass;
+        UpdateStats();
+    }
+    public void AddBuff(List<StatEffect> effects, float duration)
+    {
+        StartCoroutine(BuffCoroutine(effects, duration));
+    }
+    private IEnumerator BuffCoroutine(List<StatEffect> effects,float duration)
+    {
+        foreach (StatEffect effect in effects)
+        {
+            activeEffects.Add(effect);
+        }
+
+        UpdateStats();
+
+        yield return new WaitForSeconds(duration);
+
+        foreach (StatEffect effect in effects)
+        {
+            activeEffects.Remove(effect);
+        }
+
         UpdateStats();
     }
 }
