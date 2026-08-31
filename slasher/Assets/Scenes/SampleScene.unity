@@ -2680,7 +2680,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 490550289}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 718460309}
+        m_TargetAssemblyTypeName: ConsumableHotbar, Assembly-CSharp
+        m_MethodName: UsePotion
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &490550289
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3113,6 +3125,7 @@ MonoBehaviour:
   eqPanel: {fileID: 65906956}
   selectPanel: {fileID: 812362571}
   consumablePanel: {fileID: 1566259390}
+  consumablePanelVisible: 0
 --- !u!1 &543998805
 GameObject:
   m_ObjectHideFlags: 0
@@ -3668,7 +3681,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 574046255}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 718460309}
+        m_TargetAssemblyTypeName: ConsumableHotbar, Assembly-CSharp
+        m_MethodName: SelectFoodSlot
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &574046255
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4408,6 +4433,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6e07d88f84f9bca4a94e24fd3a87238f, type: 2}
   - {fileID: 11400000, guid: 1a913ab770ecd554fb599d4e67024b06, type: 2}
   - {fileID: 11400000, guid: da74a94538eb13e419ca7aba37b3ee32, type: 2}
+  consumableManager: {fileID: 1635490037}
+  foodItem: {fileID: 0}
+  potionItem: {fileID: 0}
 --- !u!1 &720895966
 GameObject:
   m_ObjectHideFlags: 0
@@ -7632,7 +7660,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1410751205}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 718460309}
+        m_TargetAssemblyTypeName: ConsumableHotbar, Assembly-CSharp
+        m_MethodName: SelectPotionSlot
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1410751205
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12215,7 +12255,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2109140022}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 718460309}
+        m_TargetAssemblyTypeName: ConsumableHotbar, Assembly-CSharp
+        m_MethodName: UseFood
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &2109140022
 MonoBehaviour:
   m_ObjectHideFlags: 0
