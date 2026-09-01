@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41c8fcad9ec299f47a2c28bbf7b16ecb, type: 3}
+  m_Name: Cookred Porkchop
+  m_EditorClassIdentifier: 
+  recipeName: 
+  icon: {fileID: 0}
+  ingredients:
+  - ingredient: {fileID: 11400000, guid: 0628a09573d8653498d82064e3171dc4, type: 2}
+    amount: 2
+  result: {fileID: 11400000, guid: da74a94538eb13e419ca7aba37b3ee32, type: 2}
+  resultAmount: 1
