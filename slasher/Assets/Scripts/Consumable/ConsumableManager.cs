@@ -43,12 +43,7 @@ public class ConsumableManager : MonoBehaviour
             StopCoroutine(regenerationCoroutine);
         }
 
-        regenerationCoroutine = StartCoroutine(
-            RegenerateHealth(
-                item.regenerationAmount,
-                item.regenerationDuration
-            )
-        );
+        regenerationCoroutine = StartCoroutine(RegenerateHealth(item.regenerationAmount,item.regenerationDuration));
     }
 
     private IEnumerator RegenerateHealth(

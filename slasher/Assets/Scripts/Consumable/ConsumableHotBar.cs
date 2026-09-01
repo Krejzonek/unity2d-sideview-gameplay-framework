@@ -18,16 +18,15 @@ public class ConsumableHotbar : MonoBehaviour
     [SerializeField] private Button foodButton;
     [SerializeField] private Button potionButton;
 
-    [Header("Items")]
-    [SerializeField] private List<ConsumableData> consumables = new();
-
     [Header("Player")]
     [SerializeField] private ConsumableManager consumableManager;
+    [SerializeField] private ConsumableInventory consumableInventory;
 
-    private int selectedSlot = -1;
-
+    [Header("Selected Items")]
     [SerializeField] private ConsumableData foodItem;
     [SerializeField] private ConsumableData potionItem;
+
+    private int selectedSlot = -1;
 
     private ButtonScript buttonScript;
 
@@ -42,7 +41,12 @@ public class ConsumableHotbar : MonoBehaviour
 
         selectionPanel.SetActive(false);
 
-        buttonScript = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<ButtonScript>();
+        GameObject cameraObject = GameObject.FindGameObjectWithTag("MainCamera");
+
+        if (cameraObject != null)
+        {
+            buttonScript = cameraObject.GetComponent<ButtonScript>();
+        }
     }
 
     public void SelectFoodSlot()
@@ -67,18 +71,29 @@ public class ConsumableHotbar : MonoBehaviour
     {
         ClearList();
 
-        foreach (ConsumableData item in consumables)
+        if (consumableInventory == null)
+            return;
+
+        List<ConsumableInventory.ConsumableStack> items = consumableInventory.GetConsumables();
+
+        foreach (ConsumableInventory.ConsumableStack stack in items)
         {
-            if (item == null)
+            if (stack == null)
                 continue;
 
-            if (selectedSlot == 0 && item.consumableType != ConsumableType.Food)
+            if (stack.item == null)
                 continue;
 
-            if (selectedSlot == 1 && item.consumableType != ConsumableType.Potion)
+            if (stack.amount <= 0)
                 continue;
 
-            CreateItemButton(item);
+            if (selectedSlot == 0 && stack.item.consumableType != ConsumableType.Food)
+                continue;
+
+            if (selectedSlot == 1 && stack.item.consumableType != ConsumableType.Potion)
+                continue;
+
+            CreateItemButton(stack.item);
         }
     }
 
@@ -86,29 +101,43 @@ public class ConsumableHotbar : MonoBehaviour
     {
         ClearList();
 
-        foreach (ConsumableData item in consumables)
+        if (consumableInventory == null)
+            return;
+
+        List<ConsumableInventory.ConsumableStack> items = consumableInventory.GetConsumables();
+
+        foreach (ConsumableInventory.ConsumableStack stack in items)
         {
-            if (item == null)
+            if (stack == null)
                 continue;
 
-            if (item.consumableType != type)
+            if (stack.item == null)
                 continue;
 
-            if (selectedSlot == 0 && item.consumableType != ConsumableType.Food)
+            if (stack.amount <= 0)
                 continue;
 
-            if (selectedSlot == 1 && item.consumableType != ConsumableType.Potion)
+            if (stack.item.consumableType != type)
                 continue;
 
-            CreateItemButton(item);
+            if (selectedSlot == 0 && stack.item.consumableType != ConsumableType.Food)
+                continue;
+
+            if (selectedSlot == 1 && stack.item.consumableType != ConsumableType.Potion)
+                continue;
+
+            CreateItemButton(stack.item);
         }
     }
 
     private void CreateItemButton(ConsumableData item)
     {
-        GameObject button = Instantiate(itemButtonPrefab, itemListContent);
+        GameObject buttonObject = Instantiate(itemButtonPrefab, itemListContent);
 
-        ConsumableItemButton itemButton = button.GetComponent<ConsumableItemButton>();
+        ConsumableItemButton itemButton = buttonObject.GetComponent<ConsumableItemButton>();
+
+        if (itemButton == null)
+            return;
 
         itemButton.Setup(item, this);
     }
@@ -126,18 +155,24 @@ public class ConsumableHotbar : MonoBehaviour
         if (item == null)
             return;
 
-        if (selectedSlot == 0 && item.consumableType != ConsumableType.Food)
+        if (consumableInventory == null)
             return;
 
-        if (selectedSlot == 1 && item.consumableType != ConsumableType.Potion)
+        if (!consumableInventory.HasConsumable(item, 1))
             return;
 
         if (selectedSlot == 0)
         {
+            if (item.consumableType != ConsumableType.Food)
+                return;
+
             foodItem = item;
         }
         else if (selectedSlot == 1)
         {
+            if (item.consumableType != ConsumableType.Potion)
+                return;
+
             potionItem = item;
         }
 
@@ -151,8 +186,24 @@ public class ConsumableHotbar : MonoBehaviour
 
         if (consumableManager == null)
             return;
+
+        if (consumableInventory == null)
+            return;
+
+        if (!consumableInventory.HasConsumable(foodItem, 1))
+        {
+            foodItem = null;
+            return;
+        }
+
+        consumableInventory.RemoveConsumable(foodItem, 1);
+
         consumableManager.UseConsumable(foodItem);
-        
+
+        if (consumableInventory.GetAmount(foodItem) <= 0)
+        {
+            foodItem = null;
+        }
     }
 
     public void UsePotion()
@@ -163,7 +214,23 @@ public class ConsumableHotbar : MonoBehaviour
         if (consumableManager == null)
             return;
 
+        if (consumableInventory == null)
+            return;
+
+        if (!consumableInventory.HasConsumable(potionItem, 1))
+        {
+            potionItem = null;
+            return;
+        }
+
+        consumableInventory.RemoveConsumable(potionItem, 1);
+
         consumableManager.UseConsumable(potionItem);
+
+        if (consumableInventory.GetAmount(potionItem) <= 0)
+        {
+            potionItem = null;
+        }
     }
 
     private void CloseSelection()

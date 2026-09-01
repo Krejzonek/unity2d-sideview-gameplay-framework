@@ -5,6 +5,7 @@ public class RoomGenerator : MonoBehaviour
     [Header("Rooms")]
     [SerializeField] private GameObject[] roomPrefabs;
     [SerializeField] private GameObject bossRoomPrefab;
+    [SerializeField] private GameObject restRoomPrefab;
 
     [Header("Generation")]
     [SerializeField] private int maxRooms = 30;
@@ -42,9 +43,14 @@ public class RoomGenerator : MonoBehaviour
         {
             prefab = bossRoomPrefab;
         }
+        else if (nextRoomNumber % 5 == 0 && restRoomPrefab != null)
+        {
+            prefab = restRoomPrefab;
+        }
         else
         {
-            if (roomPrefabs.Length == 0) return;
+            if (roomPrefabs.Length == 0)
+                return;
 
             int randomIndex;
 
@@ -53,6 +59,7 @@ public class RoomGenerator : MonoBehaviour
                 randomIndex = Random.Range(0, roomPrefabs.Length);
             }
             while (roomPrefabs.Length > 1 && randomIndex == lastRoomIndex);
+
             lastRoomIndex = randomIndex;
             prefab = roomPrefabs[randomIndex];
         }
