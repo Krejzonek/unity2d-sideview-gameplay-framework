@@ -199,7 +199,7 @@ public class Player : MonoBehaviour
     private void RegenerateStamina()
     {
         if (!OnFloor())return;
-        float regeneration = IsCrouching() ? 10f : 5f;
+        float regeneration = IsCrouching() ? 15f : 10f;
         stamina += regeneration * Time.deltaTime;
         stamina = Mathf.Clamp(stamina, 0f, stats.stamina);
         UiUpdate();
