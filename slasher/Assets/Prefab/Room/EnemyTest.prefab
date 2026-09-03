@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4332501416688917819}
   - component: {fileID: 5843666974876058342}
   - component: {fileID: 8259517204022777001}
-  m_Layer: 8
+  m_Layer: 10
   m_Name: EnemyTest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -172,3 +172,4 @@ MonoBehaviour:
   attackCooldown: 1
   player: {fileID: 0}
   playerScript: {fileID: 0}
+  lootTable: {fileID: 11400000, guid: 0527eb1ecfdf23e4b80a680219ddb6f5, type: 2}
