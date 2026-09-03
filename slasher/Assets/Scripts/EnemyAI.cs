@@ -45,7 +45,11 @@ public class EnemyAI : MonoBehaviour
     [Header("Target")]
     [SerializeField] private Transform player;
     [SerializeField] private Player playerScript;
-   
+
+    [Header("Loot")]
+    [SerializeField] private LootTable lootTable;
+    private LootManager lootManager;
+
 
     private Rigidbody2D rb;
     private float attackTimer;
@@ -56,7 +60,7 @@ public class EnemyAI : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         player = GameObject.FindWithTag("Player").transform;
         playerScript = GameObject.FindWithTag("Player").GetComponent<Player>();
-       
+        lootManager = FindFirstObjectByType<LootManager>();
         health = maxHealth;
         attackTimer = 0f;
         room = GetComponentInParent<Room>();
@@ -210,10 +214,7 @@ public class EnemyAI : MonoBehaviour
     }
     private void StopMoving()
     {
-        rb.velocity = new Vector2(
-            0f,
-            rb.velocity.y
-        );
+        rb.velocity = new Vector2(0f,rb.velocity.y);
     }
     private void Attack()
     {
@@ -241,6 +242,10 @@ public class EnemyAI : MonoBehaviour
     private void Die()
     {
         playerScript.GetEXP(100);
+        if (lootManager != null && lootTable != null)
+        {
+            lootManager.GenerateLoot(lootTable,transform.position);
+        }
         if (room != null)
         {
             room.EnemyKilled();

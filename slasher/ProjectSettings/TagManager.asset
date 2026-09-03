@@ -16,8 +16,8 @@ TagManager:
   - map
   - MapBounds
   - ClassSelector
-  - 
-  - 
+  - Enemy
+  - Loot
   - 
   - 
   - 
