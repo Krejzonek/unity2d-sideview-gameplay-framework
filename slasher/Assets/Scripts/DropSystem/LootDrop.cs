@@ -19,7 +19,7 @@ public class LootDrop
     public ConsumableData consumable;
 
     [Header("Equipment")]
-    public Object equipment;
+    public ItemData equipment;
 
     [Header("Drop")]
     [Range(0f, 100f)]

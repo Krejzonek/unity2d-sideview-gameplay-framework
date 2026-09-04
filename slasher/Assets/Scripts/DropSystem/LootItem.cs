@@ -9,6 +9,7 @@ public class LootItem : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        
 
         if (rb != null)
         {
@@ -70,8 +71,17 @@ public class LootItem : MonoBehaviour
                 return true;
 
             case LootType.Equipment:
+                EquipmentManager equipmentManager = player.GetComponent<EquipmentManager>();
 
-                return false;
+                if (lootDrop.equipment == null)
+                    return false;
+
+                if (equipmentManager == null)
+                    return false;
+
+                equipmentManager.AddToInventory(lootDrop.equipment);
+
+                return true;
         }
 
         return false;
