@@ -1840,7 +1840,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: LVL 0
+  m_text: LVL 1
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -9866,7 +9866,7 @@ MonoBehaviour:
   stamina: 100
   moveSpeed: 5
   jumpForce: 10
-  lvl: 0
+  lvl: 1
   currentEXP: 0
   attackCooldown: 1
   attackRange: 1.5
@@ -10118,6 +10118,8 @@ MonoBehaviour:
   itemListContent: {fileID: 2043008923}
   itemButtonPrefab: {fileID: 7519596034099529379, guid: 88285a9872461804b8fea0e06548ef0d, type: 3}
   inventory:
+  - {fileID: 11400000, guid: 05955358e5068cd469d691fa365602f6, type: 2}
+  - {fileID: 11400000, guid: 05955358e5068cd469d691fa365602f6, type: 2}
   - {fileID: 11400000, guid: 05955358e5068cd469d691fa365602f6, type: 2}
 --- !u!1 &1649404998
 GameObject:
@@ -13302,7 +13304,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2043008922}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
@@ -13311,14 +13313,12 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 0
-  m_Spacing: 0
-  m_ChildForceExpandWidth: 1
-  m_ChildForceExpandHeight: 1
-  m_ChildControlWidth: 0
-  m_ChildControlHeight: 0
-  m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
+  m_StartCorner: 0
+  m_StartAxis: 0
+  m_CellSize: {x: 30, y: 30}
+  m_Spacing: {x: 0, y: 0}
+  m_Constraint: 0
+  m_ConstraintCount: 2
 --- !u!1 &2049743968
 GameObject:
   m_ObjectHideFlags: 0
