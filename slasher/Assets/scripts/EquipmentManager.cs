@@ -22,45 +22,60 @@ public class EquipmentManager : MonoBehaviour
     {
         selectedSlot = slot;
         itemSelectionPanel.SetActive(true);
+
+        RefreshItemList();
+    }
+
+    public void RefreshItemList()
+    {
         foreach (Transform child in itemListContent)
         {
             Destroy(child.gameObject);
         }
+
+        if (selectedSlot == null)
+            return;
+
         foreach (ItemData item in inventory)
         {
-            if (item.equipmentType != slot.Type)
+            if (item.equipmentType != selectedSlot.Type)
                 continue;
 
-            GameObject button =
-                Instantiate(itemButtonPrefab, itemListContent);
+            GameObject button = Instantiate(itemButtonPrefab, itemListContent);
 
-            ItemButton itemButton =
-                button.GetComponent<ItemButton>();
+            ItemButton itemButton = button.GetComponent<ItemButton>();
 
             itemButton.Setup(item);
         }
     }
+
     public void CloseItemList()
     {
         itemSelectionPanel.SetActive(false);
+        selectedSlot = null;
     }
+
     public void SelectItem(ItemData item)
     {
         if (selectedSlot == null)
             return;
+
         selectedSlot.Equip(item);
         itemSelectionPanel.SetActive(false);
         selectedSlot = null;
     }
+
     public void AddToInventory(ItemData item)
     {
-        if (!inventory.Contains(item))
-        {
-            inventory.Add(item);
-        }
+        if (item == null)
+            return;
+        inventory.Add(item);
     }
+
     public void RemoveFromInventory(ItemData item)
     {
+        if (item == null)
+            return;
         inventory.Remove(item);
     }
 }

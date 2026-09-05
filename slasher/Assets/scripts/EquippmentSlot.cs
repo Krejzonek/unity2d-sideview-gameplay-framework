@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+
 public enum EquipmentType
 {
     Weapon,
@@ -24,8 +25,12 @@ public class EquipmentSlot : MonoBehaviour
     {
         EquipmentManager.Instance.OpenItemList(this);
     }
+
     public void Equip(ItemData item)
     {
+        if (item == null)
+            return;
+
         if (equippedItem != null)
         {
             EquipmentManager.Instance.AddToInventory(equippedItem);
@@ -40,7 +45,6 @@ public class EquipmentSlot : MonoBehaviour
         if (stats != null)
             stats.UpdateStats();
 
-        //icon.sprite = item.icon;
-        //icon.enabled = true;
+        EquipmentManager.Instance.RefreshItemList();
     }
 }
