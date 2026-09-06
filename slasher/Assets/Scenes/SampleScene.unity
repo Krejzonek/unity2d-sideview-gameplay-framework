@@ -10144,6 +10144,8 @@ MonoBehaviour:
   staminaSlider: {fileID: 2049743970}
   expSlider: {fileID: 771540214}
   lvlText: {fileID: 210980427}
+  healthText: {fileID: 1227224041}
+  staminaText: {fileID: 293572755}
   floorCheck: {fileID: 115647408}
   floorCheckRadius: 0.2
   floorLayer:
