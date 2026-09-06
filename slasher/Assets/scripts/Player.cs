@@ -24,6 +24,8 @@ public class Player : MonoBehaviour
     [SerializeField] private Slider staminaSlider;
     [SerializeField] private Slider expSlider;
     [SerializeField] private TMP_Text lvlText;
+    [SerializeField] private TMP_Text healthText;
+    [SerializeField] private TMP_Text staminaText;
 
     [Header("Floor")]
     [SerializeField] private Transform floorCheck;
@@ -51,10 +53,7 @@ public class Player : MonoBehaviour
 
         rb.freezeRotation = true;
         moveSpeed = stats.speed;
-        healthSlider.maxValue = stats.health;
-        healthSlider.value = health;
-        staminaSlider.maxValue = stats.stamina;
-        staminaSlider.value = stamina;
+        UiUpdate();
         expSlider.maxValue = (lvl + 1) * 100;
         expSlider.value = currentEXP;
         
@@ -67,8 +66,7 @@ public class Player : MonoBehaviour
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             UseStamina(25);
         }
-        healthSlider.maxValue = stats.health;
-        staminaSlider.maxValue = stats.stamina;
+        UiUpdate();
         if (Input.GetKey(KeyCode.LeftShift)) Crouch();
         else StundUp();
         attackTimer -= Time.deltaTime;
@@ -80,8 +78,8 @@ public class Player : MonoBehaviour
 
         RegenerateStamina();
         LvlUp();
-    }
 
+    }
     public void GetEXP(int exp)
     {
         currentEXP += Mathf.RoundToInt(exp * stats.expBonus);
@@ -103,8 +101,14 @@ public class Player : MonoBehaviour
     }
     private void UiUpdate()
     {
+        healthSlider.maxValue = stats.health;
+        staminaSlider .maxValue = stats.stamina;
         healthSlider.value = health;
         staminaSlider.value = stamina;
+
+        healthText.text = Mathf.Round(healthSlider.value) + "/" + Mathf.Round(healthSlider.maxValue);
+        staminaText.text = Mathf.Round(staminaSlider.value) + "/" + Mathf.Round(staminaSlider.maxValue);
+
     }
     private void FixedUpdate()
     {
