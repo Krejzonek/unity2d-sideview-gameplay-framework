@@ -217,7 +217,7 @@ public class Player : MonoBehaviour
             }
         }
 
-        float currentCooldown = Mathf.Max(attackCooldown / (1f + stats.speed * 0.1f),0.1f);
+        float currentCooldown = Mathf.Max(attackCooldown / (1f + stats.speed * 0.05f),0.15f);
         nextAttackTime = Time.time + currentCooldown;
     }
 

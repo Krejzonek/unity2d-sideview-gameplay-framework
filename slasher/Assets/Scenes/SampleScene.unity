@@ -10168,7 +10168,7 @@ MonoBehaviour:
   jumpForce: 10
   lvl: 1
   currentEXP: 0
-  attackCooldown: 1
+  attackCooldown: 2
   attackRange: 1.5
   defenseDamageReduction: 0.5
   attackPoint: {fileID: 943431465}
