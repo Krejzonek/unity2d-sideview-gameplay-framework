@@ -18,12 +18,12 @@ public class RestRoom : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D collision)
     {
         Player playerComponent = collision.GetComponent<Player>();
-
         if (playerComponent == null)
             return;
 
         player = playerComponent;
         playerInside = true;
+        player.SetCanAttack(false);
     }
 
     private void OnTriggerExit2D(Collider2D collision)
@@ -35,6 +35,7 @@ public class RestRoom : MonoBehaviour
 
         if (playerComponent == player)
         {
+            player.SetCanAttack(true);
             player = null;
             playerInside = false;
         }

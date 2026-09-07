@@ -38,14 +38,18 @@ public class EquipmentManager : MonoBehaviour
 
         foreach (ItemData item in inventory)
         {
-            if (item.equipmentType != selectedSlot.Type)
+            if (item == null)
+                continue;
+
+            if (!selectedSlot.CanEquip(item))
                 continue;
 
             GameObject button = Instantiate(itemButtonPrefab, itemListContent);
 
             ItemButton itemButton = button.GetComponent<ItemButton>();
 
-            itemButton.Setup(item);
+            if (itemButton != null)
+                itemButton.Setup(item);
         }
     }
 
@@ -60,7 +64,11 @@ public class EquipmentManager : MonoBehaviour
         if (selectedSlot == null)
             return;
 
+        if (!selectedSlot.CanEquip(item))
+            return;
+
         selectedSlot.Equip(item);
+
         itemSelectionPanel.SetActive(false);
         selectedSlot = null;
     }
@@ -69,6 +77,7 @@ public class EquipmentManager : MonoBehaviour
     {
         if (item == null)
             return;
+
         inventory.Add(item);
     }
 
@@ -76,6 +85,7 @@ public class EquipmentManager : MonoBehaviour
     {
         if (item == null)
             return;
+
         inventory.Remove(item);
     }
 }
