@@ -191,7 +191,21 @@ public class Stats : MonoBehaviour
 
         UpdateStats();
     }
+    public ItemData GetWeapon()
+    {
+        foreach (EquipmentSlot slot in equipmentSlots)
+        {
+            if (slot == null)
+                continue;
 
+            if (slot.Type != EquipmentType.Weapon)
+                continue;
+
+            return slot.EquippedItem;
+        }
+
+        return null;
+    }
     public void SetClass(Class newClass)
     {
         characterClass = newClass;

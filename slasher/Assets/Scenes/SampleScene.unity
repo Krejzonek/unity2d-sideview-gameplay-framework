@@ -6487,6 +6487,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 941760083}
   m_CullTransparentMesh: 1
+--- !u!1 &943431464
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 943431465}
+  m_Layer: 0
+  m_Name: AttackPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &943431465
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 943431464}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1635490035}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &972700472
 GameObject:
   m_ObjectHideFlags: 0
@@ -10140,6 +10171,9 @@ MonoBehaviour:
   attackCooldown: 1
   attackRange: 1.5
   defenseDamageReduction: 0.5
+  attackPoint: {fileID: 943431465}
+  arrowPrefab: {fileID: 2441591654384667964, guid: 4d52780754f3daf408289931041f4529, type: 3}
+  magicPrefab: {fileID: 1956783295464952434, guid: a4464225650323349bf63fd28c02b069, type: 3}
   healthSlider: {fileID: 1401616335}
   staminaSlider: {fileID: 2049743970}
   expSlider: {fileID: 771540214}
@@ -10281,6 +10315,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 115647408}
+  - {fileID: 943431465}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1635490036
@@ -10390,8 +10425,9 @@ MonoBehaviour:
   itemButtonPrefab: {fileID: 7519596034099529379, guid: 88285a9872461804b8fea0e06548ef0d, type: 3}
   inventory:
   - {fileID: 11400000, guid: 05955358e5068cd469d691fa365602f6, type: 2}
-  - {fileID: 11400000, guid: 05955358e5068cd469d691fa365602f6, type: 2}
-  - {fileID: 11400000, guid: 05955358e5068cd469d691fa365602f6, type: 2}
+  - {fileID: 11400000, guid: 87065221eadd9574d8dc8540503ccab8, type: 2}
+  - {fileID: 11400000, guid: cdf5243c77eeb054088427d540c7f2a3, type: 2}
+  - {fileID: 11400000, guid: c21f6aaf54474ac42bcc89e0597e5c15, type: 2}
 --- !u!1 &1649404998
 GameObject:
   m_ObjectHideFlags: 0

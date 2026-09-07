@@ -18,7 +18,6 @@ public class EquipmentSlot : MonoBehaviour
     private ItemData equippedItem;
 
     public EquipmentType Type => equipmentType;
-
     public ItemData EquippedItem => equippedItem;
 
     public void OpenItemList()
@@ -26,10 +25,41 @@ public class EquipmentSlot : MonoBehaviour
         EquipmentManager.Instance.OpenItemList(this);
     }
 
-    public void Equip(ItemData item)
+    public bool CanEquip(ItemData item)
     {
         if (item == null)
-            return;
+            return false;
+
+        if (item.equipmentType != equipmentType)
+            return false;
+
+        if (equipmentType != EquipmentType.Weapon)
+            return true;
+
+        Stats stats = FindFirstObjectByType<Stats>();
+
+        if (stats == null || stats.characterClass == null)
+            return false;
+
+        switch (item.weaponType)
+        {
+            case WeaponType.Sword:
+                return stats.characterClass.name == "Warrior";
+
+            case WeaponType.Bow:
+                return stats.characterClass.name == "Archer";
+
+            case WeaponType.Staff:
+                return stats.characterClass.name == "Mage";
+
+            default:
+                return false;
+        }
+    }
+
+    public void Equip(ItemData item)
+    {
+        if (!CanEquip(item)) return;
 
         if (equippedItem != null)
         {
@@ -40,10 +70,11 @@ public class EquipmentSlot : MonoBehaviour
 
         EquipmentManager.Instance.RemoveFromInventory(item);
 
+        if (icon != null) icon.sprite = item.icon;
+
         Stats stats = FindFirstObjectByType<Stats>();
 
-        if (stats != null)
-            stats.UpdateStats();
+        if (stats != null) stats.UpdateStats();
 
         EquipmentManager.Instance.RefreshItemList();
     }
