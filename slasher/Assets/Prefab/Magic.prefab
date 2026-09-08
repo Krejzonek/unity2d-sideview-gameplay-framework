@@ -135,3 +135,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 10
   lifetime: 3
+  gravity: 3
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 0
