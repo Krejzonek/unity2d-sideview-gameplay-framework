@@ -226,12 +226,12 @@ public class Player : MonoBehaviour
         Collider2D[] enemies = Physics2D.OverlapCircleAll(transform.position,attackRange);
         foreach (Collider2D enemy in enemies)
         {
-            EnemyAI enemyAI =
-                enemy.GetComponent<EnemyAI>();
+            EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
 
             if (enemyAI != null)
             {
-                enemyAI.TakeDamage(stats.attack);
+                Vector2 hitPoint = enemy.ClosestPoint(transform.position);
+                enemyAI.TakeDamage(stats.attack,hitPoint);
             }
         }
     }
@@ -290,7 +290,7 @@ public class Player : MonoBehaviour
     public void Heal(float amount)
     {
         health += amount;
-        health = Mathf.Clamp(health,0f,stats.health);
+        health = Mathf.Clamp(health,0f,stats.health);;
         UiUpdate();
     }
 

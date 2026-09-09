@@ -397,13 +397,7 @@ MonoBehaviour:
   maxEnemies: 5
   spawnPoint: {fileID: 521151944278911014}
   enemyParent: {fileID: 521151944278911014}
-  spawnRadius: 6
-  enemyLayer:
-    serializedVersion: 2
-    m_Bits: 1024
-  checkRadius: 0.8
-  maxAttemptsPerEnemy: 100
-  spawnOnStart: 1
+  spacing: 2
 --- !u!1 &1223263121884095298
 GameObject:
   m_ObjectHideFlags: 0
@@ -706,7 +700,7 @@ GameObject:
   - component: {fileID: 8971557117712097264}
   - component: {fileID: 5818385300637072211}
   - component: {fileID: 7267079907986685208}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: RoomTrigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}

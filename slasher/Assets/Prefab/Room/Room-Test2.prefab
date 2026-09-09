@@ -302,7 +302,7 @@ GameObject:
   - component: {fileID: 1430571081664794831}
   - component: {fileID: 3727732459976473050}
   - component: {fileID: 5065218318743285975}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: RoomTrigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -520,9 +520,7 @@ MonoBehaviour:
   maxEnemies: 5
   spawnPoint: {fileID: 5891626146069045971}
   enemyParent: {fileID: 5891626146069045971}
-  spawnRadius: 5
-  minDistanceBetweenEnemies: 1.5
-  spawnOnStart: 1
+  spacing: 2
 --- !u!1 &4087129661761602232
 GameObject:
   m_ObjectHideFlags: 0

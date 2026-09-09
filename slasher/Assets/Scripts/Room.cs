@@ -32,7 +32,7 @@ public class Room : MonoBehaviour
     {
         enemiesAlive--;
 
-        if (enemiesAlive <= 0)
+        if (IsCleared())
             RoomCleared();
     }
 

@@ -44,8 +44,10 @@ public class Projectile : MonoBehaviour
 
         if (enemy != null)
         {
-            enemy.TakeDamage(damage);
+            Vector2 hitPoint = other.ClosestPoint(transform.position);
+            enemy.TakeDamage(damage,hitPoint);
             Destroy(gameObject);
         }
+        
     }
 }
