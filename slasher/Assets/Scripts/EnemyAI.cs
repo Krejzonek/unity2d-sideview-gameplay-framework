@@ -14,6 +14,7 @@ public enum EnemyElement
     Dark,
     Poison
 }
+
 public enum EnemyClass
 {
     Melee,
@@ -23,6 +24,7 @@ public enum EnemyClass
     Support,
     Boss
 }
+
 public class EnemyAI : MonoBehaviour
 {
     [Header("Enemy")]
@@ -33,6 +35,10 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float maxHealth = 50f;
     [SerializeField] private float health = 50f;
     [SerializeField] private float damage = 10f;
+
+    [Header("Headshot")]
+    [SerializeField] private float headshotMultiplier = 2f;
+    [SerializeField] private float headshotHeight = 0.8f;
 
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 2f;
@@ -50,7 +56,6 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private LootTable lootTable;
     private LootManager lootManager;
 
-
     private Rigidbody2D rb;
     private float attackTimer;
     private Room room;
@@ -65,17 +70,19 @@ public class EnemyAI : MonoBehaviour
         attackTimer = 0f;
         room = GetComponentInParent<Room>();
         rb.freezeRotation = true;
+
         if (player == null)
         {
             GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-
-            if (playerObject != null)player = playerObject.transform;
+            if (playerObject != null) player = playerObject.transform;
         }
     }
 
     private void Update()
     {
-        if (player == null) return;
+        if (player == null)
+            return;
+
         attackTimer -= Time.deltaTime;
         float distance = Vector2.Distance(transform.position,player.position);
         switch (enemyClass)
@@ -105,6 +112,7 @@ public class EnemyAI : MonoBehaviour
                 break;
         }
     }
+
     private void MeleeAI(float distance)
     {
         if (distance <= attackRange)
@@ -121,6 +129,7 @@ public class EnemyAI : MonoBehaviour
             StopMoving();
         }
     }
+
     private void RangedAI(float distance)
     {
         if (distance <= attackRange)
@@ -137,6 +146,7 @@ public class EnemyAI : MonoBehaviour
             StopMoving();
         }
     }
+
     private void TankAI(float distance)
     {
         if (distance <= attackRange)
@@ -153,6 +163,7 @@ public class EnemyAI : MonoBehaviour
             StopMoving();
         }
     }
+
     private void AssassinAI(float distance)
     {
         if (distance <= attackRange)
@@ -169,6 +180,7 @@ public class EnemyAI : MonoBehaviour
             StopMoving();
         }
     }
+
     private void SupportAI(float distance)
     {
         if (distance <= attackRange)
@@ -185,6 +197,7 @@ public class EnemyAI : MonoBehaviour
             StopMoving();
         }
     }
+
     private void BossAI(float distance)
     {
         if (distance <= attackRange)
@@ -201,33 +214,58 @@ public class EnemyAI : MonoBehaviour
             StopMoving();
         }
     }
+
     private void MoveTowardsPlayer()
     {
-        float direction = Mathf.Sign(player.position.x - transform.position.x);
+        float direction = Mathf.Sign(player.position.x -transform.position.x);
         rb.velocity = new Vector2(direction * moveSpeed,rb.velocity.y);
         if (direction != 0)
         {
             Vector3 scale = transform.localScale;
-            scale.x = Mathf.Abs(scale.x) * direction;
+            scale.x = Mathf.Abs(scale.x) *direction;
             transform.localScale = scale;
         }
     }
+
     private void StopMoving()
     {
         rb.velocity = new Vector2(0f,rb.velocity.y);
     }
+
     private void Attack()
     {
-        if (attackTimer > 0f)return;
+        if (attackTimer > 0f)
+            return;
+
         if (playerScript != null) playerScript.TakeDamage(damage);
         attackTimer = attackCooldown;
     }
+
     public void TakeDamage(float damageAmount)
     {
+        TakeDamage(damageAmount, transform.position);
+    }
+
+    public void TakeDamage(float damageAmount, Vector2 hitPoint)
+    {
+        bool headshot = IsHeadshot(hitPoint);
+        if (headshot) damageAmount *= headshotMultiplier;
         health -= damageAmount;
         health = Mathf.Clamp(health,0f,maxHealth);
-        if (health <= 0f) Die();
-        
+        if (health <= 0f)
+            Die();
+    }
+
+    private bool IsHeadshot(Vector2 hitPoint)
+    {
+        Collider2D collider = GetComponent<Collider2D>();
+
+        if (collider == null)
+            return false;
+
+        Bounds bounds = collider.bounds;
+        float headStart = bounds.min.y + bounds.size.y * headshotHeight;
+        return hitPoint.y >= headStart;
     }
 
     public EnemyElement GetElement()
@@ -239,25 +277,40 @@ public class EnemyAI : MonoBehaviour
     {
         return enemyClass;
     }
+
+    public float GetHeadshotMultiplier()
+    {
+        return headshotMultiplier;
+    }
+
     private void Die()
     {
         playerScript.GetEXP(100);
+
         if (lootManager != null && lootTable != null)
         {
             lootManager.GenerateLoot(lootTable,transform.position);
         }
+
         if (room != null)
         {
             room.EnemyKilled();
         }
+
         Destroy(gameObject);
     }
-   /* private void OnDrawGizmosSelected()
+
+    /*private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
 
-        Gizmos.DrawWireSphere(transform.position,detectionRange);
+        Gizmos.DrawWireSphere(
+            transform.position,
+            detectionRange
+        );
+
         Gizmos.color = Color.red;
+
         Gizmos.DrawWireSphere(
             transform.position,
             attackRange

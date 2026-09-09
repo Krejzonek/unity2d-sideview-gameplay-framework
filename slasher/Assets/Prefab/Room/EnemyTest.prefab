@@ -166,6 +166,8 @@ MonoBehaviour:
   maxHealth: 50
   health: 50
   damage: 10
+  headshotMultiplier: 2
+  headshotHeight: 0.65
   moveSpeed: 2
   detectionRange: 8
   attackRange: 1.5

@@ -14,7 +14,7 @@ public class RoomEnemySpawner : MonoBehaviour
     [SerializeField] private Transform enemyParent;
     [SerializeField] private float spacing = 2f;
 
-    private void Start()
+    private void Awake()
     {
         if (enemyPrefabs == null || enemyPrefabs.Length == 0) return;
         if (spawnPoint == null) return;
