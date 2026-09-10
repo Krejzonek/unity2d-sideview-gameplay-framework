@@ -33,6 +33,9 @@ public class Stats : MonoBehaviour
     [SerializeField] private float baseSpeed = 5f;
     [SerializeField] private float baseAttack = 10f;
     [SerializeField] private float baseLuck = 1f;
+    [SerializeField] private float baseCritRate = 5f;
+    [SerializeField] private float baseCritDamage = 1.5f;
+    [SerializeField] private float baseKnockback = 0f;
 
     [Header("Points")]
     public int freePoint;
@@ -51,6 +54,9 @@ public class Stats : MonoBehaviour
     public float attack;
     public float luck;
     public float expBonus;
+    public float critRate;
+    public float critDamage;
+    public float knockback;
 
     [Header("Equipment")]
     [SerializeField] private ItemData[] equippedItems;
@@ -75,6 +81,10 @@ public class Stats : MonoBehaviour
         attack = baseAttack + attackPoint;
         luck = baseLuck + luckPoint;
 
+        critRate = baseCritRate;
+        critDamage = baseCritDamage;
+        knockback = baseKnockback;
+
         expBonus = 1f;
 
         if (characterClass != null)
@@ -91,7 +101,6 @@ public class Stats : MonoBehaviour
                 continue;
 
             ItemData item = slot.EquippedItem;
-
             if (item == null)
                 continue;
 
@@ -101,7 +110,19 @@ public class Stats : MonoBehaviour
             speed += item.speedBonus;
             attack += item.attackBonus;
             expBonus += item.expBonus;
+
+            switch (item.miscType)
+            {
+                case MiscType.CritRate:
+                    critRate += item.miscValue;
+                    break;
+
+                case MiscType.Knockback:
+                    knockback += item.miscValue;
+                    break;
+            }
         }
+
         foreach (StatEffect effect in activeEffects)
         {
             switch (effect.statType)
@@ -135,6 +156,8 @@ public class Stats : MonoBehaviour
                     break;
             }
         }
+
+        critRate = Mathf.Clamp(critRate, 0f, 100f);
     }
 
     public void HealthAdd()
@@ -191,6 +214,7 @@ public class Stats : MonoBehaviour
 
         UpdateStats();
     }
+
     public ItemData GetWeapon()
     {
         foreach (EquipmentSlot slot in equipmentSlots)
@@ -206,26 +230,26 @@ public class Stats : MonoBehaviour
 
         return null;
     }
+
     public void SetClass(Class newClass)
     {
         characterClass = newClass;
         UpdateStats();
     }
+
     public void AddBuff(List<StatEffect> effects, float duration)
     {
         StartCoroutine(BuffCoroutine(effects, duration));
     }
-    private IEnumerator BuffCoroutine(List<StatEffect> effects,float duration)
+
+    private IEnumerator BuffCoroutine(List<StatEffect> effects, float duration)
     {
         foreach (StatEffect effect in effects)
         {
             activeEffects.Add(effect);
         }
-
         UpdateStats();
-
         yield return new WaitForSeconds(duration);
-
         foreach (StatEffect effect in effects)
         {
             activeEffects.Remove(effect);
