@@ -55,13 +55,18 @@ public class Player : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         stats = GetComponent<Stats>();
+
         normalColliderSize = playerCollider.size;
         normalColliderOffset = playerCollider.offset;
+
         rb.freezeRotation = true;
+
         moveSpeed = stats.speed;
         health = stats.health;
         stamina = stats.stamina;
+
         UiUpdate();
+
         expSlider.maxValue = (lvl + 1) * 100;
         expSlider.value = currentEXP;
     }
@@ -69,10 +74,9 @@ public class Player : MonoBehaviour
     private void Update()
     {
         moveInput = Input.GetAxisRaw("Horizontal");
-
-        if (Input.GetKeyDown(KeyCode.Space) && OnFloor() && !IsCrouching() &&stamina > 25f)
+        if (Input.GetKeyDown(KeyCode.Space) && OnFloor() && !IsCrouching() && stamina > 25f)
         {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            rb.velocity = new Vector2(rb.velocity.x,jumpForce);
             UseStamina(25);
         }
 
@@ -119,10 +123,8 @@ public class Player : MonoBehaviour
     {
         healthSlider.maxValue = stats.health;
         staminaSlider.maxValue = stats.stamina;
-
         healthSlider.value = health;
         staminaSlider.value = stamina;
-
         healthText.text = Mathf.Round(healthSlider.value) + "/" + Mathf.Round(healthSlider.maxValue);
         staminaText.text = Mathf.Round(staminaSlider.value) + "/" + Mathf.Round(staminaSlider.maxValue);
     }
@@ -145,6 +147,7 @@ public class Player : MonoBehaviour
             float newHeight = oldHeight / 2f;
             moveSpeed /= 2;
             playerCollider.size = new Vector2(playerCollider.size.x,newHeight);
+
             playerCollider.offset = new Vector2(playerCollider.offset.x,normalColliderOffset.y -(oldHeight - newHeight) / 2f);
         }
     }
@@ -159,9 +162,7 @@ public class Player : MonoBehaviour
         if (IsCrouching())
         {
             playerCollider.size = normalColliderSize;
-
             moveSpeed *= 2;
-
             playerCollider.offset = normalColliderOffset;
         }
     }
@@ -191,6 +192,7 @@ public class Player : MonoBehaviour
             return;
 
         ItemData weapon = stats.GetWeapon();
+
         if (weapon == null)
         {
             MeleeAttack();
@@ -216,22 +218,24 @@ public class Player : MonoBehaviour
                     break;
             }
         }
-
-        float currentCooldown = Mathf.Max(attackCooldown / (1f + stats.speed * 0.05f),0.15f);
-        nextAttackTime = Time.time + currentCooldown;
+        float currentCooldown = Mathf.Max(attackCooldown /(1f + stats.speed * 0.05f),0.15f);
+        nextAttackTime = Time.time +currentCooldown;
     }
 
     private void MeleeAttack()
     {
         Collider2D[] enemies = Physics2D.OverlapCircleAll(transform.position,attackRange);
+
         foreach (Collider2D enemy in enemies)
         {
-            EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
+            EnemyAI enemyAI = enemy.GetComponentInParent<EnemyAI>();
 
             if (enemyAI != null)
             {
                 Vector2 hitPoint = enemy.ClosestPoint(transform.position);
-                enemyAI.TakeDamage(stats.attack,hitPoint);
+                float damage = GetAttackDamage();
+                Vector2 knockbackDirection = (enemy.transform.position -transform.position).normalized;
+                enemyAI.TakeDamage(damage,hitPoint,stats.knockback,knockbackDirection);
             }
         }
     }
@@ -245,21 +249,28 @@ public class Player : MonoBehaviour
             return;
 
         Camera cam = Camera.main;
+
         if (cam == null)
             return;
 
         Vector3 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
-
         Vector2 direction = (mousePosition - attackPoint.position).normalized;
-
         GameObject projectileObject = Instantiate(projectilePrefab,attackPoint.position,Quaternion.identity);
-
         Projectile projectile = projectileObject.GetComponent<Projectile>();
-
         if (projectile != null)
         {
-            projectile.Setup(direction,stats.attack);
+            projectile.Setup(direction,stats.attack,stats.critRate,stats.critDamage,stats.knockback);
         }
+    }
+
+    private float GetAttackDamage()
+    {
+        float damage = stats.attack;
+        if (Random.Range(0f, 100f) <= stats.critRate)
+        {
+            damage *= stats.critDamage;
+        }
+        return damage;
     }
 
     public void SetCanAttack(bool value)
@@ -270,16 +281,13 @@ public class Player : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        damage *= 100f /(100f + stats.defence);
-
+        damage *= 100f / (100f + stats.defence);
         if (isDefending)
         {
-            damage *= 1f -defenseDamageReduction;
+            damage *= 1f - defenseDamageReduction;
         }
-
         health -= damage;
         health = Mathf.Clamp(health,0f,stats.health);
-
         if (health <= 0f)
         {
             //Die
@@ -290,14 +298,14 @@ public class Player : MonoBehaviour
     public void Heal(float amount)
     {
         health += amount;
-        health = Mathf.Clamp(health,0f,stats.health);;
+        health = Mathf.Clamp(health,0f,stats.health);
         UiUpdate();
     }
 
     private void UseStamina(float amount)
     {
         stamina -= amount;
-        stamina = Mathf.Clamp(stamina,0f, stats.stamina);
+        stamina = Mathf.Clamp(stamina,0f,stats.stamina);
         UiUpdate();
     }
 
@@ -306,7 +314,7 @@ public class Player : MonoBehaviour
         if (!OnFloor())
             return;
 
-        float regeneration = IsCrouching()? 15f: 10f;
+        float regeneration = IsCrouching()? 15f : 10f;
         stamina += regeneration * Time.deltaTime;
         stamina = Mathf.Clamp(stamina,0f,stats.stamina);
         UiUpdate();

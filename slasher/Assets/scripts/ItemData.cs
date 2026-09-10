@@ -8,6 +8,13 @@ public enum WeaponType
     Staff
 }
 
+public enum MiscType
+{
+    None,
+    CritRate,
+    Knockback
+}
+
 [CreateAssetMenu(fileName = "New Item", menuName = "Items/Item")]
 public class ItemData : ScriptableObject
 {
@@ -24,4 +31,8 @@ public class ItemData : ScriptableObject
     public float speedBonus;
     public float attackBonus;
     public float expBonus;
+
+    [Header("Misc Bonus")]
+    public MiscType miscType;
+    public float miscValue;
 }

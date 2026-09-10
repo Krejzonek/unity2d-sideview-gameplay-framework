@@ -1,4 +1,3 @@
-using Unity.Mathematics;
 using UnityEngine;
 
 public enum EnemyElement
@@ -40,6 +39,9 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float headshotMultiplier = 2f;
     [SerializeField] private float headshotHeight = 0.8f;
 
+    [Header("Knockback")]
+    [SerializeField] private float knockbackDuration = 0.2f;
+
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float detectionRange = 8f;
@@ -58,6 +60,8 @@ public class EnemyAI : MonoBehaviour
 
     private Rigidbody2D rb;
     private float attackTimer;
+    private float knockbackTimer;
+    private bool isKnockedBack;
     private Room room;
 
     private void Start()
@@ -70,7 +74,6 @@ public class EnemyAI : MonoBehaviour
         attackTimer = 0f;
         room = GetComponentInParent<Room>();
         rb.freezeRotation = true;
-
         if (player == null)
         {
             GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
@@ -84,6 +87,17 @@ public class EnemyAI : MonoBehaviour
             return;
 
         attackTimer -= Time.deltaTime;
+        if (isKnockedBack)
+        {
+            knockbackTimer -= Time.deltaTime;
+            if (knockbackTimer <= 0f)
+            {
+                isKnockedBack = false;
+                rb.velocity = new Vector2(0f,rb.velocity.y);
+            }
+            return;
+        }
+
         float distance = Vector2.Distance(transform.position,player.position);
         switch (enemyClass)
         {
@@ -222,7 +236,7 @@ public class EnemyAI : MonoBehaviour
         if (direction != 0)
         {
             Vector3 scale = transform.localScale;
-            scale.x = Mathf.Abs(scale.x) *direction;
+            scale.x = Mathf.Abs(scale.x) * direction;
             transform.localScale = scale;
         }
     }
@@ -241,30 +255,55 @@ public class EnemyAI : MonoBehaviour
         attackTimer = attackCooldown;
     }
 
-    public void TakeDamage(float damageAmount)
-    {
-        TakeDamage(damageAmount, transform.position);
-    }
-
-    public void TakeDamage(float damageAmount, Vector2 hitPoint)
+   
+    public void TakeDamage(float damageAmount,Vector2 hitPoint,float knockback,Vector2 knockbackDirection)
     {
         bool headshot = IsHeadshot(hitPoint);
         if (headshot) damageAmount *= headshotMultiplier;
         health -= damageAmount;
         health = Mathf.Clamp(health,0f,maxHealth);
+        if (knockback > 0f)
+        {
+            ApplyKnockback(knockbackDirection,knockback);
+        }
+
         if (health <= 0f)
             Die();
+    }
+
+    private void ApplyKnockback(Vector2 direction,float force)
+    {
+        if (rb == null)
+            return;
+
+        isKnockedBack = true;
+        knockbackTimer = knockbackDuration;
+        rb.velocity =Vector2.zero;
+        rb.AddForce(direction.normalized * force,ForceMode2D.Impulse);
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (!isKnockedBack)
+            return;
+
+        EnemyAI otherEnemy = collision.gameObject.GetComponentInParent<EnemyAI>();
+        if (otherEnemy != null ||Mathf.Abs(collision.GetContact(0).normal.x) > 0.3f)
+        {
+            rb.velocity = Vector2.zero;
+            isKnockedBack = false;
+            knockbackTimer = 0f;
+        }
     }
 
     private bool IsHeadshot(Vector2 hitPoint)
     {
         Collider2D collider = GetComponent<Collider2D>();
-
         if (collider == null)
             return false;
 
         Bounds bounds = collider.bounds;
-        float headStart = bounds.min.y + bounds.size.y * headshotHeight;
+        float headStart = bounds.min.y +bounds.size.y *headshotHeight;
         return hitPoint.y >= headStart;
     }
 
@@ -286,34 +325,12 @@ public class EnemyAI : MonoBehaviour
     private void Die()
     {
         playerScript.GetEXP(100);
-
         if (lootManager != null && lootTable != null)
         {
             lootManager.GenerateLoot(lootTable,transform.position);
         }
 
-        if (room != null)
-        {
-            room.EnemyKilled();
-        }
-
+        if (room != null)room.EnemyKilled();
         Destroy(gameObject);
     }
-
-    /*private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-
-        Gizmos.DrawWireSphere(
-            transform.position,
-            detectionRange
-        );
-
-        Gizmos.color = Color.red;
-
-        Gizmos.DrawWireSphere(
-            transform.position,
-            attackRange
-        );
-    }*/
 }
