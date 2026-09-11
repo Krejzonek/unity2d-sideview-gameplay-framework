@@ -12,7 +12,8 @@ public enum MiscType
 {
     None,
     CritRate,
-    Knockback
+    Knockback,
+    Stun
 }
 
 [CreateAssetMenu(fileName = "New Item", menuName = "Items/Item")]
