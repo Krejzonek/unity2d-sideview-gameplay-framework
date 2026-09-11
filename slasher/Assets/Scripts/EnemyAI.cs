@@ -42,6 +42,9 @@ public class EnemyAI : MonoBehaviour
     [Header("Knockback")]
     [SerializeField] private float knockbackDuration = 0.2f;
 
+    [Header("Stun")]
+    [SerializeField] private float stunDuration = 2f;
+
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float detectionRange = 8f;
@@ -61,7 +64,9 @@ public class EnemyAI : MonoBehaviour
     private Rigidbody2D rb;
     private float attackTimer;
     private float knockbackTimer;
+    private float stunTimer;
     private bool isKnockedBack;
+    private bool isStunned;
     private Room room;
 
     private void Start()
@@ -77,6 +82,7 @@ public class EnemyAI : MonoBehaviour
         if (player == null)
         {
             GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+
             if (playerObject != null) player = playerObject.transform;
         }
     }
@@ -87,6 +93,15 @@ public class EnemyAI : MonoBehaviour
             return;
 
         attackTimer -= Time.deltaTime;
+        if (isStunned)
+        {
+            stunTimer -= Time.deltaTime;
+            StopMoving();
+            if (stunTimer <= 0f) isStunned = false;
+
+            return;
+        }
+
         if (isKnockedBack)
         {
             knockbackTimer -= Time.deltaTime;
@@ -95,10 +110,12 @@ public class EnemyAI : MonoBehaviour
                 isKnockedBack = false;
                 rb.velocity = new Vector2(0f,rb.velocity.y);
             }
+
             return;
         }
 
         float distance = Vector2.Distance(transform.position,player.position);
+
         switch (enemyClass)
         {
             case EnemyClass.Melee:
@@ -233,6 +250,7 @@ public class EnemyAI : MonoBehaviour
     {
         float direction = Mathf.Sign(player.position.x -transform.position.x);
         rb.velocity = new Vector2(direction * moveSpeed,rb.velocity.y);
+
         if (direction != 0)
         {
             Vector3 scale = transform.localScale;
@@ -252,23 +270,34 @@ public class EnemyAI : MonoBehaviour
             return;
 
         if (playerScript != null) playerScript.TakeDamage(damage);
+
         attackTimer = attackCooldown;
     }
 
-   
-    public void TakeDamage(float damageAmount,Vector2 hitPoint,float knockback,Vector2 knockbackDirection)
+    public void TakeDamage(float damageAmount,Vector2 hitPoint,float knockback,Vector2 knockbackDirection,float stunChance)
     {
         bool headshot = IsHeadshot(hitPoint);
+
         if (headshot) damageAmount *= headshotMultiplier;
+
         health -= damageAmount;
         health = Mathf.Clamp(health,0f,maxHealth);
+
+        if (Random.Range(0f, 100f) <= stunChance) ApplyStun();
+
         if (knockback > 0f)
         {
             ApplyKnockback(knockbackDirection,knockback);
         }
-
         if (health <= 0f)
             Die();
+    }
+
+    private void ApplyStun()
+    {
+        isStunned = true;
+        stunTimer = stunDuration;
+        rb.velocity = Vector2.zero;
     }
 
     private void ApplyKnockback(Vector2 direction,float force)
@@ -278,17 +307,18 @@ public class EnemyAI : MonoBehaviour
 
         isKnockedBack = true;
         knockbackTimer = knockbackDuration;
-        rb.velocity =Vector2.zero;
+        rb.velocity = Vector2.zero;
         rb.AddForce(direction.normalized * force,ForceMode2D.Impulse);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnCollisionEnter2D(
+        Collision2D collision)
     {
         if (!isKnockedBack)
             return;
 
         EnemyAI otherEnemy = collision.gameObject.GetComponentInParent<EnemyAI>();
-        if (otherEnemy != null ||Mathf.Abs(collision.GetContact(0).normal.x) > 0.3f)
+        if (otherEnemy != null || Mathf.Abs(collision.GetContact(0).normal.x) > 0.3f)
         {
             rb.velocity = Vector2.zero;
             isKnockedBack = false;
@@ -303,7 +333,7 @@ public class EnemyAI : MonoBehaviour
             return false;
 
         Bounds bounds = collider.bounds;
-        float headStart = bounds.min.y +bounds.size.y *headshotHeight;
+        float headStart = bounds.min.y + bounds.size.y * headshotHeight;
         return hitPoint.y >= headStart;
     }
 
@@ -329,8 +359,9 @@ public class EnemyAI : MonoBehaviour
         {
             lootManager.GenerateLoot(lootTable,transform.position);
         }
+        if (room != null)
+            room.EnemyKilled();
 
-        if (room != null)room.EnemyKilled();
         Destroy(gameObject);
     }
 }

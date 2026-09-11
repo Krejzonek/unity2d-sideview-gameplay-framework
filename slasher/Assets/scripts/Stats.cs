@@ -57,6 +57,7 @@ public class Stats : MonoBehaviour
     public float critRate;
     public float critDamage;
     public float knockback;
+    public float stunChance;
 
     [Header("Equipment")]
     [SerializeField] private ItemData[] equippedItems;
@@ -84,6 +85,7 @@ public class Stats : MonoBehaviour
         critRate = baseCritRate;
         critDamage = baseCritDamage;
         knockback = baseKnockback;
+        stunChance = 0f;
 
         expBonus = 1f;
 
@@ -101,6 +103,7 @@ public class Stats : MonoBehaviour
                 continue;
 
             ItemData item = slot.EquippedItem;
+
             if (item == null)
                 continue;
 
@@ -119,6 +122,10 @@ public class Stats : MonoBehaviour
 
                 case MiscType.Knockback:
                     knockback += item.miscValue;
+                    break;
+
+                case MiscType.Stun:
+                    stunChance += item.miscValue;
                     break;
             }
         }
@@ -158,6 +165,7 @@ public class Stats : MonoBehaviour
         }
 
         critRate = Mathf.Clamp(critRate, 0f, 100f);
+        stunChance = Mathf.Clamp(stunChance, 0f, 100f);
     }
 
     public void HealthAdd()
@@ -248,8 +256,11 @@ public class Stats : MonoBehaviour
         {
             activeEffects.Add(effect);
         }
+
         UpdateStats();
+
         yield return new WaitForSeconds(duration);
+
         foreach (StatEffect effect in effects)
         {
             activeEffects.Remove(effect);

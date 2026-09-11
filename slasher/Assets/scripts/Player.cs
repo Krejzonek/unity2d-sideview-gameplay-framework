@@ -235,7 +235,7 @@ public class Player : MonoBehaviour
                 Vector2 hitPoint = enemy.ClosestPoint(transform.position);
                 float damage = GetAttackDamage();
                 Vector2 knockbackDirection = (enemy.transform.position -transform.position).normalized;
-                enemyAI.TakeDamage(damage,hitPoint,stats.knockback,knockbackDirection);
+                enemyAI.TakeDamage(damage,hitPoint,stats.knockback,knockbackDirection,stats.stunChance);
             }
         }
     }
@@ -259,7 +259,7 @@ public class Player : MonoBehaviour
         Projectile projectile = projectileObject.GetComponent<Projectile>();
         if (projectile != null)
         {
-            projectile.Setup(direction,stats.attack,stats.critRate,stats.critDamage,stats.knockback);
+            projectile.Setup(direction,stats.attack,stats.critRate,stats.critDamage,stats.knockback,stats.stunChance);
         }
     }
 
