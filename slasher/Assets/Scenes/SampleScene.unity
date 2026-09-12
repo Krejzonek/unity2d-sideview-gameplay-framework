@@ -10171,6 +10171,7 @@ MonoBehaviour:
   attackCooldown: 2
   attackRange: 1.5
   defenseDamageReduction: 0.5
+  invulnerabilityTime: 0.3
   attackPoint: {fileID: 943431465}
   arrowPrefab: {fileID: 2441591654384667964, guid: 4d52780754f3daf408289931041f4529, type: 3}
   magicPrefab: {fileID: 1956783295464952434, guid: a4464225650323349bf63fd28c02b069, type: 3}
@@ -10337,6 +10338,9 @@ MonoBehaviour:
   baseSpeed: 5
   baseAttack: 10
   baseLuck: 1
+  baseCritRate: 5
+  baseCritDamage: 1.5
+  baseKnockback: 0
   freePoint: 0
   health: 0
   defence: 0
@@ -10345,6 +10349,10 @@ MonoBehaviour:
   attack: 0
   luck: 0
   expBonus: 0
+  critRate: 0
+  critDamage: 0
+  knockback: 0
+  stunChance: 0
   equippedItems: []
   firstDoor: {fileID: 1823991289}
   equipmentSlots:

@@ -17,13 +17,7 @@ public class Projectile : MonoBehaviour
     private float fallSpeed;
     private bool stuck;
 
-    public void Setup(
-        Vector2 direction,
-        float damage,
-        float critRate,
-        float critDamage,
-        float knockback,
-        float stunChance)
+    public void Setup(Vector2 direction, float damage, float critRate, float critDamage, float knockback, float stunChance)
     {
         this.direction = direction.normalized;
         this.damage = damage;
@@ -46,7 +40,9 @@ public class Projectile : MonoBehaviour
         Vector2 movement = direction * speed;
         movement.y -= fallSpeed;
         transform.position += (Vector3)(movement * Time.deltaTime);
-        if (movement.sqrMagnitude > 0.01f) transform.right = movement.normalized;
+
+        if (movement.sqrMagnitude > 0.01f)
+            transform.right = movement.normalized;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -62,10 +58,14 @@ public class Projectile : MonoBehaviour
         if (enemy != null)
         {
             Vector2 hitPoint = other.ClosestPoint(transform.position);
+            bool isCrit = Random.Range(0f, 100f) <= critRate;
             float finalDamage = damage;
-            if (Random.Range(0f, 100f) <= critRate) finalDamage *= critDamage;
+
+            if (isCrit)
+                finalDamage *= critDamage;
+
             Vector2 knockbackDirection = direction.normalized;
-            enemy.TakeDamage(finalDamage,hitPoint,knockback,knockbackDirection,stunChance);
+            enemy.TakeDamage(finalDamage, hitPoint, knockback, knockbackDirection, stunChance, isCrit);
             Destroy(gameObject);
         }
     }
