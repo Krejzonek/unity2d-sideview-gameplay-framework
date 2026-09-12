@@ -45,6 +45,9 @@ public class EnemyAI : MonoBehaviour
     [Header("Stun")]
     [SerializeField] private float stunDuration = 2f;
 
+    [Header("Hit Feedback")]
+    [SerializeField] private GameObject damageNumberPrefab;
+
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float detectionRange = 8f;
@@ -79,11 +82,13 @@ public class EnemyAI : MonoBehaviour
         attackTimer = 0f;
         room = GetComponentInParent<Room>();
         rb.freezeRotation = true;
+
         if (player == null)
         {
             GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
 
-            if (playerObject != null) player = playerObject.transform;
+            if (playerObject != null)
+                player = playerObject.transform;
         }
     }
 
@@ -93,11 +98,14 @@ public class EnemyAI : MonoBehaviour
             return;
 
         attackTimer -= Time.deltaTime;
+
         if (isStunned)
         {
             stunTimer -= Time.deltaTime;
             StopMoving();
-            if (stunTimer <= 0f) isStunned = false;
+
+            if (stunTimer <= 0f)
+                isStunned = false;
 
             return;
         }
@@ -105,16 +113,17 @@ public class EnemyAI : MonoBehaviour
         if (isKnockedBack)
         {
             knockbackTimer -= Time.deltaTime;
+
             if (knockbackTimer <= 0f)
             {
                 isKnockedBack = false;
-                rb.velocity = new Vector2(0f,rb.velocity.y);
+                rb.velocity = new Vector2(0f, rb.velocity.y);
             }
 
             return;
         }
 
-        float distance = Vector2.Distance(transform.position,player.position);
+        float distance = Vector2.Distance(transform.position, player.position);
 
         switch (enemyClass)
         {
@@ -248,8 +257,8 @@ public class EnemyAI : MonoBehaviour
 
     private void MoveTowardsPlayer()
     {
-        float direction = Mathf.Sign(player.position.x -transform.position.x);
-        rb.velocity = new Vector2(direction * moveSpeed,rb.velocity.y);
+        float direction = Mathf.Sign(player.position.x - transform.position.x);
+        rb.velocity = new Vector2(direction * moveSpeed, rb.velocity.y);
 
         if (direction != 0)
         {
@@ -261,7 +270,7 @@ public class EnemyAI : MonoBehaviour
 
     private void StopMoving()
     {
-        rb.velocity = new Vector2(0f,rb.velocity.y);
+        rb.velocity = new Vector2(0f, rb.velocity.y);
     }
 
     private void Attack()
@@ -269,28 +278,50 @@ public class EnemyAI : MonoBehaviour
         if (attackTimer > 0f)
             return;
 
-        if (playerScript != null) playerScript.TakeDamage(damage);
+        if (playerScript != null)
+            playerScript.TakeDamage(damage);
 
         attackTimer = attackCooldown;
     }
 
-    public void TakeDamage(float damageAmount,Vector2 hitPoint,float knockback,Vector2 knockbackDirection,float stunChance)
+    public void TakeDamage(float damageAmount, Vector2 hitPoint, float knockback, Vector2 knockbackDirection, float stunChance, bool isCrit)
     {
         bool headshot = IsHeadshot(hitPoint);
 
-        if (headshot) damageAmount *= headshotMultiplier;
+        if (headshot)
+            damageAmount *= headshotMultiplier;
 
         health -= damageAmount;
-        health = Mathf.Clamp(health,0f,maxHealth);
+        health = Mathf.Clamp(health, 0f, maxHealth);
 
-        if (Random.Range(0f, 100f) <= stunChance) ApplyStun();
+        ShowDamageNumber(damageAmount, isCrit);
+
+        if (Random.Range(0f, 100f) <= stunChance)
+            ApplyStun();
 
         if (knockback > 0f)
-        {
-            ApplyKnockback(knockbackDirection,knockback);
-        }
+            ApplyKnockback(knockbackDirection, knockback);
+
         if (health <= 0f)
             Die();
+    }
+
+    private void ShowDamageNumber(float damageAmount, bool isCrit)
+    {
+        if (damageNumberPrefab == null)
+            return;
+
+        Collider2D collider = GetComponent<Collider2D>();
+        Vector3 spawnPosition = transform.position;
+
+        if (collider != null)
+            spawnPosition = new Vector3(collider.bounds.center.x, collider.bounds.max.y + 0.2f, transform.position.z);
+
+        GameObject damageNumberObject = Instantiate(damageNumberPrefab, spawnPosition, Quaternion.identity);
+        DamageNumber damageNumber = damageNumberObject.GetComponent<DamageNumber>();
+
+        if (damageNumber != null)
+            damageNumber.Setup(damageAmount, isCrit);
     }
 
     private void ApplyStun()
@@ -300,7 +331,7 @@ public class EnemyAI : MonoBehaviour
         rb.velocity = Vector2.zero;
     }
 
-    private void ApplyKnockback(Vector2 direction,float force)
+    private void ApplyKnockback(Vector2 direction, float force)
     {
         if (rb == null)
             return;
@@ -308,16 +339,16 @@ public class EnemyAI : MonoBehaviour
         isKnockedBack = true;
         knockbackTimer = knockbackDuration;
         rb.velocity = Vector2.zero;
-        rb.AddForce(direction.normalized * force,ForceMode2D.Impulse);
+        rb.AddForce(direction.normalized * force, ForceMode2D.Impulse);
     }
 
-    private void OnCollisionEnter2D(
-        Collision2D collision)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
         if (!isKnockedBack)
             return;
 
         EnemyAI otherEnemy = collision.gameObject.GetComponentInParent<EnemyAI>();
+
         if (otherEnemy != null || Mathf.Abs(collision.GetContact(0).normal.x) > 0.3f)
         {
             rb.velocity = Vector2.zero;
@@ -329,11 +360,13 @@ public class EnemyAI : MonoBehaviour
     private bool IsHeadshot(Vector2 hitPoint)
     {
         Collider2D collider = GetComponent<Collider2D>();
+
         if (collider == null)
             return false;
 
         Bounds bounds = collider.bounds;
         float headStart = bounds.min.y + bounds.size.y * headshotHeight;
+
         return hitPoint.y >= headStart;
     }
 
@@ -355,10 +388,12 @@ public class EnemyAI : MonoBehaviour
     private void Die()
     {
         playerScript.GetEXP(100);
+
         if (lootManager != null && lootTable != null)
         {
-            lootManager.GenerateLoot(lootTable,transform.position);
+            lootManager.GenerateLoot(lootTable, transform.position);
         }
+
         if (room != null)
             room.EnemyKilled();
 
