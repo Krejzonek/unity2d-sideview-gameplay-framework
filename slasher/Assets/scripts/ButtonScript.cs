@@ -12,23 +12,26 @@ public class ButtonScript : MonoBehaviour
     private bool statsPanelVisible = false;
     private bool eqPanelVisible = false;
     public bool consumablePanelVisible = false;
-    
+    private Player player;
    
     private void Start()
     {
         statsPanel.SetActive(false);
+        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
         eqPanel.SetActive(false);
     }
     public void StatsButton()
     {
         if (!statsPanelVisible)
         {
-            statsPanel.SetActive(true);
+            player.SetCanAttack(false);
+            statsPanel.SetActive(true);           
             statsPanelVisible = true;
         }
         else
         {
-            statsPanel.SetActive(false);
+            player.SetCanAttack(true);
+            statsPanel.SetActive(false);            
             statsPanelVisible = false;
         }
     }
@@ -36,11 +39,13 @@ public class ButtonScript : MonoBehaviour
     {
         if (!eqPanelVisible)
         {
-            eqPanel.SetActive(true);
+            player.SetCanAttack(false);
+            eqPanel.SetActive(true);       
             eqPanelVisible = true;
         }
         else
         {
+            player.SetCanAttack(true);
             eqPanel.SetActive(false);
             eqPanelVisible = false;
         }
@@ -48,18 +53,21 @@ public class ButtonScript : MonoBehaviour
     }
     public void SelectButton()
     {
-        selectPanel.SetActive(false);     
+        selectPanel.SetActive(false);
+        player.SetCanAttack(true);
     }
     public void ConsumableButton()
     {
         if (!consumablePanelVisible) 
         {
+            player.SetCanAttack(false);
             consumablePanel.SetActive(true);
             consumablePanelVisible = true;
         }
         else
         {
-            consumablePanel.SetActive(false);
+            player.SetCanAttack(true);
+            consumablePanel.SetActive(false);        
             consumablePanelVisible = false;
         }
     }

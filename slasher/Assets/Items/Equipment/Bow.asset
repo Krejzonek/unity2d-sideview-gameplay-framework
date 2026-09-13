@@ -22,5 +22,5 @@ MonoBehaviour:
   speedBonus: 2
   attackBonus: 5
   expBonus: 0
-  miscType: 3
+  miscType: 1
   miscValue: 100

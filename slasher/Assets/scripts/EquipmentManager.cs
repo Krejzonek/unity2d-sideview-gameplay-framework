@@ -70,6 +70,7 @@ public class EquipmentManager : MonoBehaviour
         selectedSlot.Equip(item);
 
         itemSelectionPanel.SetActive(false);
+        
         selectedSlot = null;
     }
 
