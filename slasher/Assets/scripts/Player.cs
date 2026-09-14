@@ -54,6 +54,7 @@ public class Player : MonoBehaviour
     private float invulnerabilityTimer;
     private bool isDefending;
     private bool canAttack = true;
+    private float knockbackTimer;
 
     private void Start()
     {
@@ -139,6 +140,12 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (knockbackTimer > 0f)
+        {
+            knockbackTimer -= Time.fixedDeltaTime;
+            return;
+        }
+
         rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
     }
 
@@ -332,5 +339,14 @@ public class Player : MonoBehaviour
         stamina += regeneration * Time.deltaTime;
         stamina = Mathf.Clamp(stamina, 0f, stats.stamina);
         UiUpdate();
+    }
+    public void ApplyKnockback(Vector2 direction, float force)
+    {
+        if (rb == null)
+            return;
+
+        knockbackTimer = 0.3f;
+        rb.velocity = Vector2.zero;
+        rb.AddForce(direction.normalized * force, ForceMode2D.Impulse);
     }
 }

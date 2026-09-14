@@ -171,8 +171,6 @@ MonoBehaviour:
   knockbackDuration: 0.2
   stunDuration: 2
   damageNumberPrefab: {fileID: 4267766162741410995, guid: 33c4410a817f2bc4abab2b01d3394d58, type: 3}
-  hitFlashTime: 0.1
-  spriteRenderer: {fileID: 0}
   moveSpeed: 2
   detectionRange: 8
   attackRange: 1.5

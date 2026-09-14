@@ -148,8 +148,7 @@ public class EnemyAI : MonoBehaviour
                 break;
 
             case EnemyClass.Boss:
-                BossAI(distance);
-                break;
+                return;
         }
     }
 
@@ -238,22 +237,7 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    private void BossAI(float distance)
-    {
-        if (distance <= attackRange)
-        {
-            StopMoving();
-            Attack();
-        }
-        else if (distance <= detectionRange)
-        {
-            MoveTowardsPlayer();
-        }
-        else
-        {
-            StopMoving();
-        }
-    }
+    
 
     private void MoveTowardsPlayer()
     {
@@ -398,5 +382,28 @@ public class EnemyAI : MonoBehaviour
             room.EnemyKilled();
 
         Destroy(gameObject);
+    }
+    public float GetDamage()
+    {
+        return damage;
+    }
+
+    public float GetAttackRange()
+    {
+        return attackRange;
+    }
+
+    public Transform GetPlayer()
+    {
+        return player;
+    }
+
+    public Player GetPlayerScript()
+    {
+        return playerScript;
+    }
+    public float GetDetectionRange()
+    {
+        return detectionRange;
     }
 }

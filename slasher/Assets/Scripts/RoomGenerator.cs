@@ -8,7 +8,7 @@ public class RoomGenerator : MonoBehaviour
     [SerializeField] private GameObject restRoomPrefab;
 
     [Header("Generation")]
-    [SerializeField] private int maxRooms = 30;
+    [SerializeField] private int maxRooms = 100;
 
     [Header("Start")]
     [SerializeField] private Room startRoom;
@@ -38,12 +38,13 @@ public class RoomGenerator : MonoBehaviour
         if (nextRoomNumber > maxRooms) return;
 
         GameObject prefab;
+        int roomPosition = nextRoomNumber % 10;
 
-        if (nextRoomNumber % 10 == 0 && bossRoomPrefab != null)
+        if (roomPosition == 0 && bossRoomPrefab != null)
         {
             prefab = bossRoomPrefab;
         }
-        else if (nextRoomNumber % 5 == 0 && restRoomPrefab != null)
+        else if ((roomPosition == 5 || roomPosition == 9) && restRoomPrefab != null)
         {
             prefab = restRoomPrefab;
         }

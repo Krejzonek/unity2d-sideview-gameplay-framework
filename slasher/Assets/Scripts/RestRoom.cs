@@ -12,12 +12,14 @@ public class RestRoom : MonoBehaviour
         if (!playerInside || player == null)
             return;
 
+        player.SetCanAttack(false);
         player.Heal(healPerSecond * Time.deltaTime);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        Player playerComponent = collision.GetComponent<Player>();
+        Player playerComponent = collision.GetComponentInParent<Player>();
+
         if (playerComponent == null)
             return;
 
@@ -28,7 +30,7 @@ public class RestRoom : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        Player playerComponent = collision.GetComponent<Player>();
+        Player playerComponent = collision.GetComponentInParent<Player>();
 
         if (playerComponent == null)
             return;
