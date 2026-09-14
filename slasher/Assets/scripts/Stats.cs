@@ -117,15 +117,15 @@ public class Stats : MonoBehaviour
             switch (item.miscType)
             {
                 case MiscType.CritRate:
-                    critRate += item.miscValue;
+                    critRate += item.GetMiscValue();
                     break;
 
                 case MiscType.Knockback:
-                    knockback += item.miscValue;
+                    knockback += item.GetMiscValue();
                     break;
 
                 case MiscType.Stun:
-                    stunChance += item.miscValue;
+                    stunChance += item.GetMiscValue();
                     break;
             }
         }

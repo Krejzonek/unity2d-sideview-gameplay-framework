@@ -79,7 +79,10 @@ public class LootItem : MonoBehaviour
                 if (equipmentManager == null)
                     return false;
 
-                equipmentManager.AddToInventory(lootDrop.equipment);
+                ItemData equipment = Instantiate(lootDrop.equipment);
+                equipment.SetRarity(RarityManager.GetRandomRarity());
+                if (RarityManager.RollMisc()) equipment.SetMiscType(RarityManager.GetRandomMisc());
+                equipmentManager.AddToInventory(equipment);
 
                 return true;
         }
