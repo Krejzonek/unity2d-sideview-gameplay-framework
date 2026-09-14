@@ -13,64 +13,77 @@ public class ButtonScript : MonoBehaviour
     private bool eqPanelVisible = false;
     public bool consumablePanelVisible = false;
     private Player player;
-   
+
     private void Start()
     {
         statsPanel.SetActive(false);
-        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
         eqPanel.SetActive(false);
+        selectPanel.SetActive(false);
+        consumablePanel.SetActive(false);
+
+        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
     }
+
     public void StatsButton()
     {
-        if (!statsPanelVisible)
+        if (statsPanelVisible)
         {
-            player.SetCanAttack(false);
-            statsPanel.SetActive(true);           
-            statsPanelVisible = true;
-        }
-        else
-        {
-            player.SetCanAttack(true);
-            statsPanel.SetActive(false);            
+            statsPanel.SetActive(false);
             statsPanelVisible = false;
+            player.SetCanAttack(true);
+            return;
         }
+
+        if (eqPanelVisible || consumablePanelVisible)
+            return;
+
+        player.SetCanAttack(false);
+        statsPanel.SetActive(true);
+        statsPanelVisible = true;
     }
+
     public void eqButton()
     {
-        if (!eqPanelVisible)
+        if (eqPanelVisible)
         {
-            player.SetCanAttack(false);
-            eqPanel.SetActive(true);       
-            eqPanelVisible = true;
-        }
-        else
-        {
-            player.SetCanAttack(true);
             eqPanel.SetActive(false);
             eqPanelVisible = false;
+            player.SetCanAttack(true);
+            return;
         }
 
+        if (statsPanelVisible || consumablePanelVisible)
+            return;
+
+        player.SetCanAttack(false);
+        eqPanel.SetActive(true);
+        eqPanelVisible = true;
     }
+
     public void SelectButton()
     {
-        selectPanel.SetActive(false);
-        player.SetCanAttack(true);
-    }
-    public void ConsumableButton()
-    {
-        if (!consumablePanelVisible) 
-        {
-            player.SetCanAttack(false);
-            consumablePanel.SetActive(true);
-            consumablePanelVisible = true;
-        }
-        else
-        {
-            player.SetCanAttack(true);
-            consumablePanel.SetActive(false);        
-            consumablePanelVisible = false;
-        }
+        if (statsPanelVisible || eqPanelVisible || consumablePanelVisible)
+            return;
+
+        selectPanel.SetActive(true);
+        player.SetCanAttack(false);
     }
 
-    
+    public void ConsumableButton()
+    {
+        if (consumablePanelVisible)
+        {
+            consumablePanel.SetActive(false);
+            consumablePanelVisible = false;
+            player.SetCanAttack(true);
+            return;
+        }
+
+        if (statsPanelVisible || eqPanelVisible)
+            return;
+
+        player.SetCanAttack(false);
+        consumablePanel.SetActive(true);
+        consumablePanelVisible = true;
+    }
 }
