@@ -856,6 +856,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   equipmentType: 4
   icon: {fileID: 0}
+  button: {fileID: 121322879}
 --- !u!114 &121322879
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2642,6 +2643,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   equipmentType: 1
   icon: {fileID: 0}
+  button: {fileID: 362995108}
 --- !u!1 &373143845
 GameObject:
   m_ObjectHideFlags: 0
@@ -4527,6 +4529,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   equipmentType: 0
   icon: {fileID: 0}
+  button: {fileID: 673515985}
 --- !u!114 &673515985
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5659,6 +5662,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   equipmentType: 3
   icon: {fileID: 0}
+  button: {fileID: 816028018}
 --- !u!114 &816028018
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12785,6 +12789,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   equipmentType: 2
   icon: {fileID: 0}
+  button: {fileID: 1899023608}
 --- !u!114 &1899023608
 MonoBehaviour:
   m_ObjectHideFlags: 0
