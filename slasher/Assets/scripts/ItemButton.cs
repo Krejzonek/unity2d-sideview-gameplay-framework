@@ -3,19 +3,21 @@ using UnityEngine.UI;
 
 public class ItemButton : MonoBehaviour
 {
-    //[SerializeField] private Image icon;
+    [SerializeField] private Button button;
 
     private ItemData item;
 
     public void Setup(ItemData newItem)
     {
         item = newItem;
-        //icon.sprite = item.icon;
+
+        if (button != null)
+            button.image.color = RarityColor.GetColor(item.GetRarity());
     }
+
     public void Select()
     {
         EquipmentManager.Instance.SelectItem(item);
-
         EquipmentManager.Instance.CloseItemList();
     }
 }

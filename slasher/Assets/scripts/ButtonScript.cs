@@ -62,10 +62,7 @@ public class ButtonScript : MonoBehaviour
 
     public void SelectButton()
     {
-        if (statsPanelVisible || eqPanelVisible || consumablePanelVisible)
-            return;
-
-        selectPanel.SetActive(true);
+        selectPanel.SetActive(false);
         player.SetCanAttack(false);
     }
 
