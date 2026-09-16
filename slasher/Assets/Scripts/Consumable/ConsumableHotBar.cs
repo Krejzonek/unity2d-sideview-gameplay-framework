@@ -12,19 +12,23 @@ public class ConsumableHotbar : MonoBehaviour
     [SerializeField] private GameObject selectionPanel;
     [SerializeField] private Transform itemListContent;
     [SerializeField] private GameObject itemButtonPrefab;
+    [SerializeField] private GameObject ingredientButtonPrefab;
 
     [Header("Filter Buttons")]
     [SerializeField] private Button allButton;
     [SerializeField] private Button foodButton;
     [SerializeField] private Button potionButton;
+    
 
     [Header("Player")]
     [SerializeField] private ConsumableManager consumableManager;
     [SerializeField] private ConsumableInventory consumableInventory;
+    [SerializeField] private IngredientInventory ingredientInventory;
 
     [Header("Selected Items")]
     [SerializeField] private ConsumableData foodItem;
     [SerializeField] private ConsumableData potionItem;
+
 
     private int selectedSlot = -1;
 
@@ -71,29 +75,23 @@ public class ConsumableHotbar : MonoBehaviour
     {
         ClearList();
 
-        if (consumableInventory == null)
+        if (ingredientInventory == null)
             return;
 
-        List<ConsumableInventory.ConsumableStack> items = consumableInventory.GetConsumables();
+        List<IngredientInventory.IngredientStack> items = ingredientInventory.GetIngredients();
 
-        foreach (ConsumableInventory.ConsumableStack stack in items)
+        foreach (IngredientInventory.IngredientStack stack in items)
         {
             if (stack == null)
                 continue;
 
-            if (stack.item == null)
+            if (stack.ingredient == null)
                 continue;
 
             if (stack.amount <= 0)
                 continue;
 
-            if (selectedSlot == 0 && stack.item.consumableType != ConsumableType.Food)
-                continue;
-
-            if (selectedSlot == 1 && stack.item.consumableType != ConsumableType.Potion)
-                continue;
-
-            CreateItemButton(stack.item);
+            CreateIngredientButton(stack.ingredient, stack.amount);
         }
     }
 
@@ -253,5 +251,51 @@ public class ConsumableHotbar : MonoBehaviour
     public ConsumableData GetPotion()
     {
         return potionItem;
+    }
+    private void CreateIngredientButton(IngredientData ingredient, int amount)
+    {
+        GameObject buttonObject = Instantiate(ingredientButtonPrefab, itemListContent);
+
+        IngredientItemButton itemButton = buttonObject.GetComponent<IngredientItemButton>();
+
+        if (itemButton == null)
+            return;
+
+        itemButton.Setup(ingredient, amount);
+    }
+    public void SelectItemFromDescription(ConsumableData item)
+    {
+        if (item == null)
+            return;
+
+        if (consumableInventory == null)
+            return;
+
+        if (!consumableInventory.HasConsumable(item, 1))
+            return;
+
+        if (selectedSlot == 0)
+        {
+            if (item.consumableType != ConsumableType.Food)
+                return;
+
+            foodItem = item;
+        }
+        else if (selectedSlot == 1)
+        {
+            if (item.consumableType != ConsumableType.Potion)
+                return;
+
+            potionItem = item;
+        }
+
+        CloseSelection();
+    }
+    public void ShowConsumableDescription(ConsumableData item)
+    {
+        if (ItemDescriptionPanel.Instance == null)
+            return;
+
+        ItemDescriptionPanel.Instance.ShowConsumable(item, this);
     }
 }

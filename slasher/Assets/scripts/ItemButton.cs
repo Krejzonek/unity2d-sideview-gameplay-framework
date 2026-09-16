@@ -3,13 +3,16 @@ using UnityEngine.UI;
 
 public class ItemButton : MonoBehaviour
 {
-    [SerializeField] private Button button;
+    [SerializeField] private ItemDescriptionPanel descriptionPanel;
 
     private ItemData item;
 
+    
     public void Setup(ItemData newItem)
     {
         item = newItem;
+
+        Button button = GetComponent<Button>();
 
         if (button != null)
             button.image.color = RarityColor.GetColor(item.GetRarity());
@@ -17,7 +20,12 @@ public class ItemButton : MonoBehaviour
 
     public void Select()
     {
-        EquipmentManager.Instance.SelectItem(item);
-        EquipmentManager.Instance.CloseItemList();
+        if (item == null)
+            return;
+
+        if (ItemDescriptionPanel.Instance == null)
+            return;
+
+        ItemDescriptionPanel.Instance.ShowEquipment(item);
     }
 }

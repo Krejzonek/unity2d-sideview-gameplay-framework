@@ -280,4 +280,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85bee25033054c045a253d761c3329f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  button: {fileID: 7397122640550514677}
+  descriptionPanel: {fileID: 6201905761829636255, guid: 62af157f4d02b1d498e12a3558552edb, type: 3}

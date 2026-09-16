@@ -69,4 +69,8 @@ public class IngredientInventory : MonoBehaviour
 
         return stack.amount;
     }
+    public List<IngredientStack> GetIngredients()
+    {
+        return ingredients;
+    }
 }
