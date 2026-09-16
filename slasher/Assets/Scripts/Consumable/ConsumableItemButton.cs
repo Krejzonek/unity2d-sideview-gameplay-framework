@@ -4,27 +4,36 @@ using UnityEngine.UI;
 
 public class ConsumableItemButton : MonoBehaviour
 {
-    [SerializeField] private Button button;
-    [SerializeField] private TMP_Text itemName;
+    [SerializeField] private TMP_Text itemNameText;
 
     private ConsumableData item;
     private ConsumableHotbar hotbar;
 
-    public void Setup(
-        ConsumableData newItem,
-        ConsumableHotbar newHotbar)
+    public void Setup(ConsumableData newItem, ConsumableHotbar newHotbar)
     {
         item = newItem;
         hotbar = newHotbar;
 
-        itemName.text = item.itemName;
+        if (itemNameText != null)
+            itemNameText.text = item.itemName;
 
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(Select);
+        Button button = GetComponent<Button>();
+
+        if (button != null)
+        {
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(Select);
+        }
     }
 
-    private void Select()
+    public void Select()
     {
-        hotbar.SelectItem(item);
+        if (item == null)
+            return;
+
+        if (hotbar == null)
+            return;
+
+        hotbar.ShowConsumableDescription(item);
     }
 }

@@ -31,4 +31,8 @@ public class ConsumableData : ScriptableObject
     [Header("Food")]
     public float regenerationAmount;
     public float regenerationDuration;
+
+    [Header("Description")]
+    [TextArea(3, 6)]
+    public string description;
 }

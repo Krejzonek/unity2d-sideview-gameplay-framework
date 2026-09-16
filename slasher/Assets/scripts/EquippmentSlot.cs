@@ -66,4 +66,5 @@ public class EquipmentSlot : MonoBehaviour
         if (stats != null) stats.UpdateStats();
         EquipmentManager.Instance.RefreshItemList();
     }
+    
 }

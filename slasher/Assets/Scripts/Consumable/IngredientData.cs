@@ -5,4 +5,6 @@ public class IngredientData : ScriptableObject
 {
     public string itemName;
     public Sprite icon;
+    [TextArea(3, 6)]
+    public string description;
 }
