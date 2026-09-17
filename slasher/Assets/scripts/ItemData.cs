@@ -46,8 +46,7 @@ public class ItemData : ScriptableObject
     public float speedBonus;
     public float attackBonus;
     public float expBonus;
-    [TextArea(3, 6)]
-    public string description;
+   
 
     [Header("Misc Bonus")]
     public MiscType miscType;

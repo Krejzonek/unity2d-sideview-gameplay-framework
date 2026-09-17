@@ -1,32 +1,35 @@
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ItemDescriptionPanel : MonoBehaviour
 {
+    public static ItemDescriptionPanel Instance;
+
     [SerializeField] private TMP_Text itemNameText;
     [SerializeField] private TMP_Text descriptionText;
     [SerializeField] private TMP_Text statsText;
+    [SerializeField] private Image comparisonImage;
     [SerializeField] private Button actionButton;
     [SerializeField] private Button closeButton;
 
     private ItemData equipmentItem;
     private ConsumableData consumableItem;
-
     private ConsumableHotbar consumableHotbar;
 
-    public static ItemDescriptionPanel Instance;
-    private void Start()
-    {
-        gameObject.SetActive(false);
-        if (closeButton != null)
-            closeButton.onClick.AddListener(Close);
-    }
     private void Awake()
     {
         Instance = this;
     }
+
+    private void Start()
+    {
+        gameObject.SetActive(false);
+
+        if (closeButton != null)
+            closeButton.onClick.AddListener(Close);
+    }
+
     public void ShowEquipment(ItemData item)
     {
         if (item == null)
@@ -36,12 +39,12 @@ public class ItemDescriptionPanel : MonoBehaviour
         consumableItem = null;
 
         itemNameText.text = item.itemName;
-        descriptionText.text = item.description;
+        descriptionText.text = "";
 
         ShowEquipmentStats(item);
+        ShowEquipmentComparison(item);
 
         actionButton.gameObject.SetActive(true);
-        
 
         actionButton.onClick.RemoveAllListeners();
         actionButton.onClick.AddListener(EquipItem);
@@ -97,6 +100,49 @@ public class ItemDescriptionPanel : MonoBehaviour
         statsText.text = stats;
     }
 
+    private void ShowEquipmentComparison(ItemData item)
+    {
+        if (comparisonImage == null)
+            return;
+
+        EquipmentSlot[] slots = FindObjectsByType<EquipmentSlot>(FindObjectsSortMode.None);
+
+        foreach (EquipmentSlot slot in slots)
+        {
+            if (slot.Type != item.equipmentType)
+                continue;
+
+            ItemData equippedItem = slot.EquippedItem;
+
+            if (equippedItem == null)
+            {
+                comparisonImage.color = Color.green;
+                comparisonImage.gameObject.SetActive(true);
+                return;
+            }
+
+            float newValue = GetEquipmentPower(item);
+            float oldValue = GetEquipmentPower(equippedItem);
+
+            if (newValue > oldValue)
+                comparisonImage.color = Color.green;
+            else if (newValue < oldValue)
+                comparisonImage.color = Color.red;
+            else
+                comparisonImage.color = Color.gray;
+
+            comparisonImage.gameObject.SetActive(true);
+            return;
+        }
+
+        comparisonImage.gameObject.SetActive(false);
+    }
+
+    private float GetEquipmentPower(ItemData item)
+    {
+        return item.healthBonus + item.defenceBonus + item.staminaBonus + item.speedBonus + item.attackBonus + item.expBonus + item.GetMiscValue();
+    }
+
     public void ShowConsumable(ConsumableData item, ConsumableHotbar hotbar)
     {
         if (item == null)
@@ -110,8 +156,10 @@ public class ItemDescriptionPanel : MonoBehaviour
         descriptionText.text = item.description;
         statsText.text = "";
 
+        if (comparisonImage != null)
+            comparisonImage.gameObject.SetActive(false);
+
         actionButton.gameObject.SetActive(true);
-        
 
         actionButton.onClick.RemoveAllListeners();
         actionButton.onClick.AddListener(EquipConsumable);
@@ -131,6 +179,9 @@ public class ItemDescriptionPanel : MonoBehaviour
         itemNameText.text = item.itemName;
         descriptionText.text = item.description;
         statsText.text = "";
+
+        if (comparisonImage != null)
+            comparisonImage.gameObject.SetActive(false);
 
         actionButton.gameObject.SetActive(false);
 
