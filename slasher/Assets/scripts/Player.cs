@@ -255,6 +255,9 @@ public class Player : MonoBehaviour
                 if (isCrit)
                     damage *= stats.critDamage;
 
+                float elementMultiplier = ElementSystem.GetDamageMultiplier(GetAttackElement(), enemyAI.GetElement());
+                damage *= elementMultiplier;
+
                 Vector2 knockbackDirection = (enemy.transform.position - transform.position).normalized;
                 enemyAI.TakeDamage(damage, hitPoint, stats.knockback, knockbackDirection, stats.stunChance, isCrit);
             }
@@ -281,8 +284,18 @@ public class Player : MonoBehaviour
 
         if (projectile != null)
         {
-            projectile.Setup(direction, stats.attack, stats.critRate, stats.critDamage, stats.knockback, stats.stunChance);
+            projectile.Setup(direction, stats.attack, stats.critRate, stats.critDamage, stats.knockback, stats.stunChance, GetAttackElement());
         }
+    }
+
+    private ElementType GetAttackElement()
+    {
+        ItemData weapon = stats.GetWeapon();
+
+        if (weapon == null)
+            return ElementType.None;
+
+        return weapon.element;
     }
 
     public void SetCanAttack(bool value)
@@ -340,6 +353,7 @@ public class Player : MonoBehaviour
         stamina = Mathf.Clamp(stamina, 0f, stats.stamina);
         UiUpdate();
     }
+
     public void ApplyKnockback(Vector2 direction, float force)
     {
         if (rb == null)

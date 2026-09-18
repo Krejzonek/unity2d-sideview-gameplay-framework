@@ -35,6 +35,7 @@ public class ItemData : ScriptableObject
 
     public EquipmentType equipmentType;
     public WeaponType weaponType;
+    public ElementType element;
 
     [Header("Rarity")]
     [SerializeField] private ItemRarity rarity;
@@ -46,7 +47,6 @@ public class ItemData : ScriptableObject
     public float speedBonus;
     public float attackBonus;
     public float expBonus;
-   
 
     [Header("Misc Bonus")]
     public MiscType miscType;
@@ -108,6 +108,7 @@ public class ItemData : ScriptableObject
                 return 0f;
         }
     }
+
     public void SetMiscType(MiscType value)
     {
         miscType = value;
