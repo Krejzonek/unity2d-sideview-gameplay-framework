@@ -1,19 +1,5 @@
 using UnityEngine;
 
-public enum EnemyElement
-{
-    None,
-    Fire,
-    Water,
-    Earth,
-    Wind,
-    Lightning,
-    Ice,
-    Light,
-    Dark,
-    Poison
-}
-
 public enum EnemyClass
 {
     Melee,
@@ -28,7 +14,7 @@ public class EnemyAI : MonoBehaviour
 {
     [Header("Enemy")]
     [SerializeField] private EnemyClass enemyClass;
-    [SerializeField] private EnemyElement enemyElement;
+    [SerializeField] private ElementType enemyElement;
 
     [Header("Stats")]
     [SerializeField] private float maxHealth = 50f;
@@ -237,8 +223,6 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    
-
     private void MoveTowardsPlayer()
     {
         float direction = Mathf.Sign(player.position.x - transform.position.x);
@@ -278,7 +262,7 @@ public class EnemyAI : MonoBehaviour
         health -= damageAmount;
         health = Mathf.Clamp(health, 0f, maxHealth);
 
-        ShowDamageNumber(damageAmount, isCrit);
+        ShowDamageNumber(damageAmount, isCrit, headshot);
 
         if (Random.Range(0f, 100f) <= stunChance)
             ApplyStun();
@@ -290,7 +274,7 @@ public class EnemyAI : MonoBehaviour
             Die();
     }
 
-    private void ShowDamageNumber(float damageAmount, bool isCrit)
+    private void ShowDamageNumber(float damageAmount, bool isCrit, bool isHeadshot)
     {
         if (damageNumberPrefab == null)
             return;
@@ -305,7 +289,7 @@ public class EnemyAI : MonoBehaviour
         DamageNumber damageNumber = damageNumberObject.GetComponent<DamageNumber>();
 
         if (damageNumber != null)
-            damageNumber.Setup(damageAmount, isCrit);
+            damageNumber.Setup(damageAmount, isCrit, isHeadshot);
     }
 
     private void ApplyStun()
@@ -354,7 +338,7 @@ public class EnemyAI : MonoBehaviour
         return hitPoint.y >= headStart;
     }
 
-    public EnemyElement GetElement()
+    public ElementType GetElement()
     {
         return enemyElement;
     }
@@ -383,6 +367,7 @@ public class EnemyAI : MonoBehaviour
 
         Destroy(gameObject);
     }
+
     public float GetDamage()
     {
         return damage;
@@ -402,6 +387,7 @@ public class EnemyAI : MonoBehaviour
     {
         return playerScript;
     }
+
     public float GetDetectionRange()
     {
         return detectionRange;

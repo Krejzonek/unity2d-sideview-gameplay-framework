@@ -12,12 +12,13 @@ public class Projectile : MonoBehaviour
     private float critDamage;
     private float knockback;
     private float stunChance;
+    private ElementType element;
 
     private Vector2 direction;
     private float fallSpeed;
     private bool stuck;
 
-    public void Setup(Vector2 direction, float damage, float critRate, float critDamage, float knockback, float stunChance)
+    public void Setup(Vector2 direction, float damage, float critRate, float critDamage, float knockback, float stunChance, ElementType element)
     {
         this.direction = direction.normalized;
         this.damage = damage;
@@ -25,6 +26,7 @@ public class Projectile : MonoBehaviour
         this.critDamage = critDamage;
         this.knockback = knockback;
         this.stunChance = stunChance;
+        this.element = element;
 
         transform.right = this.direction;
 
@@ -63,6 +65,9 @@ public class Projectile : MonoBehaviour
 
             if (isCrit)
                 finalDamage *= critDamage;
+
+            float elementMultiplier = ElementSystem.GetDamageMultiplier(element, enemy.GetElement());
+            finalDamage *= elementMultiplier;
 
             Vector2 knockbackDirection = direction.normalized;
             enemy.TakeDamage(finalDamage, hitPoint, knockback, knockbackDirection, stunChance, isCrit);

@@ -162,7 +162,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyClass: 0
-  enemyElement: 0
+  enemyElement: 6
   maxHealth: 50
   health: 50
   damage: 10

@@ -9,10 +9,10 @@ public class DamageNumber : MonoBehaviour
 
     private float timer;
 
-    public void Setup(float damage, bool isCrit)
+    public void Setup(float damage, bool isCrit, bool isHeadshot)
     {
         damageText.text = Mathf.RoundToInt(damage).ToString();
-        damageText.color = isCrit ? Color.red : Color.white;
+        damageText.color = isCrit || isHeadshot ? Color.red : Color.white;
     }
 
     private void Update()

@@ -10,17 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c53f63f110b72f94c85f817f16a8eacb, type: 3}
-  m_Name: Bow
+  m_Name: Magma Bow
   m_EditorClassIdentifier: 
-  itemName: Bow
+  itemName: Magma Bow
   icon: {fileID: 0}
   equipmentType: 0
   weaponType: 2
-  rarity: 4
+  element: 1
+  rarity: 0
   healthBonus: 0
   defenceBonus: 0
   staminaBonus: 25
   speedBonus: 2
   attackBonus: 5
   expBonus: 0
-  miscType: 1
+  miscType: 0
