@@ -242,6 +242,8 @@ public class Player : MonoBehaviour
     {
         Collider2D[] enemies = Physics2D.OverlapCircleAll(transform.position, attackRange);
 
+        GetWeaponStatus(out StatusEffectType statusEffect, out float statusChance, out float statusDuration, out float statusDamage);
+
         foreach (Collider2D enemy in enemies)
         {
             EnemyAI enemyAI = enemy.GetComponentInParent<EnemyAI>();
@@ -259,7 +261,7 @@ public class Player : MonoBehaviour
                 damage *= elementMultiplier;
 
                 Vector2 knockbackDirection = (enemy.transform.position - transform.position).normalized;
-                enemyAI.TakeDamage(damage, hitPoint, stats.knockback, knockbackDirection, stats.stunChance, isCrit);
+                enemyAI.TakeDamage(damage, hitPoint, stats.knockback, knockbackDirection, stats.stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage);
             }
         }
     }
@@ -277,6 +279,11 @@ public class Player : MonoBehaviour
         if (cam == null)
             return;
 
+        ItemData weapon = stats.GetWeapon();
+
+        if (weapon == null)
+            return;
+
         Vector3 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
         Vector2 direction = (mousePosition - attackPoint.position).normalized;
         GameObject projectileObject = Instantiate(projectilePrefab, attackPoint.position, Quaternion.identity);
@@ -284,7 +291,12 @@ public class Player : MonoBehaviour
 
         if (projectile != null)
         {
-            projectile.Setup(direction, stats.attack, stats.critRate, stats.critDamage, stats.knockback, stats.stunChance, GetAttackElement());
+            StatusEffectType statusEffect = weapon.GetStatusEffect();
+            float statusChance = weapon.GetStatusChance();
+            float statusDuration = weapon.GetStatusDuration();
+            float statusDamage = weapon.GetStatusDamage(stats.attack);
+
+            projectile.Setup(direction, stats.attack, stats.critRate, stats.critDamage, stats.knockback, stats.stunChance, GetAttackElement(), statusEffect, statusChance, statusDuration, statusDamage);
         }
     }
 
@@ -342,7 +354,23 @@ public class Player : MonoBehaviour
         stamina = Mathf.Clamp(stamina, 0f, stats.stamina);
         UiUpdate();
     }
+    private void GetWeaponStatus(out StatusEffectType statusEffect, out float statusChance, out float statusDuration, out float statusDamage)
+    {
+        statusEffect = StatusEffectType.None;
+        statusChance = 0f;
+        statusDuration = 0f;
+        statusDamage = 0f;
 
+        ItemData weapon = stats.GetWeapon();
+
+        if (weapon == null)
+            return;
+
+        statusEffect = weapon.GetStatusEffect();
+        statusChance = weapon.GetStatusChance();
+        statusDuration = weapon.GetStatusDuration();
+        statusDamage = weapon.GetStatusDamage(stats.attack);
+    }
     private void RegenerateStamina()
     {
         if (!OnFloor())
