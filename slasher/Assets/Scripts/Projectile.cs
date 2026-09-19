@@ -13,12 +13,16 @@ public class Projectile : MonoBehaviour
     private float knockback;
     private float stunChance;
     private ElementType element;
+    private StatusEffectType statusEffect;
+    private float statusChance;
+    private float statusDuration;
+    private float statusDamage;
 
     private Vector2 direction;
     private float fallSpeed;
     private bool stuck;
 
-    public void Setup(Vector2 direction, float damage, float critRate, float critDamage, float knockback, float stunChance, ElementType element)
+    public void Setup(Vector2 direction, float damage, float critRate, float critDamage, float knockback, float stunChance, ElementType element, StatusEffectType statusEffect, float statusChance, float statusDuration, float statusDamage)
     {
         this.direction = direction.normalized;
         this.damage = damage;
@@ -27,6 +31,10 @@ public class Projectile : MonoBehaviour
         this.knockback = knockback;
         this.stunChance = stunChance;
         this.element = element;
+        this.statusEffect = statusEffect;
+        this.statusChance = statusChance;
+        this.statusDuration = statusDuration;
+        this.statusDamage = statusDamage;
 
         transform.right = this.direction;
 
@@ -70,7 +78,9 @@ public class Projectile : MonoBehaviour
             finalDamage *= elementMultiplier;
 
             Vector2 knockbackDirection = direction.normalized;
-            enemy.TakeDamage(finalDamage, hitPoint, knockback, knockbackDirection, stunChance, isCrit);
+
+            enemy.TakeDamage(finalDamage, hitPoint, knockback, knockbackDirection, stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage);
+
             Destroy(gameObject);
         }
     }

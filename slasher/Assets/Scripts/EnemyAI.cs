@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum EnemyClass
@@ -54,28 +55,45 @@ public class EnemyAI : MonoBehaviour
     private float attackTimer;
     private float knockbackTimer;
     private float stunTimer;
+
     private bool isKnockedBack;
     private bool isStunned;
+
     private Room room;
+
+    private List<StatusEffect> activeStatusEffects = new();
+
+    private Transform illusionTarget;
+    private float illusionTimer;
+    private bool isIllusion;
+
+    private EnemyAI attackingEnemy;
+
+    private bool isRooted;
+    private bool isFrozen;
+    private bool isBlind;
+
+    private float normalDetectionRange;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        player = GameObject.FindWithTag("Player").transform;
-        playerScript = GameObject.FindWithTag("Player").GetComponent<Player>();
+
+        GameObject playerObject = GameObject.FindWithTag("Player");
+
+        if (playerObject != null)
+        {
+            player = playerObject.transform;
+            playerScript = playerObject.GetComponent<Player>();
+        }
+
         lootManager = FindFirstObjectByType<LootManager>();
         health = maxHealth;
         attackTimer = 0f;
         room = GetComponentInParent<Room>();
         rb.freezeRotation = true;
 
-        if (player == null)
-        {
-            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-
-            if (playerObject != null)
-                player = playerObject.transform;
-        }
+        normalDetectionRange = detectionRange;
     }
 
     private void Update()
@@ -85,13 +103,33 @@ public class EnemyAI : MonoBehaviour
 
         attackTimer -= Time.deltaTime;
 
-        if (isStunned)
+        UpdateStatusEffects();
+
+        if (illusionTimer > 0f)
         {
-            stunTimer -= Time.deltaTime;
+            illusionTimer -= Time.deltaTime;
+
+            if (illusionTimer <= 0f)
+            {
+                illusionTarget = null;
+                attackingEnemy = null;
+            }
+        }
+
+        if (isStunned || isFrozen)
+        {
+            StopMoving();
+            return;
+        }
+
+        if (isRooted)
+        {
             StopMoving();
 
-            if (stunTimer <= 0f)
-                isStunned = false;
+            if (attackingEnemy != null)
+                AttackEnemy(attackingEnemy);
+            else
+                Attack();
 
             return;
         }
@@ -109,7 +147,29 @@ public class EnemyAI : MonoBehaviour
             return;
         }
 
+        if (illusionTarget != null)
+        {
+            UpdateIllusionAI();
+            return;
+        }
+
+        if (attackingEnemy != null)
+        {
+            UpdateEnemyDefense();
+            return;
+        }
+
+        UpdateNormalAI();
+    }
+
+    private void UpdateNormalAI()
+    {
         float distance = Vector2.Distance(transform.position, player.position);
+
+        if (isBlind)
+            detectionRange = normalDetectionRange * 0.5f;
+        else
+            detectionRange = normalDetectionRange;
 
         switch (enemyClass)
         {
@@ -136,6 +196,66 @@ public class EnemyAI : MonoBehaviour
             case EnemyClass.Boss:
                 return;
         }
+    }
+
+    private void UpdateIllusionAI()
+    {
+        if (illusionTarget == null)
+            return;
+
+        EnemyAI targetEnemy = illusionTarget.GetComponentInParent<EnemyAI>();
+
+        if (targetEnemy == null || targetEnemy == this)
+        {
+            illusionTarget = null;
+            return;
+        }
+
+        targetEnemy.SetEnemyTarget(this);
+
+        float distance = Vector2.Distance(transform.position, illusionTarget.position);
+
+        if (distance <= attackRange)
+        {
+            StopMoving();
+            AttackEnemy(targetEnemy);
+        }
+        else
+        {
+            MoveTowardsTarget(illusionTarget);
+        }
+    }
+
+    private void UpdateEnemyDefense()
+    {
+        if (attackingEnemy == null)
+            return;
+
+        if (attackingEnemy == this)
+        {
+            attackingEnemy = null;
+            return;
+        }
+
+        float distance = Vector2.Distance(transform.position, attackingEnemy.transform.position);
+
+        if (distance <= attackRange)
+        {
+            StopMoving();
+            AttackEnemy(attackingEnemy);
+        }
+        else
+        {
+            MoveTowardsTarget(attackingEnemy.transform);
+        }
+    }
+
+    public void SetEnemyTarget(EnemyAI enemy)
+    {
+        if (enemy == null || enemy == this)
+            return;
+
+        attackingEnemy = enemy;
     }
 
     private void MeleeAI(float distance)
@@ -225,7 +345,15 @@ public class EnemyAI : MonoBehaviour
 
     private void MoveTowardsPlayer()
     {
-        float direction = Mathf.Sign(player.position.x - transform.position.x);
+        MoveTowardsTarget(player);
+    }
+
+    private void MoveTowardsTarget(Transform target)
+    {
+        if (target == null)
+            return;
+
+        float direction = Mathf.Sign(target.position.x - transform.position.x);
         rb.velocity = new Vector2(direction * moveSpeed, rb.velocity.y);
 
         if (direction != 0)
@@ -252,7 +380,24 @@ public class EnemyAI : MonoBehaviour
         attackTimer = attackCooldown;
     }
 
-    public void TakeDamage(float damageAmount, Vector2 hitPoint, float knockback, Vector2 knockbackDirection, float stunChance, bool isCrit)
+    private void AttackEnemy(EnemyAI target)
+    {
+        if (attackTimer > 0f)
+            return;
+
+        if (target == null)
+            return;
+
+        float attackDamage = damage;
+        if (isIllusion)
+            attackDamage *= 0.5f;
+
+        target.TakeDamage(attackDamage, target.transform.position, 0f, Vector2.zero, 0f, false);
+
+        attackTimer = attackCooldown;
+    }
+
+    public void TakeDamage(float damageAmount, Vector2 hitPoint, float knockback, Vector2 knockbackDirection, float stunChance, bool isCrit, StatusEffectType statusEffect = StatusEffectType.None, float statusChance = 0f, float statusDuration = 0f, float statusDamage = 0f)
     {
         bool headshot = IsHeadshot(hitPoint);
 
@@ -267,11 +412,162 @@ public class EnemyAI : MonoBehaviour
         if (Random.Range(0f, 100f) <= stunChance)
             ApplyStun();
 
+        if (statusEffect != StatusEffectType.None && Random.Range(0f, 100f) <= statusChance)
+            ApplyStatusEffect(statusEffect, statusDuration, statusDamage);
+
         if (knockback > 0f)
             ApplyKnockback(knockbackDirection, knockback);
 
         if (health <= 0f)
             Die();
+    }
+
+    private void ApplyStatusEffect(StatusEffectType type, float duration, float statusDamage)
+    {
+        if (type == StatusEffectType.None)
+            return;
+
+        foreach (StatusEffect effect in activeStatusEffects)
+        {
+            if (effect.type != type)
+                continue;
+
+            effect.remainingDuration = Mathf.Max(effect.remainingDuration, duration);
+            effect.damage = statusDamage;
+
+            if (type == StatusEffectType.Illusion)
+                ApplyIllusion(duration);
+
+            return;
+        }
+
+        StatusEffect newEffect = new StatusEffect(type, duration, statusDamage);
+        activeStatusEffects.Add(newEffect);
+
+        switch (type)
+        {
+            case StatusEffectType.Root:
+                isRooted = true;
+                break;
+
+            case StatusEffectType.Freeze:
+                isFrozen = true;
+                break;
+
+            case StatusEffectType.Shock:
+                isStunned = true;
+                stunTimer = Mathf.Max(stunTimer, duration);
+                rb.velocity = Vector2.zero;
+                break;
+
+            case StatusEffectType.Illusion:
+                ApplyIllusion(duration);
+                break;
+
+            case StatusEffectType.Blind:
+                isBlind = true;
+                break;
+        }
+    }
+
+    private void UpdateStatusEffects()
+    {
+        for (int i = activeStatusEffects.Count - 1; i >= 0; i--)
+        {
+            StatusEffect effect = activeStatusEffects[i];
+
+            effect.remainingDuration -= Time.deltaTime;
+            effect.tickTimer -= Time.deltaTime;
+
+            if (effect.type == StatusEffectType.Burn || effect.type == StatusEffectType.Drown || effect.type == StatusEffectType.Bleed || effect.type == StatusEffectType.Poison)
+            {
+                if (effect.tickTimer <= 0f)
+                {
+                    effect.tickTimer = effect.tickInterval;
+                    TakeStatusDamage(effect.damage);
+                }
+            }
+
+            if (effect.remainingDuration <= 0f)
+            {
+                RemoveStatusEffect(effect);
+                activeStatusEffects.RemoveAt(i);
+            }
+        }
+    }
+
+    private void RemoveStatusEffect(StatusEffect effect)
+    {
+        switch (effect.type)
+        {
+            case StatusEffectType.Root:
+                isRooted = false;
+                break;
+
+            case StatusEffectType.Freeze:
+                isFrozen = false;
+                break;
+
+            case StatusEffectType.Shock:
+                isStunned = false;
+                stunTimer = 0f;
+                break;
+
+            case StatusEffectType.Illusion:
+                illusionTarget = null;
+                illusionTimer = 0f;
+                isIllusion = false;
+                break;
+
+            case StatusEffectType.Blind:
+                isBlind = false;
+                detectionRange = normalDetectionRange;
+                break;
+        }
+    }
+
+    private void TakeStatusDamage(float damageAmount)
+    {
+        health -= damageAmount;
+        health = Mathf.Clamp(health, 0f, maxHealth);
+
+        ShowDamageNumber(damageAmount, false, false);
+
+        if (health <= 0f)
+            Die();
+    }
+
+    private void ApplyIllusion(float duration)
+    {
+        EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+        EnemyAI closestEnemy = null;
+        float closestDistance = Mathf.Infinity;
+        isIllusion = true;
+
+        foreach (EnemyAI enemy in enemies)
+        {
+            if (enemy == null || enemy == this)
+                continue;
+
+            float distance = Vector2.Distance(transform.position, enemy.transform.position);
+
+            if (distance > detectionRange)
+                continue;
+
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestEnemy = enemy;
+            }
+        }
+
+        if (closestEnemy == null)
+            return;
+
+        illusionTarget = closestEnemy.transform;
+        illusionTimer = duration;
+
+        closestEnemy.SetEnemyTarget(this);
     }
 
     private void ShowDamageNumber(float damageAmount, bool isCrit, bool isHeadshot)
@@ -358,9 +654,7 @@ public class EnemyAI : MonoBehaviour
         playerScript.GetEXP(100);
 
         if (lootManager != null && lootTable != null)
-        {
             lootManager.GenerateLoot(lootTable, transform.position);
-        }
 
         if (room != null)
             room.EnemyKilled();

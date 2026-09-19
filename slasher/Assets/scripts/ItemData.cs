@@ -61,6 +61,26 @@ public class ItemData : ScriptableObject
         rarity = value;
     }
 
+    public StatusEffectType GetStatusEffect()
+    {
+        return StatusEffectSystem.GetStatusEffect(element);
+    }
+
+    public float GetStatusChance()
+    {
+        return StatusEffectSystem.GetStatusChance(rarity);
+    }
+
+    public float GetStatusDuration()
+    {
+        return StatusEffectSystem.GetStatusDuration(rarity);
+    }
+
+    public float GetStatusDamage(float attack)
+    {
+        return StatusEffectSystem.GetStatusDamage(attack);
+    }
+
     public float GetMiscValue()
     {
         switch (miscType)
