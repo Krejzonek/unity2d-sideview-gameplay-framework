@@ -72,7 +72,7 @@ public class EnemyAI : MonoBehaviour
     private bool isRooted;
     private bool isFrozen;
     private bool isBlind;
-
+    private bool isShock;
     private float normalDetectionRange;
 
     private void Start()
@@ -116,7 +116,15 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
-        if (isStunned || isFrozen)
+        if (isStunned)
+        {
+            stunTimer -= Time.deltaTime;
+
+            if (stunTimer <= 0f)
+                isStunned = false;
+        }
+
+        if (isStunned || isShock || isFrozen)
         {
             StopMoving();
             return;
@@ -389,6 +397,7 @@ public class EnemyAI : MonoBehaviour
             return;
 
         float attackDamage = damage;
+
         if (isIllusion)
             attackDamage *= 0.5f;
 
@@ -455,8 +464,7 @@ public class EnemyAI : MonoBehaviour
                 break;
 
             case StatusEffectType.Shock:
-                isStunned = true;
-                stunTimer = Mathf.Max(stunTimer, duration);
+                isShock = true;
                 rb.velocity = Vector2.zero;
                 break;
 
@@ -509,11 +517,18 @@ public class EnemyAI : MonoBehaviour
                 break;
 
             case StatusEffectType.Shock:
-                isStunned = false;
-                stunTimer = 0f;
+                isShock = false;
                 break;
 
             case StatusEffectType.Illusion:
+                if (illusionTarget != null)
+                {
+                    EnemyAI targetEnemy = illusionTarget.GetComponentInParent<EnemyAI>();
+
+                    if (targetEnemy != null)
+                        targetEnemy.ClearEnemyTarget(this);
+                }
+
                 illusionTarget = null;
                 illusionTimer = 0f;
                 isIllusion = false;
@@ -525,7 +540,11 @@ public class EnemyAI : MonoBehaviour
                 break;
         }
     }
-
+    public void ClearEnemyTarget(EnemyAI enemy)
+    {
+        if (attackingEnemy == enemy)
+            attackingEnemy = null;
+    }
     private void TakeStatusDamage(float damageAmount)
     {
         health -= damageAmount;
@@ -542,7 +561,6 @@ public class EnemyAI : MonoBehaviour
         EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
         EnemyAI closestEnemy = null;
         float closestDistance = Mathf.Infinity;
-        isIllusion = true;
 
         foreach (EnemyAI enemy in enemies)
         {
@@ -564,6 +582,7 @@ public class EnemyAI : MonoBehaviour
         if (closestEnemy == null)
             return;
 
+        isIllusion = true;
         illusionTarget = closestEnemy.transform;
         illusionTimer = duration;
 

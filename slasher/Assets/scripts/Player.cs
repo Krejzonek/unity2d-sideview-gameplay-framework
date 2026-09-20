@@ -197,44 +197,35 @@ public class Player : MonoBehaviour
 
     private void Attack()
     {
-        if (!canAttack)
-            return;
-
-        if (isDefending)
-            return;
-
-        if (Time.time < nextAttackTime)
-            return;
+        if (!canAttack) return;
+        if (isDefending) return;
+        if (Time.time < nextAttackTime) return;
 
         ItemData weapon = stats.GetWeapon();
+        float staminaCost = 50f;
+
+        if (weapon != null && weapon.weaponType == WeaponType.Staff)
+            staminaCost = 100f;
+
+        if (stamina < staminaCost)
+            return;
+
+        UseStamina(staminaCost);
 
         if (weapon == null)
-        {
             MeleeAttack();
-        }
         else
         {
             switch (weapon.weaponType)
             {
-                case WeaponType.Sword:
-                    MeleeAttack();
-                    break;
-
-                case WeaponType.Bow:
-                    ShootProjectile(arrowPrefab);
-                    break;
-
-                case WeaponType.Staff:
-                    ShootProjectile(magicPrefab);
-                    break;
-
-                default:
-                    MeleeAttack();
-                    break;
+                case WeaponType.Sword: MeleeAttack(); break;
+                case WeaponType.Bow: ShootProjectile(arrowPrefab); break;
+                case WeaponType.Staff: ShootProjectile(magicPrefab); break;
+                default: MeleeAttack(); break;
             }
         }
 
-        float currentCooldown = Mathf.Max(attackCooldown / (1f + stats.speed * 0.05f), 0.15f);
+        float currentCooldown = Mathf.Max(attackCooldown / (1f + stats.speed * 0.1f), 0.1f);
         nextAttackTime = Time.time + currentCooldown;
     }
 
