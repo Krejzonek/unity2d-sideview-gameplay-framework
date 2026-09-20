@@ -78,7 +78,7 @@ public class Projectile : MonoBehaviour
             finalDamage *= elementMultiplier;
 
             Vector2 knockbackDirection = direction.normalized;
-
+            
             enemy.TakeDamage(finalDamage, hitPoint, knockback, knockbackDirection, stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage);
 
             Destroy(gameObject);
