@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class ClassSelector : MonoBehaviour
@@ -6,10 +7,12 @@ public class ClassSelector : MonoBehaviour
     [SerializeField] private LayerMask classStationLayer;
 
     private Camera cam;
+    private Player player;
 
     private void Start()
     {
         cam = Camera.main;
+        player = FindFirstObjectByType<Player>();
 
         if (uiClass != null)
             uiClass.SetActive(false);
@@ -22,14 +25,26 @@ public class ClassSelector : MonoBehaviour
 
         Vector2 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
 
-        Collider2D hit = Physics2D.OverlapPoint(
-            mousePosition,
-            classStationLayer
-        );
+        Collider2D hit = Physics2D.OverlapPoint(mousePosition, classStationLayer);
 
         if (hit != null && hit.transform == transform)
         {
-            uiClass.SetActive(true);
+            bool isOpen = uiClass.activeSelf;
+            uiClass.SetActive(!isOpen);
+
+            if (player != null)
+            {
+                if (isOpen)
+                    StartCoroutine(EnableAttack());
+                else
+                    player.SetCanAttack(false);
+            }
         }
+    }
+
+    private IEnumerator EnableAttack()
+    {
+        yield return null;
+        player.SetCanAttack(true);
     }
 }

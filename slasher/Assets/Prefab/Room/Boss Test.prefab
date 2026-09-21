@@ -168,14 +168,26 @@ MonoBehaviour:
   health: 2000
   damage: 50
   headshotMultiplier: 2
-  headshotHeight: 0.65
+  headshotHeight: 0.8
   knockbackDuration: 0.2
   stunDuration: 2
+  stunChance: 0
   damageNumberPrefab: {fileID: 4267766162741410995, guid: 33c4410a817f2bc4abab2b01d3394d58, type: 3}
   moveSpeed: 2
   detectionRange: 8
   attackRange: 3
   attackCooldown: 1
+  projectilePrefab: {fileID: 0}
+  projectilePoint: {fileID: 0}
+  rangedPreferredDistance: 5
+  rangedRetreatDistance: 2.5
+  projectileCritRate: 0
+  projectileCritDamage: 1
+  assassinSpeedMultiplier: 1.75
+  tankSpeedMultiplier: 0.6
+  supportHealRange: 6
+  supportHealAmount: 15
+  supportHealCooldown: 5
   player: {fileID: 0}
   playerScript: {fileID: 0}
   lootTable: {fileID: 11400000, guid: 0527eb1ecfdf23e4b80a680219ddb6f5, type: 2}

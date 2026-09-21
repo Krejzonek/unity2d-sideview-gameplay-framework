@@ -202,10 +202,10 @@ public class Player : MonoBehaviour
         if (Time.time < nextAttackTime) return;
 
         ItemData weapon = stats.GetWeapon();
-        float staminaCost = 50f;
+        float staminaCost = 25f;
 
         if (weapon != null && weapon.weaponType == WeaponType.Staff)
-            staminaCost = 100f;
+            staminaCost = 50f;
 
         if (stamina < staminaCost)
             return;
