@@ -18,11 +18,13 @@ public class Projectile : MonoBehaviour
     private float statusDuration;
     private float statusDamage;
 
+    private bool isEnemyProjectile;
+
     private Vector2 direction;
     private float fallSpeed;
     private bool stuck;
 
-    public void Setup(Vector2 direction, float damage, float critRate, float critDamage, float knockback, float stunChance, ElementType element, StatusEffectType statusEffect, float statusChance, float statusDuration, float statusDamage)
+    public void Setup(Vector2 direction, float damage, float critRate, float critDamage, float knockback, float stunChance, ElementType element, StatusEffectType statusEffect, float statusChance, float statusDuration, float statusDamage, bool isEnemyProjectile = false)
     {
         this.direction = direction.normalized;
         this.damage = damage;
@@ -35,6 +37,7 @@ public class Projectile : MonoBehaviour
         this.statusChance = statusChance;
         this.statusDuration = statusDuration;
         this.statusDamage = statusDamage;
+        this.isEnemyProjectile = isEnemyProjectile;
 
         transform.right = this.direction;
 
@@ -63,25 +66,44 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        EnemyAI enemy = other.GetComponentInParent<EnemyAI>();
-
-        if (enemy != null)
+        if (isEnemyProjectile)
         {
-            Vector2 hitPoint = other.ClosestPoint(transform.position);
-            bool isCrit = Random.Range(0f, 100f) <= critRate;
-            float finalDamage = damage;
+            Player player = other.GetComponentInParent<Player>();
 
-            if (isCrit)
-                finalDamage *= critDamage;
+            if (player != null)
+            {
+                player.TakeDamage(damage);
+                Destroy(gameObject);
+                return;
+            }
 
-            float elementMultiplier = ElementSystem.GetDamageMultiplier(element, enemy.GetElement());
-            finalDamage *= elementMultiplier;
+            EnemyAI enemy = other.GetComponentInParent<EnemyAI>();
 
-            Vector2 knockbackDirection = direction.normalized;
-            
-            enemy.TakeDamage(finalDamage, hitPoint, knockback, knockbackDirection, stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage);
+            if (enemy != null)
+                return;
+        }
+        else
+        {
+            EnemyAI enemy = other.GetComponentInParent<EnemyAI>();
 
-            Destroy(gameObject);
+            if (enemy != null)
+            {
+                Vector2 hitPoint = other.ClosestPoint(transform.position);
+                bool isCrit = Random.Range(0f, 100f) <= critRate;
+                float finalDamage = damage;
+
+                if (isCrit)
+                    finalDamage *= critDamage;
+
+                float elementMultiplier = ElementSystem.GetDamageMultiplier(element, enemy.GetElement());
+                finalDamage *= elementMultiplier;
+
+                Vector2 knockbackDirection = direction.normalized;
+
+                enemy.TakeDamage(finalDamage, hitPoint, knockback, knockbackDirection, stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage);
+
+                Destroy(gameObject);
+            }
         }
     }
 }

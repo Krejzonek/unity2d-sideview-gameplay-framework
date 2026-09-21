@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5843666974876058342}
   - component: {fileID: 8259517204022777001}
   m_Layer: 10
-  m_Name: EnemyTest
+  m_Name: Support Test
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -161,20 +161,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ffbc631c8aba8754f9fb27cfbc65bce5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyClass: 0
-  enemyElement: 6
-  maxHealth: 50
-  health: 50
-  damage: 10
+  enemyClass: 4
+  enemyElement: 0
+  maxHealth: 45
+  health: 45
+  damage: 0
   headshotMultiplier: 2
-  headshotHeight: 0.65
+  headshotHeight: 0.8
   knockbackDuration: 0.2
-  stunDuration: 2
+  stunDuration: 1.8
+  stunChance: 0
   damageNumberPrefab: {fileID: 4267766162741410995, guid: 33c4410a817f2bc4abab2b01d3394d58, type: 3}
   moveSpeed: 2
-  detectionRange: 8
+  detectionRange: 10
   attackRange: 1.5
-  attackCooldown: 1
+  attackCooldown: 1.5
+  projectilePrefab: {fileID: 0}
+  projectilePoint: {fileID: 0}
+  rangedPreferredDistance: 5
+  rangedRetreatDistance: 2.5
+  projectileCritRate: 0
+  projectileCritDamage: 1
+  assassinSpeedMultiplier: 1.75
+  tankSpeedMultiplier: 0.6
+  supportHealRange: 6
+  supportHealAmount: 20
+  supportHealCooldown: 3
   player: {fileID: 0}
   playerScript: {fileID: 0}
   lootTable: {fileID: 11400000, guid: 0527eb1ecfdf23e4b80a680219ddb6f5, type: 2}

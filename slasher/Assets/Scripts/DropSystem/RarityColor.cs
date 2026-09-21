@@ -7,7 +7,7 @@ public static class RarityColor
         switch (rarity)
         {
             case ItemRarity.Common:
-                return Color.white;
+                return Color.gray;
 
             case ItemRarity.Uncommon:
                 return Color.green;

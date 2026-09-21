@@ -31,6 +31,7 @@ public class EnemyAI : MonoBehaviour
 
     [Header("Stun")]
     [SerializeField] private float stunDuration = 2f;
+    [SerializeField] private float stunChance = 0f;
 
     [Header("Hit Feedback")]
     [SerializeField] private GameObject damageNumberPrefab;
@@ -42,6 +43,25 @@ public class EnemyAI : MonoBehaviour
 
     [Header("Attack")]
     [SerializeField] private float attackCooldown = 1f;
+
+    [Header("Ranged")]
+    [SerializeField] private GameObject projectilePrefab;
+    [SerializeField] private Transform projectilePoint;
+    [SerializeField] private float rangedPreferredDistance = 5f;
+    [SerializeField] private float rangedRetreatDistance = 2.5f;
+    [SerializeField] private float projectileCritRate = 0f;
+    [SerializeField] private float projectileCritDamage = 1f;
+
+    [Header("Assassin")]
+    [SerializeField] private float assassinSpeedMultiplier = 1.75f;
+
+    [Header("Tank")]
+    [SerializeField] private float tankSpeedMultiplier = 0.6f;
+
+    [Header("Support")]
+    [SerializeField] private float supportHealRange = 6f;
+    [SerializeField] private float supportHealAmount = 15f;
+    [SerializeField] private float supportHealCooldown = 5f;
 
     [Header("Target")]
     [SerializeField] private Transform player;
@@ -55,6 +75,7 @@ public class EnemyAI : MonoBehaviour
     private float attackTimer;
     private float knockbackTimer;
     private float stunTimer;
+    private float supportHealTimer;
 
     private bool isKnockedBack;
     private bool isStunned;
@@ -73,7 +94,9 @@ public class EnemyAI : MonoBehaviour
     private bool isFrozen;
     private bool isBlind;
     private bool isShock;
+
     private float normalDetectionRange;
+    private float normalMoveSpeed;
 
     private void Start()
     {
@@ -94,6 +117,7 @@ public class EnemyAI : MonoBehaviour
         rb.freezeRotation = true;
 
         normalDetectionRange = detectionRange;
+        normalMoveSpeed = moveSpeed;
     }
 
     private void Update()
@@ -136,7 +160,7 @@ public class EnemyAI : MonoBehaviour
 
             if (attackingEnemy != null)
                 AttackEnemy(attackingEnemy);
-            else
+            else if (enemyClass != EnemyClass.Support)
                 Attack();
 
             return;
@@ -182,23 +206,28 @@ public class EnemyAI : MonoBehaviour
         switch (enemyClass)
         {
             case EnemyClass.Melee:
+                moveSpeed = normalMoveSpeed;
                 MeleeAI(distance);
                 break;
 
             case EnemyClass.Ranged:
+                moveSpeed = normalMoveSpeed;
                 RangedAI(distance);
                 break;
 
             case EnemyClass.Tank:
+                moveSpeed = normalMoveSpeed * tankSpeedMultiplier;
                 TankAI(distance);
                 break;
 
             case EnemyClass.Assassin:
+                moveSpeed = normalMoveSpeed * assassinSpeedMultiplier;
                 AssassinAI(distance);
                 break;
 
             case EnemyClass.Support:
-                SupportAI(distance);
+                moveSpeed = normalMoveSpeed;
+                SupportAI();
                 break;
 
             case EnemyClass.Boss:
@@ -250,7 +279,9 @@ public class EnemyAI : MonoBehaviour
         if (distance <= attackRange)
         {
             StopMoving();
-            AttackEnemy(attackingEnemy);
+
+            if (enemyClass != EnemyClass.Support)
+                AttackEnemy(attackingEnemy);
         }
         else
         {
@@ -285,10 +316,14 @@ public class EnemyAI : MonoBehaviour
 
     private void RangedAI(float distance)
     {
-        if (distance <= attackRange)
+        if (distance <= rangedRetreatDistance)
+        {
+            MoveAwayFromPlayer();
+        }
+        else if (distance <= rangedPreferredDistance)
         {
             StopMoving();
-            Attack();
+            Shoot();
         }
         else if (distance <= detectionRange)
         {
@@ -334,21 +369,87 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    private void SupportAI(float distance)
+    private void SupportAI()
     {
-        if (distance <= attackRange)
+        EnemyAI woundedEnemy = FindWoundedEnemy();
+
+        if (woundedEnemy == null)
         {
             StopMoving();
-            Attack();
+            return;
         }
-        else if (distance <= detectionRange)
+
+        float enemyDistance = Vector2.Distance(transform.position, woundedEnemy.transform.position);
+
+        if (enemyDistance <= supportHealRange)
         {
-            MoveTowardsPlayer();
+            StopMoving();
+            HealEnemy(woundedEnemy);
+        }
+        else if (enemyDistance <= detectionRange)
+        {
+            MoveTowardsTarget(woundedEnemy.transform);
         }
         else
         {
             StopMoving();
         }
+    }
+
+    private EnemyAI FindWoundedEnemy()
+    {
+        EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+        EnemyAI closestEnemy = null;
+        float closestDistance = Mathf.Infinity;
+
+        foreach (EnemyAI enemy in enemies)
+        {
+            if (enemy == null || enemy == this)
+                continue;
+
+            if (enemy.room != room)
+                continue;
+
+            if (enemy.health >= enemy.maxHealth)
+                continue;
+
+            float distance = Vector2.Distance(transform.position, enemy.transform.position);
+
+            if (distance > detectionRange)
+                continue;
+
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestEnemy = enemy;
+            }
+        }
+
+        return closestEnemy;
+    }
+
+    private void HealEnemy(EnemyAI target)
+    {
+        if (target == null)
+            return;
+
+        if (supportHealTimer > 0f)
+        {
+            supportHealTimer -= Time.deltaTime;
+            return;
+        }
+
+        target.Heal(supportHealAmount);
+        supportHealTimer = supportHealCooldown;
+    }
+
+    public void Heal(float amount)
+    {
+        if (health <= 0f)
+            return;
+
+        health += amount;
+        health = Mathf.Clamp(health, 0f, maxHealth);
     }
 
     private void MoveTowardsPlayer()
@@ -372,6 +473,22 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
+    private void MoveAwayFromPlayer()
+    {
+        if (player == null)
+            return;
+
+        float direction = Mathf.Sign(transform.position.x - player.position.x);
+        rb.velocity = new Vector2(direction * moveSpeed, rb.velocity.y);
+
+        if (direction != 0)
+        {
+            Vector3 scale = transform.localScale;
+            scale.x = Mathf.Abs(scale.x) * direction;
+            transform.localScale = scale;
+        }
+    }
+
     private void StopMoving()
     {
         rb.velocity = new Vector2(0f, rb.velocity.y);
@@ -382,10 +499,39 @@ public class EnemyAI : MonoBehaviour
         if (attackTimer > 0f)
             return;
 
-        if (playerScript != null)
-            playerScript.TakeDamage(damage);
+        if (playerScript == null || player == null)
+            return;
+
+        if (Vector2.Distance(transform.position, player.position) > attackRange)
+            return;
+
+        playerScript.TakeDamage(damage);
 
         attackTimer = attackCooldown;
+    }
+
+    private void Shoot()
+    {
+        if (attackTimer > 0f)
+            return;
+
+        if (projectilePrefab == null || projectilePoint == null || player == null)
+            return;
+
+        Vector2 direction = (player.position - projectilePoint.position).normalized;
+
+        GameObject projectileObject = Instantiate(projectilePrefab, projectilePoint.position, Quaternion.identity);
+        Projectile projectile = projectileObject.GetComponent<Projectile>();
+
+        if (projectile != null)
+        {
+            projectile.Setup(direction, damage, projectileCritRate, projectileCritDamage, 0, stunChance, enemyElement, StatusEffectType.None, 0f, 0f, 0f, true);
+            attackTimer = attackCooldown;
+        }
+        else
+        {
+            Destroy(projectileObject);
+        }
     }
 
     private void AttackEnemy(EnemyAI target)
@@ -540,11 +686,13 @@ public class EnemyAI : MonoBehaviour
                 break;
         }
     }
+
     public void ClearEnemyTarget(EnemyAI enemy)
     {
         if (attackingEnemy == enemy)
             attackingEnemy = null;
     }
+
     private void TakeStatusDamage(float damageAmount)
     {
         health -= damageAmount;
@@ -565,6 +713,9 @@ public class EnemyAI : MonoBehaviour
         foreach (EnemyAI enemy in enemies)
         {
             if (enemy == null || enemy == this)
+                continue;
+
+            if (enemy.room != room)
                 continue;
 
             float distance = Vector2.Distance(transform.position, enemy.transform.position);
@@ -670,7 +821,8 @@ public class EnemyAI : MonoBehaviour
 
     private void Die()
     {
-        playerScript.GetEXP(100);
+        if (playerScript != null)
+            playerScript.GetEXP(100);
 
         if (lootManager != null && lootTable != null)
             lootManager.GenerateLoot(lootTable, transform.position);
