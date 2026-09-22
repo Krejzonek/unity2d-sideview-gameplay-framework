@@ -184,7 +184,7 @@ MonoBehaviour:
   projectileCritDamage: 1
   assassinSpeedMultiplier: 1.75
   tankSpeedMultiplier: 0.6
-  supportHealRange: 6
+  supportHealRange: 7
   supportHealAmount: 20
   supportHealCooldown: 3
   player: {fileID: 0}

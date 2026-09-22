@@ -19,12 +19,14 @@ public class Projectile : MonoBehaviour
     private float statusDamage;
 
     private bool isEnemyProjectile;
+    private Player owner;
 
     private Vector2 direction;
+    private Vector2 startPosition;
     private float fallSpeed;
     private bool stuck;
 
-    public void Setup(Vector2 direction, float damage, float critRate, float critDamage, float knockback, float stunChance, ElementType element, StatusEffectType statusEffect, float statusChance, float statusDuration, float statusDamage, bool isEnemyProjectile = false)
+    public void Setup(Vector2 direction, float damage, float critRate, float critDamage, float knockback, float stunChance, ElementType element, StatusEffectType statusEffect, float statusChance, float statusDuration, float statusDamage, bool isEnemyProjectile = false, Player owner = null)
     {
         this.direction = direction.normalized;
         this.damage = damage;
@@ -38,6 +40,9 @@ public class Projectile : MonoBehaviour
         this.statusDuration = statusDuration;
         this.statusDamage = statusDamage;
         this.isEnemyProjectile = isEnemyProjectile;
+        this.owner = owner;
+
+        startPosition = transform.position;
 
         transform.right = this.direction;
 
@@ -88,6 +93,8 @@ public class Projectile : MonoBehaviour
 
             if (enemy != null)
             {
+                float distance = Vector2.Distance(startPosition, enemy.transform.position);
+
                 Vector2 hitPoint = other.ClosestPoint(transform.position);
                 bool isCrit = Random.Range(0f, 100f) <= critRate;
                 float finalDamage = damage;
@@ -98,9 +105,28 @@ public class Projectile : MonoBehaviour
                 float elementMultiplier = ElementSystem.GetDamageMultiplier(element, enemy.GetElement());
                 finalDamage *= elementMultiplier;
 
+                if (owner != null)
+                {
+                    ClassSkillManager skillManager = owner.GetComponent<ClassSkillManager>();
+
+                    if (skillManager != null)
+                    {
+                        float skillMultiplier = skillManager.GetDamageMultiplier(distance);
+                        finalDamage *= skillMultiplier;
+                    }
+                }
+
                 Vector2 knockbackDirection = direction.normalized;
 
                 enemy.TakeDamage(finalDamage, hitPoint, knockback, knockbackDirection, stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage);
+
+                if (owner != null)
+                {
+                    ClassSkillManager skillManager = owner.GetComponent<ClassSkillManager>();
+
+                    if (skillManager != null)
+                        skillManager.RegisterHit();
+                }
 
                 Destroy(gameObject);
             }

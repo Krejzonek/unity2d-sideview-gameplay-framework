@@ -50,6 +50,7 @@ public class Player : MonoBehaviour
     private Rigidbody2D rb;
     private float moveInput;
     private Stats stats;
+    private ClassSkillManager skillManager;
     private float nextAttackTime;
     private float invulnerabilityTimer;
     private bool isDefending;
@@ -60,6 +61,7 @@ public class Player : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         stats = GetComponent<Stats>();
+        skillManager = GetComponent<ClassSkillManager>();
 
         normalColliderSize = playerCollider.size;
         normalColliderOffset = playerCollider.offset;
@@ -162,7 +164,6 @@ public class Player : MonoBehaviour
             float newHeight = oldHeight / 2f;
             moveSpeed /= 2;
             playerCollider.size = new Vector2(playerCollider.size.x, newHeight);
-
             playerCollider.offset = new Vector2(playerCollider.offset.x, normalColliderOffset.y - (oldHeight - newHeight) / 2f);
         }
     }
@@ -207,10 +208,16 @@ public class Player : MonoBehaviour
         if (weapon != null && weapon.weaponType == WeaponType.Staff)
             staminaCost = 50f;
 
+        if (skillManager != null)
+            staminaCost *= skillManager.GetStaminaCostMultiplier();
+
         if (stamina < staminaCost)
             return;
 
         UseStamina(staminaCost);
+
+        if (skillManager != null)
+            skillManager.RegisterAttack();
 
         if (weapon == null)
             MeleeAttack();
@@ -225,7 +232,8 @@ public class Player : MonoBehaviour
             }
         }
 
-        float currentCooldown = Mathf.Max(attackCooldown / (1f + stats.speed * 0.1f), 0.1f);
+        float speedMultiplier = skillManager != null ? skillManager.GetAttackSpeedMultiplier() : 1f;
+        float currentCooldown = Mathf.Max(attackCooldown / (1f + stats.speed * 0.1f) / speedMultiplier, 0.1f);
         nextAttackTime = Time.time + currentCooldown;
     }
 
@@ -244,17 +252,27 @@ public class Player : MonoBehaviour
                 Vector2 hitPoint = enemy.ClosestPoint(transform.position);
                 bool isCrit = Random.Range(0f, 100f) <= stats.critRate;
                 float damage = stats.attack;
+                float distance = Vector2.Distance(transform.position, enemy.transform.position);
 
                 if (isCrit)
                     damage *= stats.critDamage;
+
+                if (skillManager != null)
+                {
+                    damage *= skillManager.GetDamageMultiplier(distance);
+                    skillManager.RegisterHit();
+                }
 
                 float elementMultiplier = ElementSystem.GetDamageMultiplier(GetAttackElement(), enemyAI.GetElement());
                 damage *= elementMultiplier;
 
                 Vector2 knockbackDirection = (enemy.transform.position - transform.position).normalized;
-                enemyAI.TakeDamage(damage, hitPoint, stats.knockback, knockbackDirection, stats.stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage);
+                enemyAI.TakeDamage(damage, hitPoint, stats.knockback * (skillManager != null ? skillManager.GetKnockbackMultiplier() : 1f), knockbackDirection, stats.stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage);
             }
         }
+
+        if (skillManager != null)
+            skillManager.ConsumeAttackSkill();
     }
 
     private void ShootProjectile(GameObject projectilePrefab)
@@ -277,17 +295,44 @@ public class Player : MonoBehaviour
 
         Vector3 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
         Vector2 direction = (mousePosition - attackPoint.position).normalized;
+
+        bool doubleShot = false;
+
+        if (skillManager != null && weapon.weaponType == WeaponType.Bow)
+            doubleShot = skillManager.ConsumeDoubleShot();
+
+        if (doubleShot)
+        {
+            ShootSingleProjectile(projectilePrefab, direction);
+            ShootSingleProjectile(projectilePrefab, Quaternion.Euler(0f, 0f, 10f) * direction);
+        }
+        else
+        {
+            ShootSingleProjectile(projectilePrefab, direction);
+        }
+
+        if (skillManager != null)
+            skillManager.ConsumeAttackSkill();
+    }
+
+    private void ShootSingleProjectile(GameObject projectilePrefab, Vector2 direction)
+    {
         GameObject projectileObject = Instantiate(projectilePrefab, attackPoint.position, Quaternion.identity);
         Projectile projectile = projectileObject.GetComponent<Projectile>();
 
         if (projectile != null)
         {
+            ItemData weapon = stats.GetWeapon();
+
             StatusEffectType statusEffect = weapon.GetStatusEffect();
             float statusChance = weapon.GetStatusChance();
             float statusDuration = weapon.GetStatusDuration();
             float statusDamage = weapon.GetStatusDamage(stats.attack);
 
-            projectile.Setup(direction, stats.attack, stats.critRate, stats.critDamage, stats.knockback, stats.stunChance, GetAttackElement(), statusEffect, statusChance, statusDuration, statusDamage);
+            float damageMultiplier = skillManager != null ? skillManager.GetDamageMultiplier(Vector2.Distance(transform.position, attackPoint.position)) : 1f;
+            float damage = stats.attack * damageMultiplier;
+
+            projectile.Setup(direction, damage, stats.critRate, stats.critDamage, stats.knockback * (skillManager != null ? skillManager.GetKnockbackMultiplier() : 1f), stats.stunChance, GetAttackElement(), statusEffect, statusChance, statusDuration, statusDamage, false, this);
         }
     }
 
@@ -316,17 +361,18 @@ public class Player : MonoBehaviour
 
         damage *= 100f / (100f + stats.defence);
 
+        if (skillManager != null)
+            damage *= 1f - skillManager.GetDamageReduction();
+
         if (isDefending)
-        {
             damage *= 1f - defenseDamageReduction;
-        }
 
         health -= damage;
         health = Mathf.Clamp(health, 0f, stats.health);
 
         if (health <= 0f)
         {
-            //Die 
+            //Die
         }
 
         UiUpdate();
@@ -345,6 +391,7 @@ public class Player : MonoBehaviour
         stamina = Mathf.Clamp(stamina, 0f, stats.stamina);
         UiUpdate();
     }
+
     private void GetWeaponStatus(out StatusEffectType statusEffect, out float statusChance, out float statusDuration, out float statusDamage)
     {
         statusEffect = StatusEffectType.None;
@@ -362,6 +409,7 @@ public class Player : MonoBehaviour
         statusDuration = weapon.GetStatusDuration();
         statusDamage = weapon.GetStatusDamage(stats.attack);
     }
+
     private void RegenerateStamina()
     {
         if (!OnFloor())
@@ -381,5 +429,16 @@ public class Player : MonoBehaviour
         knockbackTimer = 0.3f;
         rb.velocity = Vector2.zero;
         rb.AddForce(direction.normalized * force, ForceMode2D.Impulse);
+    }
+
+    public void UseClassSkill()
+    {
+        if (skillManager != null)
+            skillManager.UseActiveSkill();
+    }
+
+    public float GetHealthPercent()
+    {
+        return stats.health > 0f ? health / stats.health : 0f;
     }
 }
