@@ -10,4 +10,11 @@ public class Class : ScriptableObject
     public float staminaBonus;
     public float attackBonus;
     public float speedBonus;
+
+    [Header("Passive Skills")]
+    public PassiveSkill passiveSkill1;
+    public PassiveSkill passiveSkill2;
+
+    [Header("Active Skill")]
+    public ActiveSkill activeSkill;
 }

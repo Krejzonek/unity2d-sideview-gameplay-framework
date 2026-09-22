@@ -17,3 +17,6 @@ MonoBehaviour:
   staminaBonus: 30
   attackBonus: 10
   speedBonus: 2
+  passiveSkill1: {fileID: 11400000, guid: 3873d1a783c477c48869629e64a278bb, type: 2}
+  passiveSkill2: {fileID: 11400000, guid: 440c0a48ac9459e48a5fe0702a4ff52b, type: 2}
+  activeSkill: {fileID: 11400000, guid: 084cab2e6ed68cd4bad27445d3abe296, type: 2}
