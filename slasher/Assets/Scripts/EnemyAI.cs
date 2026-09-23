@@ -17,6 +17,14 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private EnemyClass enemyClass;
     [SerializeField] private ElementType enemyElement;
 
+    [Header("Elite")]
+    [SerializeField] private float eliteChance = 0.05f;
+    [SerializeField] private float eliteScale = 1.5f;
+    [SerializeField] private float eliteHealthMultiplier = 2f;
+    [SerializeField] private float eliteDamageMultiplier = 1.5f;
+    [SerializeField] private float eliteKnockbackResistance = 0.5f;
+    private bool isElite;
+
     [Header("Stats")]
     [SerializeField] private float maxHealth = 50f;
     [SerializeField] private float health = 50f;
@@ -118,6 +126,44 @@ public class EnemyAI : MonoBehaviour
 
         normalDetectionRange = detectionRange;
         normalMoveSpeed = moveSpeed;
+
+        if (enemyClass != EnemyClass.Boss && Random.value <= eliteChance)
+            MakeElite();
+    }
+
+    private void MakeElite()
+    {
+        isElite = true;
+
+        transform.localScale *= eliteScale;
+        maxHealth *= eliteHealthMultiplier;
+        damage *= eliteDamageMultiplier;
+
+        switch (enemyClass)
+        {
+            case EnemyClass.Melee:
+                attackRange *= 1.25f;
+                break;
+
+            case EnemyClass.Ranged:
+                attackCooldown *= 0.75f;
+                break;
+
+            case EnemyClass.Tank:
+                eliteKnockbackResistance = 0.25f;
+                break;
+
+            case EnemyClass.Assassin:
+                assassinSpeedMultiplier *= 1.2f;
+                break;
+
+            case EnemyClass.Support:
+                supportHealAmount *= 1.5f;
+                supportHealCooldown *= 0.7f;
+                break;
+        }
+
+        health = maxHealth;
     }
 
     private void Update()
@@ -770,6 +816,9 @@ public class EnemyAI : MonoBehaviour
         if (rb == null)
             return;
 
+        if (isElite)
+            force *= eliteKnockbackResistance;
+
         isKnockedBack = true;
         knockbackTimer = knockbackDuration;
         rb.velocity = Vector2.zero;
@@ -822,10 +871,15 @@ public class EnemyAI : MonoBehaviour
     private void Die()
     {
         if (playerScript != null)
-            playerScript.GetEXP(100);
+            playerScript.GetEXP(isElite ? 250 : 100);
 
         if (lootManager != null && lootTable != null)
+        {
             lootManager.GenerateLoot(lootTable, transform.position);
+
+            if (isElite)
+                lootManager.GenerateLoot(lootTable, transform.position);
+        }
 
         if (room != null)
             room.EnemyKilled();
@@ -856,5 +910,10 @@ public class EnemyAI : MonoBehaviour
     public float GetDetectionRange()
     {
         return detectionRange;
+    }
+
+    public bool IsElite()
+    {
+        return isElite;
     }
 }

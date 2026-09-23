@@ -5,7 +5,7 @@ public class ClassSkillManager : MonoBehaviour
     private Player player;
     private Stats stats;
 
-    private int attackCount;
+    private int hitCount;
     private float agilityTimer;
     private float activeCooldown;
 
@@ -39,11 +39,12 @@ public class ClassSkillManager : MonoBehaviour
 
     public void RegisterAttack()
     {
-        attackCount++;
     }
 
     public void RegisterHit()
     {
+        hitCount++;
+
         Class characterClass = stats.characterClass;
 
         if (characterClass == null)
@@ -69,7 +70,7 @@ public class ClassSkillManager : MonoBehaviour
         {
             PassiveSkill skill = GetPassive(PassiveSkillType.StrongHit);
 
-            if (skill.attackCount > 0 && attackCount % skill.attackCount == 0)
+            if (skill.attackCount > 0 && hitCount > 0 && hitCount % skill.attackCount == 0)
                 multiplier *= 1f + skill.value / 100f;
         }
 
@@ -206,6 +207,16 @@ public class ClassSkillManager : MonoBehaviour
         return activeCooldown;
     }
 
+    public int GetHitCount()
+    {
+        return hitCount;
+    }
+
+    public bool HasLongShot()
+    {
+        return HasPassive(PassiveSkillType.LongShot);
+    }
+
     private bool HasPassive(PassiveSkillType type)
     {
         Class characterClass = stats.characterClass;
@@ -236,9 +247,5 @@ public class ClassSkillManager : MonoBehaviour
             return characterClass.passiveSkill2;
 
         return null;
-    }
-    public bool HasLongShot()
-    {
-        return HasPassive(PassiveSkillType.LongShot);
     }
 }
