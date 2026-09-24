@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: Archer
   m_EditorClassIdentifier: 
   characterClass: 2
+  className: Archer
+  description: A fast ranged fighter focused on precision and mobility. Perfect for
+    players who prefer attacking enemies from a safe distance.
   healthBonus: 0
   staminaBonus: 30
   attackBonus: 10

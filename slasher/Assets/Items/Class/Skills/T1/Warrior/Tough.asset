@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb2e78575fe18d74ca4d12581c387c91, type: 3}
   m_Name: Tough
   m_EditorClassIdentifier: 
-  skillName: 
+  skillName: Tough
   description: Reduces damage taken by 5%.
   icon: {fileID: 0}
   type: 1

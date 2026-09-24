@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: Warrior
   m_EditorClassIdentifier: 
   characterClass: 1
+  className: Warrior
+  description: A strong melee fighter focused on powerful attacks and durability.
+    Perfect for players who prefer fighting enemies up close.
   healthBonus: 20
   staminaBonus: 25
   attackBonus: 15

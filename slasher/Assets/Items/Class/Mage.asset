@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: Mage
   m_EditorClassIdentifier: 
   characterClass: 3
+  className: Mage
+  description: A powerful spellcaster who uses elemental magic to deal heavy damage.
+    Perfect for players who prefer ranged combat and magical abilities.
   healthBonus: 5
   staminaBonus: 50
   attackBonus: 20
