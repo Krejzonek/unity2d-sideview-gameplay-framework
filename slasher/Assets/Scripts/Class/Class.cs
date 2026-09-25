@@ -5,6 +5,7 @@ public class Class : ScriptableObject
 {
     [Header("Class Info")]
     public string className;
+    public Color classColor;
 
     [TextArea(2, 4)]
     public string description;

@@ -12,13 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e2b9c301ad1bbd429b6e75f523cb9e5, type: 3}
   m_Name: Archer
   m_EditorClassIdentifier: 
-  characterClass: 2
   className: Archer
+  classColor: {r: 0, g: 1, b: 0.043137256, a: 1}
   description: A fast ranged fighter focused on precision and mobility. Perfect for
     players who prefer attacking enemies from a safe distance.
   healthBonus: 0
   staminaBonus: 30
   attackBonus: 10
+  defenceBonus: 0
   speedBonus: 2
   passiveSkill1: {fileID: 11400000, guid: 3873d1a783c477c48869629e64a278bb, type: 2}
   passiveSkill2: {fileID: 11400000, guid: 440c0a48ac9459e48a5fe0702a4ff52b, type: 2}
