@@ -12,13 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e2b9c301ad1bbd429b6e75f523cb9e5, type: 3}
   m_Name: Mage
   m_EditorClassIdentifier: 
-  characterClass: 3
   className: Mage
+  classColor: {r: 0, g: 0.24705882, b: 1, a: 1}
   description: A powerful spellcaster who uses elemental magic to deal heavy damage.
     Perfect for players who prefer ranged combat and magical abilities.
   healthBonus: 5
   staminaBonus: 50
   attackBonus: 20
+  defenceBonus: 0
   speedBonus: 0
   passiveSkill1: {fileID: 11400000, guid: ac4c68e60879894418ab6c87e2d1acfd, type: 2}
   passiveSkill2: {fileID: 11400000, guid: dc50c4f49cffb6b48b48f5741d8a7f72, type: 2}

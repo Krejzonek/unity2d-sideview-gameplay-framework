@@ -12,13 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e2b9c301ad1bbd429b6e75f523cb9e5, type: 3}
   m_Name: Warrior
   m_EditorClassIdentifier: 
-  characterClass: 1
   className: Warrior
+  classColor: {r: 1, g: 0, b: 0, a: 1}
   description: A strong melee fighter focused on powerful attacks and durability.
     Perfect for players who prefer fighting enemies up close.
   healthBonus: 20
   staminaBonus: 25
   attackBonus: 15
+  defenceBonus: 0
   speedBonus: 1
   passiveSkill1: {fileID: 11400000, guid: 47ef1f02d530d454898738f52c6a4676, type: 2}
   passiveSkill2: {fileID: 11400000, guid: 3d06ddd08e05b2e479392b037ac56e38, type: 2}

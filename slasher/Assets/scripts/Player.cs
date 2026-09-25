@@ -11,7 +11,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float stamina;
     [SerializeField] private float moveSpeed;
     [SerializeField] private float jumpForce = 10f;
-    [SerializeField] private int lvl = 0;
+    public int lvl = 0;
     public int currentEXP;
 
     [Header("Combat")]
