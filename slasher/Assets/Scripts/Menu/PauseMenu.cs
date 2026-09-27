@@ -5,6 +5,7 @@ public class PauseMenu : MonoBehaviour
     [SerializeField] private GameObject pauseMenu;
     [SerializeField] private SceneLoader sceneLoader;
     [SerializeField] private string mainMenuSceneName = "MainMenu";
+    [SerializeField] private string characterSelectSceneName = "CharacterSelect";
 
     private bool isPaused;
 
@@ -43,5 +44,10 @@ public class PauseMenu : MonoBehaviour
     {
         Time.timeScale = 1f;
         sceneLoader.LoadScene(mainMenuSceneName);
+    }
+    public void ChangeCharacter()
+    {
+        Time.timeScale = 1f;
+        sceneLoader.LoadScene(characterSelectSceneName);
     }
 }

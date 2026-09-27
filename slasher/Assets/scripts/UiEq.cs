@@ -12,6 +12,7 @@ public class UiEq : MonoBehaviour
     [SerializeField] private Player player;
 
     [Header("UI")]
+    [SerializeField] private TMP_Text characterNameText;
     [SerializeField] private TMP_Text classText;
     [SerializeField] private TMP_Text levelText;
     [SerializeField] private TMP_Text statsText;
@@ -19,6 +20,7 @@ public class UiEq : MonoBehaviour
 
     private void Update()
     {
+        characterNameText.text = CharacterManager.Instance != null && CharacterManager.Instance.SelectedCharacter != null ? CharacterManager.Instance.SelectedCharacter.characterName : "None";
         classText.text = stats.characterClass != null ? stats.characterClass.className : "None";
         classImage.color = stats.characterClass != null ? stats.characterClass.classColor : Color.gray;
         levelText.text = $"LVL: {player.lvl}";

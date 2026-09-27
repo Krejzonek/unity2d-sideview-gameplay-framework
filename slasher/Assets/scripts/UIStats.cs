@@ -18,6 +18,7 @@ public class UIStats : MonoBehaviour
     [SerializeField] private TMP_Text luck;
 
     [Header("UI")]
+    [SerializeField] private TMP_Text characterNameText;
     [SerializeField] private Image classImage;
     [SerializeField] private TMP_Text className;
     [SerializeField] private TMP_Text lvltext;
@@ -33,6 +34,7 @@ public class UIStats : MonoBehaviour
         attack.text = $"Attack: {stats.attack}";
         luck.text = $"Luck: {stats.luck}";
 
+        characterNameText.text = CharacterManager.Instance != null && CharacterManager.Instance.SelectedCharacter != null ? CharacterManager.Instance.SelectedCharacter.characterName : "None";
         classImage.color = stats.characterClass != null ? stats.characterClass.classColor : Color.gray;
         className.text = stats.characterClass != null ? stats.characterClass.className : "None";
         lvltext.text = $"LVL: {player.lvl}";
