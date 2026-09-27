@@ -115,8 +115,6 @@ public class Projectile : MonoBehaviour
                         finalDamage *= skillMultiplier;
 
                         bool longShotActive = distance >= 4f && skillManager.HasLongShot();
-
-                        Debug.Log("Arrow distance: " + distance + " | Long Shot: " + longShotActive + " | Damage: " + finalDamage);
                     }
                 }
 

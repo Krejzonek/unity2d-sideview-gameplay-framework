@@ -76,6 +76,7 @@ public class Player : MonoBehaviour
 
         expSlider.maxValue = (lvl + 1) * 100;
         expSlider.value = currentEXP;
+        lvlText.text = $"Lvl {lvl}";
     }
 
     private void Update()
@@ -115,6 +116,9 @@ public class Player : MonoBehaviour
         currentEXP += Mathf.RoundToInt(exp * stats.expBonus);
         expSlider.value = currentEXP;
         LvlUp();
+
+        if (CharacterManager.Instance != null)
+            CharacterManager.Instance.UpdateCharacterFromPlayer(this, stats);
     }
 
     private void LvlUp()
@@ -127,6 +131,9 @@ public class Player : MonoBehaviour
             expSlider.maxValue = (lvl + 1) * 100;
             expSlider.value = currentEXP;
             stats.freePoint += 1;
+
+            if (CharacterManager.Instance != null)
+                CharacterManager.Instance.UpdateCharacterFromPlayer(this, stats);
         }
     }
 

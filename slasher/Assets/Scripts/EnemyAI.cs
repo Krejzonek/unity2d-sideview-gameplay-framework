@@ -486,6 +486,7 @@ public class EnemyAI : MonoBehaviour
         }
 
         target.Heal(supportHealAmount);
+        target.ShowHealNumber(supportHealAmount);
         supportHealTimer = supportHealCooldown;
     }
 
@@ -911,9 +912,22 @@ public class EnemyAI : MonoBehaviour
     {
         return detectionRange;
     }
-
-    public bool IsElite()
+   
+    private void ShowHealNumber(float amount)
     {
-        return isElite;
+        if (damageNumberPrefab == null)
+            return;
+
+        Collider2D collider = GetComponent<Collider2D>();
+        Vector3 spawnPosition = transform.position;
+
+        if (collider != null)
+            spawnPosition = new Vector3(collider.bounds.center.x, collider.bounds.max.y + 0.2f, transform.position.z);
+
+        GameObject damageNumberObject = Instantiate(damageNumberPrefab, spawnPosition, Quaternion.identity);
+        DamageNumber damageNumber = damageNumberObject.GetComponent<DamageNumber>();
+
+        if (damageNumber != null)
+            damageNumber.Setup(amount, false, false, true);
     }
 }

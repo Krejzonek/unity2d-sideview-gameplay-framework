@@ -242,6 +242,10 @@ public class Stats : MonoBehaviour
     public void SetClass(Class newClass)
     {
         characterClass = newClass;
+
+        if (CharacterManager.Instance != null)
+            CharacterManager.Instance.SetCharacterClass(newClass);
+
         UpdateStats();
     }
 
@@ -265,6 +269,25 @@ public class Stats : MonoBehaviour
         {
             activeEffects.Remove(effect);
         }
+
+        UpdateStats();
+    }
+    public void GetStatPoints(out float health, out float stamina, out float speed, out float attack, out float luck)
+    {
+        health = healthPoint;
+        stamina = staminaPoint;
+        speed = speedPoint;
+        attack = attackPoint;
+        luck = luckPoint;
+    }
+
+    public void SetStatPoints(float health, float stamina, float speed, float attack, float luck)
+    {
+        healthPoint = health;
+        staminaPoint = stamina;
+        speedPoint = speed;
+        attackPoint = attack;
+        luckPoint = luck;
 
         UpdateStats();
     }
