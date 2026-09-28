@@ -1584,6 +1584,11 @@ MonoBehaviour:
   - {fileID: 592515027}
   - {fileID: 518096418}
   - {fileID: 1479308529}
+  characterButtons:
+  - {fileID: 54764328}
+  - {fileID: 2048815490}
+  - {fileID: 1156442682}
+  - {fileID: 1175450238}
   createPanel: {fileID: 2067022919}
   nameInput: {fileID: 391007924}
   errorText: {fileID: 1472899184}

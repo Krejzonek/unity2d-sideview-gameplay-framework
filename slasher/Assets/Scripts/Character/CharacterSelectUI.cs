@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.UI;
 
 public class CharacterSelectUI : MonoBehaviour
 {
     [Header("Character Slots")]
     [SerializeField] private TMP_Text[] characterTexts;
+    [SerializeField] private Button[] characterButtons;
 
     [Header("Create Character")]
     [SerializeField] private GameObject createPanel;
@@ -31,9 +33,30 @@ public class CharacterSelectUI : MonoBehaviour
         for (int i = 0; i < characterTexts.Length; i++)
         {
             if (i < CharacterManager.Instance.Characters.Count)
-                characterTexts[i].text = CharacterManager.Instance.Characters[i].characterName + "\nLvl " + CharacterManager.Instance.Characters[i].level;
+            {
+                CharacterData character = CharacterManager.Instance.Characters[i];
+
+                characterTexts[i].text = character.characterName + "\nLvl " + character.level;
+
+                if (characterButtons != null && i < characterButtons.Length && characterButtons[i] != null)
+                {
+                    if (character.characterClass != null)
+                    {
+                        characterButtons[i].image.color = character.characterClass.classColor;
+                        characterTexts[i].color = Color.white;
+                    }
+                    else
+                    {
+                        characterButtons[i].image.color = Color.gray;
+                        characterTexts[i].color = Color.white;
+                    }
+                        
+                }
+            }
             else
+            {
                 characterTexts[i].text = "EMPTY";
+            }
         }
     }
 

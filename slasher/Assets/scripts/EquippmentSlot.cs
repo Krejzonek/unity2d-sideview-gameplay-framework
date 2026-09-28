@@ -17,6 +17,8 @@ public class EquipmentSlot : MonoBehaviour
     [SerializeField] private Button button;
 
     private ItemData equippedItem;
+    private EquipmentManager equipmentManager;
+    private Stats stats;
 
     public EquipmentType Type => equipmentType;
     public ItemData EquippedItem => equippedItem;
@@ -24,11 +26,17 @@ public class EquipmentSlot : MonoBehaviour
     private void Awake()
     {
         if (button == null) button = GetComponent<Button>();
+
+        equipmentManager = GetComponentInParent<EquipmentManager>();
+        stats = GetComponentInParent<Stats>();
     }
 
     public void OpenItemList()
     {
-        EquipmentManager.Instance.OpenItemList(this);
+        if (equipmentManager == null)
+            return;
+
+        equipmentManager.OpenItemList(this);
     }
 
     public bool CanEquip(ItemData item)
@@ -36,18 +44,20 @@ public class EquipmentSlot : MonoBehaviour
         if (item == null) return false;
         if (item.equipmentType != equipmentType) return false;
         if (equipmentType != EquipmentType.Weapon) return true;
-        Stats stats = FindFirstObjectByType<Stats>();
-        if (stats == null || stats.characterClass == null) return false;
+
+        if (stats == null || stats.characterClass == null)
+            return false;
+
         switch (item.weaponType)
         {
             case WeaponType.Sword:
-                return stats.characterClass.name == "Warrior";
+                return stats.characterClass.className == "Warrior";
 
             case WeaponType.Bow:
-                return stats.characterClass.name == "Archer";
+                return stats.characterClass.className == "Archer";
 
             case WeaponType.Staff:
-                return stats.characterClass.name == "Mage";
+                return stats.characterClass.className == "Mage";
 
             default:
                 return false;
@@ -56,15 +66,25 @@ public class EquipmentSlot : MonoBehaviour
 
     public void Equip(ItemData item)
     {
-        if (!CanEquip(item)) return;
-        if (equippedItem != null) EquipmentManager.Instance.AddToInventory(equippedItem);
+        if (!CanEquip(item))
+            return;
+
+        if (equippedItem != null)
+            equipmentManager.AddToInventory(equippedItem);
+
         equippedItem = item;
-        EquipmentManager.Instance.RemoveFromInventory(item);
-        if (button != null) button.image.color = RarityColor.GetColor(item.GetRarity());
-        if (icon != null) icon.sprite = item.icon;
-        Stats stats = FindFirstObjectByType<Stats>();
-        if (stats != null) stats.UpdateStats();
-        EquipmentManager.Instance.RefreshItemList();
+
+        equipmentManager.RemoveFromInventory(item);
+
+        if (button != null)
+            button.image.color = RarityColor.GetColor(item.GetRarity());
+
+        if (icon != null)
+            icon.sprite = item.icon;
+
+        if (stats != null)
+            stats.UpdateStats();
+
+        equipmentManager.RefreshItemList();
     }
-    
 }

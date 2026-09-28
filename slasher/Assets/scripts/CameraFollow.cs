@@ -12,8 +12,17 @@ public class CameraFollow : MonoBehaviour
         cam = GetComponent<Camera>();
     }
 
+    private void Start()
+    {
+        if (TeamManager.Instance != null && TeamManager.Instance.CurrentPlayer != null)
+            player = TeamManager.Instance.CurrentPlayer.transform;
+    }
+
     private void LateUpdate()
     {
+        if (TeamManager.Instance != null && TeamManager.Instance.CurrentPlayer != null)
+            player = TeamManager.Instance.CurrentPlayer.transform;
+
         if (player == null || mapBounds == null)
             return;
 
@@ -37,11 +46,16 @@ public class CameraFollow : MonoBehaviour
         if (minY < maxY) y = Mathf.Clamp(y, minY, maxY);
         else y = bounds.center.y;
 
-        transform.position = new Vector3(x,y,transform.position.z);
+        transform.position = new Vector3(x, y, transform.position.z);
     }
 
     public void SetBounds(Collider2D newBounds)
     {
         mapBounds = newBounds;
+    }
+
+    public void SetPlayer(Transform newPlayer)
+    {
+        player = newPlayer;
     }
 }

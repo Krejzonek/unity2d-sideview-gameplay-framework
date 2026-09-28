@@ -3,8 +3,6 @@ using UnityEngine;
 
 public class EquipmentManager : MonoBehaviour
 {
-    public static EquipmentManager Instance;
-
     [SerializeField] private GameObject itemSelectionPanel;
     [SerializeField] private Transform itemListContent;
     [SerializeField] private GameObject itemButtonPrefab;
@@ -15,11 +13,36 @@ public class EquipmentManager : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        FindUI();
+    }
+
+    private void FindUI()
+    {
+        if (itemSelectionPanel == null)
+        {
+            GameObject panel = GameObject.Find("ItemSelectionPanel");
+
+            if (panel != null)
+                itemSelectionPanel = panel;
+        }
+
+        if (itemListContent == null && itemSelectionPanel != null)
+        {
+            Transform content = itemSelectionPanel.transform.Find("ItemListContent");
+
+            if (content != null)
+                itemListContent = content;
+        }
     }
 
     public void OpenItemList(EquipmentSlot slot)
     {
+        if (itemSelectionPanel == null)
+            FindUI();
+
+        if (itemSelectionPanel == null || itemListContent == null)
+            return;
+
         selectedSlot = slot;
         itemSelectionPanel.SetActive(true);
 
@@ -28,6 +51,9 @@ public class EquipmentManager : MonoBehaviour
 
     public void RefreshItemList()
     {
+        if (itemListContent == null)
+            return;
+
         foreach (Transform child in itemListContent)
         {
             Destroy(child.gameObject);
@@ -55,7 +81,12 @@ public class EquipmentManager : MonoBehaviour
 
     public void CloseItemList()
     {
-        itemSelectionPanel.SetActive(false);
+        if (itemSelectionPanel == null)
+            FindUI();
+
+        if (itemSelectionPanel != null)
+            itemSelectionPanel.SetActive(false);
+
         selectedSlot = null;
     }
 
@@ -69,8 +100,9 @@ public class EquipmentManager : MonoBehaviour
 
         selectedSlot.Equip(item);
 
-        itemSelectionPanel.SetActive(false);
-        
+        if (itemSelectionPanel != null)
+            itemSelectionPanel.SetActive(false);
+
         selectedSlot = null;
     }
 

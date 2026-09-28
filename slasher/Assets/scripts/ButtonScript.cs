@@ -12,7 +12,14 @@ public class ButtonScript : MonoBehaviour
     private bool statsPanelVisible = false;
     private bool eqPanelVisible = false;
     public bool consumablePanelVisible = false;
-    private Player player;
+
+    private Player GetCurrentPlayer()
+    {
+        if (TeamManager.Instance == null)
+            return null;
+
+        return TeamManager.Instance.CurrentPlayer;
+    }
 
     private void Start()
     {
@@ -20,18 +27,22 @@ public class ButtonScript : MonoBehaviour
         eqPanel.SetActive(false);
         selectPanel.SetActive(false);
         consumablePanel.SetActive(false);
-
-        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
-        
     }
 
     public void StatsButton()
     {
+        Player player = GetCurrentPlayer();
+
+        if (player == null)
+            return;
+
         if (statsPanelVisible)
         {
             statsPanel.SetActive(false);
             statsPanelVisible = false;
+
             CloseDescriptionPanel();
+
             player.SetCanAttack(true);
             return;
         }
@@ -46,13 +57,20 @@ public class ButtonScript : MonoBehaviour
 
     public void eqButton()
     {
+        Player player = GetCurrentPlayer();
+
+        if (player == null)
+            return;
+
         if (eqPanelVisible)
         {
             eqPanel.SetActive(false);
             eqPanelVisible = false;
 
-            if (EquipmentManager.Instance != null)
-                EquipmentManager.Instance.CloseItemList();
+            EquipmentManager equipmentManager = player.GetComponent<EquipmentManager>();
+
+            if (equipmentManager != null)
+                equipmentManager.CloseItemList();
 
             CloseDescriptionPanel();
 
@@ -70,6 +88,11 @@ public class ButtonScript : MonoBehaviour
 
     public void SelectButton()
     {
+        Player player = GetCurrentPlayer();
+
+        if (player == null)
+            return;
+
         selectPanel.SetActive(false);
         CloseDescriptionPanel();
         player.SetCanAttack(false);
@@ -77,11 +100,18 @@ public class ButtonScript : MonoBehaviour
 
     public void ConsumableButton()
     {
+        Player player = GetCurrentPlayer();
+
+        if (player == null)
+            return;
+
         if (consumablePanelVisible)
         {
             consumablePanel.SetActive(false);
             consumablePanelVisible = false;
+
             CloseDescriptionPanel();
+
             player.SetCanAttack(true);
             return;
         }
@@ -93,6 +123,7 @@ public class ButtonScript : MonoBehaviour
         consumablePanel.SetActive(true);
         consumablePanelVisible = true;
     }
+
     private void CloseDescriptionPanel()
     {
         if (ItemDescriptionPanel.Instance != null)
