@@ -1,8 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
+using System.Xml;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
@@ -11,7 +10,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float stamina;
     [SerializeField] private float moveSpeed;
     [SerializeField] private float jumpForce = 10f;
-    public int lvl = 0;
+    public int lvl = 1;
     public int currentEXP;
 
     [Header("Combat")]
@@ -27,14 +26,6 @@ public class Player : MonoBehaviour
     [SerializeField] private GameObject arrowPrefab;
     [SerializeField] private GameObject magicPrefab;
 
-    [Header("UI")]
-    [SerializeField] private Slider healthSlider;
-    [SerializeField] private Slider staminaSlider;
-    [SerializeField] private Slider expSlider;
-    [SerializeField] private TMP_Text lvlText;
-    [SerializeField] private TMP_Text healthText;
-    [SerializeField] private TMP_Text staminaText;
-
     [Header("Floor")]
     [SerializeField] private Transform floorCheck;
     [SerializeField] private float floorCheckRadius = 0.1f;
@@ -46,6 +37,7 @@ public class Player : MonoBehaviour
 
     private Vector2 normalColliderSize;
     private Vector2 normalColliderOffset;
+   
 
     private Rigidbody2D rb;
     private float moveInput;
@@ -56,6 +48,10 @@ public class Player : MonoBehaviour
     private bool isDefending;
     private bool canAttack = true;
     private float knockbackTimer;
+
+    private bool isBot;
+    private TeamManager teamManager;
+    private CharacterData characterData;
 
     private void Start()
     {
@@ -72,15 +68,14 @@ public class Player : MonoBehaviour
         health = stats.health;
         stamina = stats.stamina;
 
-        UiUpdate();
-
-        expSlider.maxValue = (lvl + 1) * 100;
-        expSlider.value = currentEXP;
-        lvlText.text = $"Lvl {lvl}";
+        
     }
 
     private void Update()
     {
+        if (isBot)
+            return;
+
         moveInput = Input.GetAxisRaw("Horizontal");
 
         if (Input.GetKeyDown(KeyCode.Space) && OnFloor() && !IsCrouching() && stamina > 25f)
@@ -91,8 +86,6 @@ public class Player : MonoBehaviour
 
         if (invulnerabilityTimer > 0f)
             invulnerabilityTimer -= Time.deltaTime;
-
-        UiUpdate();
 
         if (Input.GetKey(KeyCode.LeftShift))
             Crouch();
@@ -111,42 +104,6 @@ public class Player : MonoBehaviour
         LvlUp();
     }
 
-    public void GetEXP(int exp)
-    {
-        currentEXP += Mathf.RoundToInt(exp * stats.expBonus);
-        expSlider.value = currentEXP;
-        LvlUp();
-
-        if (CharacterManager.Instance != null)
-            CharacterManager.Instance.UpdateCharacterFromPlayer(this, stats);
-    }
-
-    private void LvlUp()
-    {
-        if (currentEXP >= (lvl + 1) * 100)
-        {
-            lvl += 1;
-            currentEXP -= lvl * 100;
-            lvlText.text = $"Lvl {lvl}";
-            expSlider.maxValue = (lvl + 1) * 100;
-            expSlider.value = currentEXP;
-            stats.freePoint += 1;
-
-            if (CharacterManager.Instance != null)
-                CharacterManager.Instance.UpdateCharacterFromPlayer(this, stats);
-        }
-    }
-
-    private void UiUpdate()
-    {
-        healthSlider.maxValue = stats.health;
-        staminaSlider.maxValue = stats.stamina;
-        healthSlider.value = health;
-        staminaSlider.value = stamina;
-        healthText.text = Mathf.Round(healthSlider.value) + "/" + Mathf.Round(healthSlider.maxValue);
-        staminaText.text = Mathf.Round(staminaSlider.value) + "/" + Mathf.Round(staminaSlider.maxValue);
-    }
-
     private void FixedUpdate()
     {
         if (knockbackTimer > 0f)
@@ -155,11 +112,104 @@ public class Player : MonoBehaviour
             return;
         }
 
+        if (isBot)
+            return;
+
         rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
+    }
+
+    public void SetTeamManager(TeamManager manager)
+    {
+        teamManager = manager;
+    }
+
+    public void SetBotMode(bool value)
+    {
+        isBot = value;
+
+        BotController botController = GetComponent<BotController>();
+
+        if (botController != null)
+            botController.enabled = value;
+    }
+
+    public bool IsBot()
+    {
+        return isBot;
+    }
+
+    public CharacterData GetCharacterData()
+    {
+        return characterData;
+    }
+
+    public void SetCharacterData(CharacterData data)
+    {
+        characterData = data;
+    }
+
+    public void InitializeCharacter(CharacterData data)
+    {
+        characterData = data;
+
+        if (CharacterManager.Instance == null || data == null)
+            return;
+
+        CharacterManager.Instance.ApplyCharacterToPlayer(data, this, stats);
+    }
+
+    public void SaveCharacterData()
+    {
+        if (characterData == null || CharacterManager.Instance == null || stats == null)
+            return;
+
+        CharacterManager.Instance.UpdateCharacterFromPlayer(characterData, this, stats);
+    }
+
+    public void RefreshStats()
+    {
+        if (stats == null)
+            return;
+
+        stats.UpdateStats();
+
+        if (health > stats.health)
+            health = stats.health;
+
+        if (stamina > stats.stamina)
+            stamina = stats.stamina;
+
+        moveSpeed = stats.speed;
+    }
+
+    public void GetEXP(int exp)
+    {
+        currentEXP += Mathf.RoundToInt(exp * stats.expBonus);
+        LvlUp();
+
+        if (characterData != null)
+            SaveCharacterData();
+    }
+   
+    private void LvlUp()
+    {
+        if (currentEXP >= lvl * 100)
+        {
+            lvl += 1;
+            currentEXP -= lvl * 100;
+
+            stats.freePoint += 1;
+
+            if (characterData != null)
+                SaveCharacterData();
+        }
     }
 
     private bool OnFloor()
     {
+        if (floorCheck == null)
+            return false;
+
         return Physics2D.OverlapCircle(floorCheck.position, floorCheckRadius, floorLayer) != null;
     }
 
@@ -169,7 +219,9 @@ public class Player : MonoBehaviour
         {
             float oldHeight = playerCollider.size.y;
             float newHeight = oldHeight / 2f;
+
             moveSpeed /= 2;
+
             playerCollider.size = new Vector2(playerCollider.size.x, newHeight);
             playerCollider.offset = new Vector2(playerCollider.offset.x, normalColliderOffset.y - (oldHeight - newHeight) / 2f);
         }
@@ -205,9 +257,14 @@ public class Player : MonoBehaviour
 
     private void Attack()
     {
-        if (!canAttack) return;
-        if (isDefending) return;
-        if (Time.time < nextAttackTime) return;
+        if (!canAttack)
+            return;
+
+        if (isDefending)
+            return;
+
+        if (Time.time < nextAttackTime)
+            return;
 
         ItemData weapon = stats.GetWeapon();
         float staminaCost = 25f;
@@ -239,8 +296,14 @@ public class Player : MonoBehaviour
             }
         }
 
+        SetAttackCooldown();
+    }
+
+    private void SetAttackCooldown()
+    {
         float speedMultiplier = skillManager != null ? skillManager.GetAttackSpeedMultiplier() : 1f;
         float currentCooldown = Mathf.Max(attackCooldown / (1f + stats.speed * 0.1f) / speedMultiplier, 0.1f);
+
         nextAttackTime = Time.time + currentCooldown;
     }
 
@@ -274,6 +337,7 @@ public class Player : MonoBehaviour
                 damage *= elementMultiplier;
 
                 Vector2 knockbackDirection = (enemy.transform.position - transform.position).normalized;
+
                 enemyAI.TakeDamage(damage, hitPoint, stats.knockback * (skillManager != null ? skillManager.GetKnockbackMultiplier() : 1f), knockbackDirection, stats.stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage);
             }
         }
@@ -284,10 +348,7 @@ public class Player : MonoBehaviour
 
     private void ShootProjectile(GameObject projectilePrefab)
     {
-        if (projectilePrefab == null)
-            return;
-
-        if (attackPoint == null)
+        if (projectilePrefab == null || attackPoint == null)
             return;
 
         Camera cam = Camera.main;
@@ -331,6 +392,9 @@ public class Player : MonoBehaviour
         {
             ItemData weapon = stats.GetWeapon();
 
+            if (weapon == null)
+                return;
+
             StatusEffectType statusEffect = weapon.GetStatusEffect();
             float statusChance = weapon.GetStatusChance();
             float statusDuration = weapon.GetStatusDuration();
@@ -356,12 +420,14 @@ public class Player : MonoBehaviour
     public void SetCanAttack(bool value)
     {
         canAttack = value;
-        if (!value) isDefending = false;
+
+        if (!value)
+            isDefending = false;
     }
 
     public void TakeDamage(float damage)
     {
-        if (invulnerabilityTimer > 0f)
+        if (invulnerabilityTimer > 0f || IsDead())
             return;
 
         invulnerabilityTimer = invulnerabilityTime;
@@ -378,25 +444,19 @@ public class Player : MonoBehaviour
         health = Mathf.Clamp(health, 0f, stats.health);
 
         if (health <= 0f)
-        {
-            //Die
-        }
-
-        UiUpdate();
+            SetCanAttack(false);
     }
 
     public void Heal(float amount)
     {
         health += amount;
         health = Mathf.Clamp(health, 0f, stats.health);
-        UiUpdate();
     }
 
     private void UseStamina(float amount)
     {
         stamina -= amount;
         stamina = Mathf.Clamp(stamina, 0f, stats.stamina);
-        UiUpdate();
     }
 
     private void GetWeaponStatus(out StatusEffectType statusEffect, out float statusChance, out float statusDuration, out float statusDamage)
@@ -423,9 +483,9 @@ public class Player : MonoBehaviour
             return;
 
         float regeneration = IsCrouching() ? 15f : 10f;
+
         stamina += regeneration * Time.deltaTime;
         stamina = Mathf.Clamp(stamina, 0f, stats.stamina);
-        UiUpdate();
     }
 
     public void ApplyKnockback(Vector2 direction, float force)
@@ -447,5 +507,138 @@ public class Player : MonoBehaviour
     public float GetHealthPercent()
     {
         return stats.health > 0f ? health / stats.health : 0f;
+    }
+
+    public float GetHealth()
+    {
+        return health;
+    }
+    public float GetStamina()
+    {
+        return stamina;
+    }
+
+    public float GetMaxHealth()
+    {
+        return stats != null ? stats.health : 0f;
+    }
+
+    public Stats GetStats()
+    {
+        return stats;
+    }
+
+    public bool IsDead()
+    {
+        return health <= 0f;
+    }
+
+    public bool IsDefending()
+    {
+        return isDefending;
+    }
+
+    public void BotMeleeAttack()
+    {
+        if (!canAttack || isDefending || IsDead() || Time.time < nextAttackTime)
+            return;
+
+        float staminaCost = 25f;
+
+        if (skillManager != null)
+            staminaCost *= skillManager.GetStaminaCostMultiplier();
+
+        if (stamina < staminaCost)
+            return;
+
+        UseStamina(staminaCost);
+
+        if (skillManager != null)
+            skillManager.RegisterAttack();
+
+        MeleeAttack();
+        SetAttackCooldown();
+    }
+
+    public void BotRangedAttack(EnemyAI enemy)
+    {
+        if (enemy == null || !canAttack || isDefending || IsDead() || Time.time < nextAttackTime)
+            return;
+
+        if (attackPoint == null)
+            return;
+
+        ItemData weapon = stats.GetWeapon();
+
+        if (weapon == null)
+            return;
+
+        GameObject projectilePrefab = null;
+
+        switch (weapon.weaponType)
+        {
+            case WeaponType.Bow:
+                projectilePrefab = arrowPrefab;
+                break;
+
+            case WeaponType.Staff:
+                projectilePrefab = magicPrefab;
+                break;
+
+            default:
+                return;
+        }
+
+        if (projectilePrefab == null)
+            return;
+
+        float staminaCost = weapon.weaponType == WeaponType.Staff ? 50f : 25f;
+
+        if (skillManager != null)
+            staminaCost *= skillManager.GetStaminaCostMultiplier();
+
+        if (stamina < staminaCost)
+            return;
+
+        UseStamina(staminaCost);
+
+        if (skillManager != null)
+            skillManager.RegisterAttack();
+
+        Vector2 direction = (enemy.transform.position - attackPoint.position).normalized;
+
+        bool doubleShot = false;
+
+        if (skillManager != null && weapon.weaponType == WeaponType.Bow)
+            doubleShot = skillManager.ConsumeDoubleShot();
+
+        if (doubleShot)
+        {
+            ShootSingleProjectile(projectilePrefab, direction);
+            ShootSingleProjectile(projectilePrefab, Quaternion.Euler(0f, 0f, 10f) * direction);
+        }
+        else
+        {
+            ShootSingleProjectile(projectilePrefab, direction);
+        }
+
+        if (skillManager != null)
+            skillManager.ConsumeAttackSkill();
+
+        SetAttackCooldown();
+    }
+
+    public void BotUseClassSkill()
+    {
+        if (!IsDead() && skillManager != null)
+            skillManager.UseActiveSkill();
+    }
+
+    public void BotDefense(bool value)
+    {
+        if (value)
+            StartDefense();
+        else
+            StopDefense();
     }
 }

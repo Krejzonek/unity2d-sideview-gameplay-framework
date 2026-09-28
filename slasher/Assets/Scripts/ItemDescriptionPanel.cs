@@ -105,7 +105,20 @@ public class ItemDescriptionPanel : MonoBehaviour
         if (comparisonImage == null)
             return;
 
-        EquipmentSlot[] slots = FindObjectsByType<EquipmentSlot>(FindObjectsSortMode.None);
+        if (TeamManager.Instance == null)
+            return;
+
+        Player player = TeamManager.Instance.CurrentPlayer;
+
+        if (player == null)
+            return;
+
+        EquipmentManager equipmentManager = player.GetComponent<EquipmentManager>();
+
+        if (equipmentManager == null)
+            return;
+
+        EquipmentSlot[] slots = player.GetComponentsInChildren<EquipmentSlot>(true);
 
         foreach (EquipmentSlot slot in slots)
         {
@@ -193,7 +206,15 @@ public class ItemDescriptionPanel : MonoBehaviour
         if (equipmentItem == null)
             return;
 
-        EquipmentManager equipmentManager = EquipmentManager.Instance;
+        if (TeamManager.Instance == null)
+            return;
+
+        Player player = TeamManager.Instance.CurrentPlayer;
+
+        if (player == null)
+            return;
+
+        EquipmentManager equipmentManager = player.GetComponent<EquipmentManager>();
 
         if (equipmentManager == null)
             return;

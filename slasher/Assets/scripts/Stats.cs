@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 
 public enum CharacterClass
@@ -62,15 +63,15 @@ public class Stats : MonoBehaviour
     [Header("Equipment")]
     [SerializeField] private ItemData[] equippedItems;
 
-    [Header("First Door")]
-    [SerializeField] private GameObject firstDoor;
-
     [SerializeField] private EquipmentSlot[] equipmentSlots;
     private List<StatEffect> activeEffects = new();
+    private SpriteRenderer spriteRenderer;
 
     private void Awake()
     {
+        spriteRenderer = GetComponent<SpriteRenderer>();
         UpdateStats();
+        UpdateClassColor();
     }
 
     public void UpdateStats()
@@ -166,6 +167,8 @@ public class Stats : MonoBehaviour
 
         critRate = Mathf.Clamp(critRate, 0f, 100f);
         stunChance = Mathf.Clamp(stunChance, 0f, 100f);
+
+        UpdateClassColor();
     }
 
     public void HealthAdd()
@@ -246,6 +249,7 @@ public class Stats : MonoBehaviour
         if (CharacterManager.Instance != null)
             CharacterManager.Instance.SetCharacterClass(newClass);
 
+        
         UpdateStats();
     }
 
@@ -280,7 +284,19 @@ public class Stats : MonoBehaviour
         attack = attackPoint;
         luck = luckPoint;
     }
+    private void UpdateClassColor()
+    {
+        if (spriteRenderer == null)
+            return;
 
+        if (characterClass == null)
+        {
+            spriteRenderer.color = Color.gray;
+            return;
+        }
+
+        spriteRenderer.color = characterClass.classColor;
+    }
     public void SetStatPoints(float health, float stamina, float speed, float attack, float luck)
     {
         healthPoint = health;

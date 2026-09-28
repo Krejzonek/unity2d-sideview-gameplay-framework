@@ -37,6 +37,9 @@ public class CharacterManager : MonoBehaviour
         CharacterData character = new CharacterData(characterName.Trim());
         characters.Add(character);
 
+        if (selectedCharacterIndex == -1)
+            selectedCharacterIndex = 0;
+
         return true;
     }
 
@@ -58,33 +61,50 @@ public class CharacterManager : MonoBehaviour
 
     public void UpdateCharacterFromPlayer(Player player, Stats stats)
     {
-        if (SelectedCharacter == null || player == null || stats == null)
+        if (SelectedCharacter == null)
             return;
 
-        SelectedCharacter.level = player.lvl;
-        SelectedCharacter.currentEXP = player.currentEXP;
-        SelectedCharacter.characterClass = stats.characterClass;
-        SelectedCharacter.freePoint = stats.freePoint;
+        UpdateCharacterFromPlayer(SelectedCharacter, player, stats);
+    }
+
+    public void UpdateCharacterFromPlayer(CharacterData character, Player player, Stats stats)
+    {
+        if (character == null || player == null || stats == null)
+            return;
+
+        character.characterName = character.characterName;
+        character.level = player.lvl;
+        character.currentEXP = player.currentEXP;
+        character.characterClass = stats.characterClass;
+        character.freePoint = stats.freePoint;
 
         stats.GetStatPoints(out float healthPoint, out float staminaPoint, out float speedPoint, out float attackPoint, out float luckPoint);
 
-        SelectedCharacter.healthPoint = healthPoint;
-        SelectedCharacter.staminaPoint = staminaPoint;
-        SelectedCharacter.speedPoint = speedPoint;
-        SelectedCharacter.attackPoint = attackPoint;
-        SelectedCharacter.luckPoint = luckPoint;
+        character.healthPoint = healthPoint;
+        character.staminaPoint = staminaPoint;
+        character.speedPoint = speedPoint;
+        character.attackPoint = attackPoint;
+        character.luckPoint = luckPoint;
     }
 
     public void ApplyCharacterToPlayer(Player player, Stats stats)
     {
-        if (SelectedCharacter == null || player == null || stats == null)
+        if (SelectedCharacter == null)
             return;
 
-        player.lvl = SelectedCharacter.level;
-        player.currentEXP = SelectedCharacter.currentEXP;
+        ApplyCharacterToPlayer(SelectedCharacter, player, stats);
+    }
 
-        stats.freePoint = SelectedCharacter.freePoint;
-        stats.SetStatPoints(SelectedCharacter.healthPoint, SelectedCharacter.staminaPoint, SelectedCharacter.speedPoint, SelectedCharacter.attackPoint, SelectedCharacter.luckPoint);
-        stats.SetClass(SelectedCharacter.characterClass);
+    public void ApplyCharacterToPlayer(CharacterData character, Player player, Stats stats)
+    {
+        if (character == null || player == null || stats == null)
+            return;
+
+        player.lvl = character.level;
+        player.currentEXP = character.currentEXP;
+
+        stats.freePoint = character.freePoint;
+        stats.SetStatPoints(character.healthPoint, character.staminaPoint, character.speedPoint, character.attackPoint, character.luckPoint);
+        stats.SetClass(character.characterClass);
     }
 }
