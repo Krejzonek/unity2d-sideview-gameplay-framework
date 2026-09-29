@@ -9,14 +9,33 @@ public class RoomTrigger : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (activated) return;
-        if (!other.CompareTag("Player")) return;
-        activated = true;
-        roomPoints = this.transform.GetComponentInParent<RoomPoints>();
-        roomPoints.CloseTheDoor();
+        if (!other.CompareTag("Player"))
+            return;
+
+        Player player = other.GetComponent<Player>();
+
+        if (player == null)
+            return;
+
         CameraFollow cameraFollow = FindFirstObjectByType<CameraFollow>();
-        if (cameraFollow != null) cameraFollow.SetBounds(room.GetMapBounds());
+
+        if (cameraFollow != null)
+            cameraFollow.SetBounds(room.GetMapBounds());
+
+        if (activated)
+            return;
+
+        activated = true;
+
+        if (roomPoints == null)
+            roomPoints = GetComponentInParent<RoomPoints>();
+
+        if (roomPoints != null)
+            roomPoints.CloseTheDoor();
+
         RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
-        if (generator != null) generator.GenerateNextRoom();
+
+        if (generator != null)
+            generator.GenerateNextRoom();
     }
 }

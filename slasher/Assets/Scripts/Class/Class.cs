@@ -17,10 +17,15 @@ public class Class : ScriptableObject
     public float defenceBonus;
     public float speedBonus;
 
+    [Header("Formation")]
+    public int formationPosition;
+
     [Header("Passive Skills")]
     public PassiveSkill passiveSkill1;
     public PassiveSkill passiveSkill2;
 
     [Header("Active Skill")]
     public ActiveSkill activeSkill;
+
+
 }

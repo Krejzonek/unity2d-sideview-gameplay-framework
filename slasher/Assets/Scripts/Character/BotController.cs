@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class BotController : MonoBehaviour
@@ -5,6 +6,10 @@ public class BotController : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float followDistance = 2.5f;
     [SerializeField] private float detectionRange = 10f;
+
+    [Header("Formation")]
+    [SerializeField] private float formationSpacing = 2f;
+    [SerializeField] private float formationStopDistance = 0.2f;
 
     [Header("Combat")]
     [SerializeField] private float attackRange = 1.5f;
@@ -17,6 +22,7 @@ public class BotController : MonoBehaviour
     private EnemyAI target;
 
     private float targetUpdateTimer;
+    private int formationPosition;
 
     private void Awake()
     {
@@ -42,7 +48,6 @@ public class BotController : MonoBehaviour
         teamManager = TeamManager.Instance;
 
         UpdateTarget();
-
         UpdateAI();
     }
 
@@ -73,10 +78,10 @@ public class BotController : MonoBehaviour
             return;
         }
 
-        FollowLeader();
+        FollowFormation();
     }
 
-    private void FollowLeader()
+    private void FollowFormation()
     {
         if (TeamManager.Instance == null)
         {
@@ -86,41 +91,40 @@ public class BotController : MonoBehaviour
 
         Player leader = TeamManager.Instance.CurrentPlayer;
 
-        if (leader == null)
+        if (leader == null || leader == player || leader.IsDead())
         {
             StopMoving();
             return;
         }
 
-        if (leader.gameObject == null)
+        Vector3 targetPosition = GetFormationTargetPosition(leader);
+
+        float distance = Vector2.Distance(transform.position, targetPosition);
+
+        if (distance <= formationStopDistance)
         {
             StopMoving();
             return;
         }
 
-        if (leader == player)
-        {
-            StopMoving();
-            return;
-        }
+        MoveTowards(targetPosition);
+    }
 
-        Transform leaderTransform = leader.transform;
+    private Vector3 GetFormationTargetPosition(Player leader)
+    {
+        Vector3 position = leader.transform.position;
 
-        if (leaderTransform == null)
-        {
-            StopMoving();
-            return;
-        }
+        if (formationPosition == 0)
+            return position;
 
-        float distance = Vector2.Distance(transform.position, leaderTransform.position);
+        float direction = Mathf.Sign(leader.transform.localScale.x);
 
-        if (distance <= followDistance)
-        {
-            StopMoving();
-            return;
-        }
+        if (direction == 0)
+            direction = 1f;
 
-        MoveTowards(leaderTransform.position);
+        position.x += formationPosition * formationSpacing * direction;
+
+        return position;
     }
 
     private void MoveToTarget()
@@ -250,6 +254,11 @@ public class BotController : MonoBehaviour
         Vector3 scale = transform.localScale;
         scale.x = Mathf.Abs(scale.x) * direction;
         transform.localScale = scale;
+    }
+
+    public void SetFormationPosition(int position)
+    {
+        formationPosition = position;
     }
 
     public EnemyAI GetTarget()

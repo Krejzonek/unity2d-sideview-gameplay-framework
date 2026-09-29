@@ -113,42 +113,31 @@ public class ItemDescriptionPanel : MonoBehaviour
         if (player == null)
             return;
 
-        EquipmentManager equipmentManager = player.GetComponent<EquipmentManager>();
+        EquipmentManager equipmentManager = FindFirstObjectByType<EquipmentManager>();
 
         if (equipmentManager == null)
             return;
 
-        EquipmentSlot[] slots = player.GetComponentsInChildren<EquipmentSlot>(true);
+        ItemData equippedItem = equipmentManager.GetEquippedItem(item.equipmentType);
 
-        foreach (EquipmentSlot slot in slots)
+        if (equippedItem == null)
         {
-            if (slot.Type != item.equipmentType)
-                continue;
-
-            ItemData equippedItem = slot.EquippedItem;
-
-            if (equippedItem == null)
-            {
-                comparisonImage.color = Color.green;
-                comparisonImage.gameObject.SetActive(true);
-                return;
-            }
-
-            float newValue = GetEquipmentPower(item);
-            float oldValue = GetEquipmentPower(equippedItem);
-
-            if (newValue > oldValue)
-                comparisonImage.color = Color.green;
-            else if (newValue < oldValue)
-                comparisonImage.color = Color.red;
-            else
-                comparisonImage.color = Color.gray;
-
+            comparisonImage.color = Color.green;
             comparisonImage.gameObject.SetActive(true);
             return;
         }
 
-        comparisonImage.gameObject.SetActive(false);
+        float newValue = GetEquipmentPower(item);
+        float oldValue = GetEquipmentPower(equippedItem);
+
+        if (newValue > oldValue)
+            comparisonImage.color = Color.green;
+        else if (newValue < oldValue)
+            comparisonImage.color = Color.red;
+        else
+            comparisonImage.color = Color.gray;
+
+        comparisonImage.gameObject.SetActive(true);
     }
 
     private float GetEquipmentPower(ItemData item)
@@ -206,22 +195,22 @@ public class ItemDescriptionPanel : MonoBehaviour
         if (equipmentItem == null)
             return;
 
-        if (TeamManager.Instance == null)
-            return;
-
-        Player player = TeamManager.Instance.CurrentPlayer;
-
-        if (player == null)
-            return;
-
-        EquipmentManager equipmentManager = player.GetComponent<EquipmentManager>();
+        EquipmentManager equipmentManager = FindFirstObjectByType<EquipmentManager>();
 
         if (equipmentManager == null)
             return;
 
-        equipmentManager.SelectItem(equipmentItem);
+        EquipmentSlot[] slots = FindObjectsByType<EquipmentSlot>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
-        Close();
+        foreach (EquipmentSlot slot in slots)
+        {
+            if (slot == null || slot.Type != equipmentItem.equipmentType)
+                continue;
+
+            equipmentManager.EquipItem(slot, equipmentItem);
+            Close();
+            return;
+        }
     }
 
     private void EquipConsumable()

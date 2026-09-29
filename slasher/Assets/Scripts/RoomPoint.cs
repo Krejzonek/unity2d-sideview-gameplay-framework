@@ -19,4 +19,9 @@ public class RoomPoints : MonoBehaviour
     {
         entry.gameObject.SetActive(true);
     }
+
+    public void OpenTheDoor()
+    {
+        entry.gameObject.SetActive(false);
+    }
 }

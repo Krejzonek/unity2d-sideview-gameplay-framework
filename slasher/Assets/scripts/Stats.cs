@@ -60,10 +60,6 @@ public class Stats : MonoBehaviour
     public float knockback;
     public float stunChance;
 
-    [Header("Equipment")]
-    [SerializeField] private ItemData[] equippedItems;
-
-    [SerializeField] private EquipmentSlot[] equipmentSlots;
     private List<StatEffect> activeEffects = new();
     private SpriteRenderer spriteRenderer;
 
@@ -97,39 +93,39 @@ public class Stats : MonoBehaviour
             speed += characterClass.speedBonus;
             attack += characterClass.attackBonus;
         }
+        Player player = GetComponent<Player>();
 
-        foreach (EquipmentSlot slot in equipmentSlots)
+        if (player != null && player.GetCharacterData() != null)
         {
-            if (slot == null)
-                continue;
-
-            ItemData item = slot.EquippedItem;
-
-            if (item == null)
-                continue;
-
-            health += item.healthBonus;
-            defence += item.defenceBonus;
-            stamina += item.staminaBonus;
-            speed += item.speedBonus;
-            attack += item.attackBonus;
-            expBonus += item.expBonus;
-
-            switch (item.miscType)
+            foreach (ItemData item in player.GetCharacterData().equippedItems)
             {
-                case MiscType.CritRate:
-                    critRate += item.GetMiscValue();
-                    break;
+                if (item == null)
+                    continue;
 
-                case MiscType.Knockback:
-                    knockback += item.GetMiscValue();
-                    break;
+                health += item.healthBonus;
+                defence += item.defenceBonus;
+                stamina += item.staminaBonus;
+                speed += item.speedBonus;
+                attack += item.attackBonus;
+                expBonus += item.expBonus;
 
-                case MiscType.Stun:
-                    stunChance += item.GetMiscValue();
-                    break;
+                switch (item.miscType)
+                {
+                    case MiscType.CritRate:
+                        critRate += item.GetMiscValue();
+                        break;
+
+                    case MiscType.Knockback:
+                        knockback += item.GetMiscValue();
+                        break;
+
+                    case MiscType.Stun:
+                        stunChance += item.GetMiscValue();
+                        break;
+                }
             }
         }
+
 
         foreach (StatEffect effect in activeEffects)
         {
@@ -228,15 +224,15 @@ public class Stats : MonoBehaviour
 
     public ItemData GetWeapon()
     {
-        foreach (EquipmentSlot slot in equipmentSlots)
+        Player player = GetComponent<Player>();
+
+        if (player == null || player.GetCharacterData() == null)
+            return null;
+
+        foreach (ItemData item in player.GetCharacterData().equippedItems)
         {
-            if (slot == null)
-                continue;
-
-            if (slot.Type != EquipmentType.Weapon)
-                continue;
-
-            return slot.EquippedItem;
+            if (item != null && item.equipmentType == EquipmentType.Weapon)
+                return item;
         }
 
         return null;
@@ -246,10 +242,11 @@ public class Stats : MonoBehaviour
     {
         characterClass = newClass;
 
-        if (CharacterManager.Instance != null)
-            CharacterManager.Instance.SetCharacterClass(newClass);
+        Player player = GetComponent<Player>();
 
-        
+        if (player != null && player.GetCharacterData() != null)
+            player.GetCharacterData().characterClass = newClass;
+
         UpdateStats();
     }
 

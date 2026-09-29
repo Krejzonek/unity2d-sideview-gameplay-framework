@@ -38,7 +38,6 @@ public class ClassSelector : MonoBehaviour
     private void Start()
     {
         cam = Camera.main;
-        player = FindFirstObjectByType<Player>();
 
         if (uiClass != null)
             uiClass.SetActive(false);
@@ -66,6 +65,8 @@ public class ClassSelector : MonoBehaviour
         {
             bool isOpen = uiClass.activeSelf;
             uiClass.SetActive(!isOpen);
+
+            player = TeamManager.Instance != null ? TeamManager.Instance.CurrentPlayer : null;
 
             if (player != null)
             {
@@ -143,6 +144,8 @@ public class ClassSelector : MonoBehaviour
         if (selectedClass == null)
             return;
 
+        player = TeamManager.Instance != null ? TeamManager.Instance.CurrentPlayer : null;
+
         if (player != null)
         {
             Stats stats = player.GetComponent<Stats>();
@@ -164,6 +167,8 @@ public class ClassSelector : MonoBehaviour
     private IEnumerator EnableAttack()
     {
         yield return null;
-        player.SetCanAttack(true);
+
+        if (player != null)
+            player.SetCanAttack(true);
     }
 }

@@ -382,7 +382,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   room: {fileID: 4825818114989873497}
-  roomPoints: {fileID: 0}
+  roomPoints: {fileID: 2391138540777881437}
 --- !u!1 &3764944364824592511
 GameObject:
   m_ObjectHideFlags: 0

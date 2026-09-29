@@ -72,6 +72,59 @@ public class TeamManager : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        UpdateFormation();
+    }
+
+    private void UpdateFormation()
+    {
+        Player leader = CurrentPlayer;
+
+        if (leader == null)
+            return;
+
+        List<Player> sortedTeam = new List<Player>(team);
+
+        sortedTeam.Sort((a, b) => GetFormationPosition(a).CompareTo(GetFormationPosition(b)));
+
+        int leaderIndex = sortedTeam.IndexOf(leader);
+
+        if (leaderIndex < 0)
+            return;
+
+        for (int i = 0; i < sortedTeam.Count; i++)
+        {
+            Player player = sortedTeam[i];
+
+            if (player == null || player == leader || player.IsDead())
+                continue;
+
+            int relativePosition = i - leaderIndex;
+
+            BotController botController = player.GetComponent<BotController>();
+
+            if (botController != null)
+                botController.SetFormationPosition(relativePosition);
+        }
+    }
+
+    private int GetFormationPosition(Player player)
+    {
+        if (player == null)
+            return int.MaxValue;
+
+        Stats stats = player.GetStats();
+
+        if (stats == null)
+            return int.MaxValue;
+
+        if (stats.characterClass == null)
+            return 0;
+
+        return stats.characterClass.formationPosition + 1;
+    }
+
     public void SwitchCharacter(int index)
     {
         if (index < 0 || index >= team.Count)
