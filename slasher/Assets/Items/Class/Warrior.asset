@@ -21,6 +21,7 @@ MonoBehaviour:
   attackBonus: 15
   defenceBonus: 0
   speedBonus: 1
+  formationPosition: 3
   passiveSkill1: {fileID: 11400000, guid: 47ef1f02d530d454898738f52c6a4676, type: 2}
   passiveSkill2: {fileID: 11400000, guid: 3d06ddd08e05b2e479392b037ac56e38, type: 2}
   activeSkill: {fileID: 11400000, guid: d034c9ece4328a741a5ca236ac5bf5b0, type: 2}

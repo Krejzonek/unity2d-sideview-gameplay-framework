@@ -80,7 +80,6 @@ GameObject:
   - component: {fileID: 600575637574920754}
   - component: {fileID: 5798616679648062507}
   - component: {fileID: 8539261783837966337}
-  - component: {fileID: 7191145144864919182}
   - component: {fileID: 6152890624656137417}
   - component: {fileID: 8906405906093625272}
   m_Layer: 3
@@ -287,13 +286,6 @@ MonoBehaviour:
   critDamage: 0
   knockback: 0
   stunChance: 0
-  equippedItems: []
-  equipmentSlots:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
 --- !u!114 &8061368195527097820
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -349,27 +341,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lootPrefab: {fileID: 3080857759323171983, guid: 83b03a95e5df2d541b1330a2e2af6f58, type: 3}
---- !u!114 &7191145144864919182
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8062126315278442476}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2b4a53978dc680b4aab81716708ddcdc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  itemSelectionPanel: {fileID: 0}
-  itemListContent: {fileID: 0}
-  itemButtonPrefab: {fileID: 7519596034099529379, guid: 88285a9872461804b8fea0e06548ef0d, type: 3}
-  inventory:
-  - {fileID: 11400000, guid: 05955358e5068cd469d691fa365602f6, type: 2}
-  - {fileID: 11400000, guid: 87065221eadd9574d8dc8540503ccab8, type: 2}
-  - {fileID: 11400000, guid: cdf5243c77eeb054088427d540c7f2a3, type: 2}
-  - {fileID: 11400000, guid: c21f6aaf54474ac42bcc89e0597e5c15, type: 2}
-  - {fileID: 11400000, guid: 3b52f7d54d4f61c46b8b7db0fcc30ac3, type: 2}
 --- !u!114 &6152890624656137417
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -396,5 +367,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   followDistance: 2.5
   detectionRange: 10
+  formationSpacing: 2
+  formationStopDistance: 0.2
   attackRange: 1.5
   rangedAttackRange: 6

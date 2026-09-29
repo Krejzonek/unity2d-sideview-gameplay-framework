@@ -16,10 +16,12 @@ public class Room : MonoBehaviour
     [SerializeField] private Collider2D mapBounds;
 
     private int enemiesAlive;
+    private RoomPoints roomPoints;
 
     private void Start()
     {
         enemiesAlive = enemyParent.childCount;
+        roomPoints = GetComponentInChildren<RoomPoints>();
 
         if (exit != null)
             exit.SetActive(true);
@@ -42,6 +44,9 @@ public class Room : MonoBehaviour
 
         if (exit != null)
             exit.SetActive(false);
+
+        if (roomPoints != null)
+            roomPoints.OpenTheDoor();
     }
 
     public bool IsCleared()

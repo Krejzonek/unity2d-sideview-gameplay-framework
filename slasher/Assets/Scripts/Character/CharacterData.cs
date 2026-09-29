@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 [Serializable]
 public class CharacterData
@@ -17,6 +18,8 @@ public class CharacterData
     public float attackPoint;
     public float luckPoint;
 
+    public List<ItemData> equippedItems = new();
+
     public CharacterData(string name)
     {
         characterName = name;
@@ -30,5 +33,7 @@ public class CharacterData
         speedPoint = 0;
         attackPoint = 0;
         luckPoint = 0;
+
+        equippedItems = new List<ItemData>();
     }
 }

@@ -35,10 +35,10 @@ public class CharacterManager : MonoBehaviour
             return false;
 
         CharacterData character = new CharacterData(characterName.Trim());
-        characters.Add(character);
+        character.characterClass = null;
 
-        if (selectedCharacterIndex == -1)
-            selectedCharacterIndex = 0;
+        characters.Add(character);
+        selectedCharacterIndex = characters.Count - 1;
 
         return true;
     }
@@ -87,14 +87,6 @@ public class CharacterManager : MonoBehaviour
         character.luckPoint = luckPoint;
     }
 
-    public void ApplyCharacterToPlayer(Player player, Stats stats)
-    {
-        if (SelectedCharacter == null)
-            return;
-
-        ApplyCharacterToPlayer(SelectedCharacter, player, stats);
-    }
-
     public void ApplyCharacterToPlayer(CharacterData character, Player player, Stats stats)
     {
         if (character == null || player == null || stats == null)
@@ -105,6 +97,7 @@ public class CharacterManager : MonoBehaviour
 
         stats.freePoint = character.freePoint;
         stats.SetStatPoints(character.healthPoint, character.staminaPoint, character.speedPoint, character.attackPoint, character.luckPoint);
-        stats.SetClass(character.characterClass);
+        stats.characterClass = character.characterClass;
+        stats.UpdateStats();
     }
 }
