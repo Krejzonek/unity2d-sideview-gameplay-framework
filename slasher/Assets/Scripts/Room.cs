@@ -20,21 +20,44 @@ public class Room : MonoBehaviour
 
     private void Start()
     {
-        enemiesAlive = enemyParent.childCount;
         roomPoints = GetComponentInChildren<RoomPoints>();
+        enemiesAlive = CountEnemies();
 
         if (exit != null)
-            exit.SetActive(true);
+            exit.SetActive(enemiesAlive > 0);
 
         if (enemiesAlive == 0)
             RoomCleared();
+    }
+
+    private int CountEnemies()
+    {
+        if (enemyParent == null)
+            return 0;
+
+        int count = 0;
+
+        for (int i = 0; i < enemyParent.childCount; i++)
+        {
+            Transform child = enemyParent.GetChild(i);
+
+            if (!child.gameObject.activeInHierarchy)
+                continue;
+
+            EnemyAI enemy = child.GetComponent<EnemyAI>();
+
+            if (enemy != null)
+                count++;
+        }
+
+        return count;
     }
 
     public void EnemyKilled()
     {
         enemiesAlive--;
 
-        if (IsCleared())
+        if (enemiesAlive <= 0)
             RoomCleared();
     }
 
@@ -47,6 +70,9 @@ public class Room : MonoBehaviour
 
         if (roomPoints != null)
             roomPoints.OpenTheDoor();
+
+        if (TeamManager.Instance != null)
+            TeamManager.Instance.SetFormationMode(BotFormationMode.Idle);
     }
 
     public bool IsCleared()
