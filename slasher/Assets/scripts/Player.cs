@@ -37,10 +37,10 @@ public class Player : MonoBehaviour
 
     private Vector2 normalColliderSize;
     private Vector2 normalColliderOffset;
-   
 
     private Rigidbody2D rb;
     private float moveInput;
+    private float formationSpeed = -1f;
     private Stats stats;
     private ClassSkillManager skillManager;
     private float nextAttackTime;
@@ -67,8 +67,6 @@ public class Player : MonoBehaviour
         moveSpeed = stats.speed;
         health = stats.health;
         stamina = stats.stamina;
-
-        
     }
 
     private void Update()
@@ -115,7 +113,19 @@ public class Player : MonoBehaviour
         if (isBot)
             return;
 
-        rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
+        float currentMoveSpeed = formationSpeed > 0f ? formationSpeed : moveSpeed;
+
+        rb.velocity = new Vector2(moveInput * currentMoveSpeed, rb.velocity.y);
+    }
+
+    public void SetFormationSpeed(float speed)
+    {
+        formationSpeed = speed;
+    }
+
+    public void ClearFormationSpeed()
+    {
+        formationSpeed = -1f;
     }
 
     public void SetTeamManager(TeamManager manager)
@@ -190,7 +200,7 @@ public class Player : MonoBehaviour
         if (characterData != null)
             SaveCharacterData();
     }
-   
+
     private void LvlUp()
     {
         if (currentEXP >= lvl * 100)
@@ -513,6 +523,7 @@ public class Player : MonoBehaviour
     {
         return health;
     }
+
     public float GetStamina()
     {
         return stamina;

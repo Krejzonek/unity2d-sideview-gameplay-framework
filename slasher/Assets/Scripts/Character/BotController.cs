@@ -1,28 +1,33 @@
-using System.Collections;
 using UnityEngine;
+
+public enum BotFormationMode
+{
+    Idle,
+    Combat
+}
 
 public class BotController : MonoBehaviour
 {
-    [Header("Movement")]
-    [SerializeField] private float followDistance = 2.5f;
-    [SerializeField] private float detectionRange = 10f;
-
     [Header("Formation")]
     [SerializeField] private float formationSpacing = 2f;
-    [SerializeField] private float formationStopDistance = 0.2f;
+    [SerializeField] private float formationStopDistance = 0.8f;
 
     [Header("Combat")]
-    [SerializeField] private float attackRange = 1.5f;
-    [SerializeField] private float rangedAttackRange = 6f;
+    [SerializeField] private float combatSearchRange = 15f;
+    [SerializeField] private float meleeAttackRange = 1.5f;
+    [SerializeField] private float rangedAttackRange = 8f;
+    [SerializeField] private float retreatDistance = 4f;
 
     private Player player;
     private Stats stats;
     private Rigidbody2D rb;
     private TeamManager teamManager;
+
+    private int formationPosition;
+    private BotFormationMode formationMode = BotFormationMode.Idle;
     private EnemyAI target;
 
-    private float targetUpdateTimer;
-    private int formationPosition;
+    private float formationDirection = 1f;
 
     private void Awake()
     {
@@ -31,13 +36,7 @@ public class BotController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
     }
 
-    private void OnEnable()
-    {
-        target = null;
-        targetUpdateTimer = 0f;
-    }
-
-    private void Update()
+    private void FixedUpdate()
     {
         if (player == null || player.IsDead())
             return;
@@ -47,180 +46,115 @@ public class BotController : MonoBehaviour
 
         teamManager = TeamManager.Instance;
 
-        UpdateTarget();
-        UpdateAI();
-    }
-
-    private void FixedUpdate()
-    {
-        if (player == null || player.IsDead())
-            return;
-
-        Move();
-    }
-
-    private void UpdateAI()
-    {
-        if (target != null)
-        {
-            if (CanAttackTarget())
-                AttackTarget();
-
-            return;
-        }
-    }
-
-    private void Move()
-    {
-        if (target != null)
-        {
-            MoveToTarget();
-            return;
-        }
-
-        FollowFormation();
+        if (formationMode == BotFormationMode.Idle)
+            FollowFormation();
+        else
+            Combat();
     }
 
     private void FollowFormation()
     {
-        if (TeamManager.Instance == null)
+        Player leader = teamManager.CurrentPlayer;
+
+        if (leader == null || leader == player)
+            return;
+
+        float targetX = leader.transform.position.x + formationPosition * formationSpacing;
+        float distance = targetX - transform.position.x;
+
+        if (Mathf.Abs(distance) <= formationStopDistance)
         {
-            StopMoving();
+            rb.velocity = new Vector2(0f, rb.velocity.y);
             return;
         }
 
-        Player leader = TeamManager.Instance.CurrentPlayer;
+        float moveDirection = Mathf.Sign(distance);
 
-        if (leader == null || leader == player || leader.IsDead())
-        {
-            StopMoving();
-            return;
-        }
-
-        Vector3 targetPosition = GetFormationTargetPosition(leader);
-
-        float distance = Vector2.Distance(transform.position, targetPosition);
-
-        if (distance <= formationStopDistance)
-        {
-            StopMoving();
-            return;
-        }
-
-        MoveTowards(targetPosition);
+        rb.velocity = new Vector2(moveDirection * teamManager.GetFormationSpeed(), rb.velocity.y);
     }
 
-    private Vector3 GetFormationTargetPosition(Player leader)
-    {
-        Vector3 position = leader.transform.position;
-
-        if (formationPosition == 0)
-            return position;
-
-        float direction = Mathf.Sign(leader.transform.localScale.x);
-
-        if (direction == 0)
-            direction = 1f;
-
-        position.x += formationPosition * formationSpacing * direction;
-
-        return position;
-    }
-
-    private void MoveToTarget()
-    {
-        if (target == null)
-            return;
-
-        float distance = Vector2.Distance(transform.position, target.transform.position);
-
-        if (IsRangedClass())
-        {
-            if (distance < rangedAttackRange * 0.6f)
-                MoveAwayFrom(target.transform.position);
-            else if (distance > rangedAttackRange)
-                MoveTowards(target.transform.position);
-            else
-                StopMoving();
-        }
-        else
-        {
-            if (distance > attackRange)
-                MoveTowards(target.transform.position);
-            else
-                StopMoving();
-        }
-    }
-
-    private void UpdateTarget()
-    {
-        targetUpdateTimer -= Time.deltaTime;
-
-        if (targetUpdateTimer > 0f)
-            return;
-
-        targetUpdateTimer = 0.25f;
-
-        EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
-
-        EnemyAI closestEnemy = null;
-        float closestDistance = Mathf.Infinity;
-
-        foreach (EnemyAI enemy in enemies)
-        {
-            if (enemy == null)
-                continue;
-
-            float distance = Vector2.Distance(transform.position, enemy.transform.position);
-
-            if (distance > detectionRange)
-                continue;
-
-            if (distance < closestDistance)
-            {
-                closestDistance = distance;
-                closestEnemy = enemy;
-            }
-        }
-
-        target = ChooseTarget(closestEnemy);
-    }
-
-    private EnemyAI ChooseTarget(EnemyAI closestEnemy)
-    {
-        return closestEnemy;
-    }
-
-    private bool CanAttackTarget()
-    {
-        if (target == null)
-            return false;
-
-        float distance = Vector2.Distance(transform.position, target.transform.position);
-
-        if (IsRangedClass())
-            return distance <= rangedAttackRange;
-
-        return distance <= attackRange;
-    }
-
-    private void AttackTarget()
-    {
-        if (target == null)
-            return;
-
-        if (IsRangedClass())
-            player.BotRangedAttack(target);
-        else
-            player.BotMeleeAttack();
-    }
-
-    private bool IsRangedClass()
+    private void Combat()
     {
         if (stats == null || stats.characterClass == null)
-            return false;
+        {
+            RetreatFromEnemy();
+            return;
+        }
 
-        return stats.characterClass.className == "Archer" || stats.characterClass.className == "Mage";
+        target = GetClosestEnemy();
+
+        if (target == null)
+        {
+            rb.velocity = new Vector2(0f, rb.velocity.y);
+            return;
+        }
+
+        string className = stats.characterClass.className;
+
+        if (className == "Warrior")
+            CombatMelee();
+        else if (className == "Archer" || className == "Mage")
+            CombatRanged();
+        else
+            RetreatFromEnemy();
+    }
+
+    private void CombatMelee()
+    {
+        if (target == null)
+            return;
+
+        float distance = Vector2.Distance(transform.position, target.transform.position);
+
+        if (distance > meleeAttackRange)
+        {
+            MoveTowards(target.transform.position);
+            return;
+        }
+
+        rb.velocity = new Vector2(0f, rb.velocity.y);
+        player.BotMeleeAttack();
+    }
+
+    private void CombatRanged()
+    {
+        if (target == null)
+            return;
+
+        float distance = Vector2.Distance(transform.position, target.transform.position);
+
+        if (distance > rangedAttackRange)
+        {
+            MoveTowards(target.transform.position);
+            return;
+        }
+
+        if (distance < retreatDistance)
+        {
+            MoveAwayFrom(target.transform.position);
+            return;
+        }
+
+        rb.velocity = new Vector2(0f, rb.velocity.y);
+        player.BotRangedAttack(target);
+    }
+
+    private void RetreatFromEnemy()
+    {
+        target = GetClosestEnemy();
+
+        if (target == null)
+        {
+            rb.velocity = new Vector2(0f, rb.velocity.y);
+            return;
+        }
+
+        float distance = Vector2.Distance(transform.position, target.transform.position);
+
+        if (distance < retreatDistance)
+            MoveAwayFrom(target.transform.position);
+        else
+            rb.velocity = new Vector2(0f, rb.velocity.y);
     }
 
     private void MoveTowards(Vector3 position)
@@ -228,8 +162,6 @@ public class BotController : MonoBehaviour
         float direction = Mathf.Sign(position.x - transform.position.x);
 
         rb.velocity = new Vector2(direction * stats.speed, rb.velocity.y);
-
-        FaceDirection(direction);
     }
 
     private void MoveAwayFrom(Vector3 position)
@@ -237,28 +169,48 @@ public class BotController : MonoBehaviour
         float direction = Mathf.Sign(transform.position.x - position.x);
 
         rb.velocity = new Vector2(direction * stats.speed, rb.velocity.y);
-
-        FaceDirection(direction);
     }
 
-    private void StopMoving()
+    private EnemyAI GetClosestEnemy()
     {
-        rb.velocity = new Vector2(0f, rb.velocity.y);
-    }
+        EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
 
-    private void FaceDirection(float direction)
-    {
-        if (direction == 0)
-            return;
+        EnemyAI closest = null;
+        float closestDistance = combatSearchRange;
 
-        Vector3 scale = transform.localScale;
-        scale.x = Mathf.Abs(scale.x) * direction;
-        transform.localScale = scale;
+        foreach (EnemyAI enemy in enemies)
+        {
+            if (enemy == null || !enemy.gameObject.activeInHierarchy)
+                continue;
+
+            float distance = Vector2.Distance(transform.position, enemy.transform.position);
+
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closest = enemy;
+            }
+        }
+
+        return closest;
     }
 
     public void SetFormationPosition(int position)
     {
         formationPosition = position;
+    }
+
+    public void SetFormationMode(BotFormationMode mode)
+    {
+        formationMode = mode;
+
+        if (mode == BotFormationMode.Idle)
+            target = null;
+    }
+
+    public BotFormationMode GetFormationMode()
+    {
+        return formationMode;
     }
 
     public EnemyAI GetTarget()
