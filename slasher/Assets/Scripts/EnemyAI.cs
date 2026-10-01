@@ -30,6 +30,10 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float health = 50f;
     [SerializeField] private float damage = 10f;
 
+    [Header("Experience")]
+    [SerializeField] private int baseExp = 100;
+    [SerializeField] private float eliteExpMultiplier = 2.5f;
+
     [Header("Headshot")]
     [SerializeField] private float headshotMultiplier = 2f;
     [SerializeField] private float headshotHeight = 0.8f;
@@ -105,6 +109,8 @@ public class EnemyAI : MonoBehaviour
 
     private float normalDetectionRange;
     private float normalMoveSpeed;
+
+    private Player lastAttacker;
 
     private void Start()
     {
@@ -599,8 +605,11 @@ public class EnemyAI : MonoBehaviour
         attackTimer = attackCooldown;
     }
 
-    public void TakeDamage(float damageAmount, Vector2 hitPoint, float knockback, Vector2 knockbackDirection, float stunChance, bool isCrit, StatusEffectType statusEffect = StatusEffectType.None, float statusChance = 0f, float statusDuration = 0f, float statusDamage = 0f)
+    public void TakeDamage(float damageAmount, Vector2 hitPoint, float knockback, Vector2 knockbackDirection, float stunChance, bool isCrit, StatusEffectType statusEffect = StatusEffectType.None, float statusChance = 0f, float statusDuration = 0f, float statusDamage = 0f, Player attacker = null)
     {
+        if (attacker != null)
+            lastAttacker = attacker;
+
         bool headshot = IsHeadshot(hitPoint);
 
         if (headshot)
@@ -871,8 +880,20 @@ public class EnemyAI : MonoBehaviour
 
     private void Die()
     {
-        if (playerScript != null)
-            playerScript.GetEXP(isElite ? 250 : 100);
+        int exp = Mathf.RoundToInt(baseExp * (isElite ? eliteExpMultiplier : 1f));
+
+        if (lastAttacker != null)
+            lastAttacker.GetEXP(exp);
+
+        Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
+
+        foreach (Player teamPlayer in players)
+        {
+            if (teamPlayer == null || teamPlayer == lastAttacker || teamPlayer.IsDead())
+                continue;
+
+            teamPlayer.GetEXP(Mathf.RoundToInt(exp * 0.5f));
+        }
 
         if (lootManager != null && lootTable != null)
         {
@@ -912,7 +933,7 @@ public class EnemyAI : MonoBehaviour
     {
         return detectionRange;
     }
-   
+
     private void ShowHealNumber(float amount)
     {
         if (damageNumberPrefab == null)

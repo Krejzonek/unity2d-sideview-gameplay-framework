@@ -16,7 +16,7 @@ MonoBehaviour:
   - lootType: 2
     ingredient: {fileID: 0}
     consumable: {fileID: 0}
-    equipment: {fileID: 11400000, guid: 05955358e5068cd469d691fa365602f6, type: 2}
+    equipment: {fileID: 11400000, guid: b256e87db3a3c7440ba41ade87c85745, type: 2}
     dropChance: 100
     minAmount: 1
     maxAmount: 1

@@ -71,6 +71,11 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
+        if (invulnerabilityTimer > 0f)
+            invulnerabilityTimer -= Time.deltaTime;
+
+        RegenerateStamina();
+
         if (isBot)
             return;
 
@@ -81,9 +86,6 @@ public class Player : MonoBehaviour
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             UseStamina(25);
         }
-
-        if (invulnerabilityTimer > 0f)
-            invulnerabilityTimer -= Time.deltaTime;
 
         if (Input.GetKey(KeyCode.LeftShift))
             Crouch();
@@ -98,7 +100,6 @@ public class Player : MonoBehaviour
         else
             StopDefense();
 
-        RegenerateStamina();
         LvlUp();
     }
 
@@ -203,16 +204,14 @@ public class Player : MonoBehaviour
 
     private void LvlUp()
     {
-        if (currentEXP >= lvl * 100)
+        while (currentEXP >= lvl * 100)
         {
-            lvl += 1;
             currentEXP -= lvl * 100;
-
+            lvl += 1;
             stats.freePoint += 1;
-
-            if (characterData != null)
-                SaveCharacterData();
         }
+
+        SaveCharacterData();
     }
 
     private bool OnFloor()
@@ -348,7 +347,7 @@ public class Player : MonoBehaviour
 
                 Vector2 knockbackDirection = (enemy.transform.position - transform.position).normalized;
 
-                enemyAI.TakeDamage(damage, hitPoint, stats.knockback * (skillManager != null ? skillManager.GetKnockbackMultiplier() : 1f), knockbackDirection, stats.stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage);
+                enemyAI.TakeDamage(damage, hitPoint, stats.knockback * (skillManager != null ? skillManager.GetKnockbackMultiplier() : 1f), knockbackDirection, stats.stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage, this);
             }
         }
 
@@ -571,7 +570,7 @@ public class Player : MonoBehaviour
         SetAttackCooldown();
     }
 
-    public void BotRangedAttack(EnemyAI enemy)
+    public void BotRangedAttack(EnemyAI enemy, bool shouldMiss = false)
     {
         if (enemy == null || !canAttack || isDefending || IsDead() || Time.time < nextAttackTime)
             return;
@@ -617,6 +616,16 @@ public class Player : MonoBehaviour
             skillManager.RegisterAttack();
 
         Vector2 direction = (enemy.transform.position - attackPoint.position).normalized;
+
+        if (shouldMiss)
+        {
+            float missAngle = Random.Range(20f, 45f);
+
+            if (Random.value < 0.5f)
+                missAngle *= -1f;
+
+            direction = Quaternion.Euler(0f, 0f, missAngle) * direction;
+        }
 
         bool doubleShot = false;
 

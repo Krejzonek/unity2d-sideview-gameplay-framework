@@ -9,7 +9,6 @@ public class LootItem : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        
 
         if (rb != null)
         {
@@ -46,13 +45,13 @@ public class LootItem : MonoBehaviour
 
                 IngredientInventory ingredientInventory = player.GetComponent<IngredientInventory>();
 
-                if (ingredientInventory == null) 
+                if (ingredientInventory == null)
                     ingredientInventory = player.GetComponentInParent<IngredientInventory>();
 
-                if (ingredientInventory == null) 
+                if (ingredientInventory == null)
                     return false;
 
-                ingredientInventory.AddIngredient(lootDrop.ingredient,amount);
+                ingredientInventory.AddIngredient(lootDrop.ingredient, amount);
 
                 return true;
 
@@ -60,28 +59,32 @@ public class LootItem : MonoBehaviour
 
                 ConsumableInventory consumableInventory = player.GetComponent<ConsumableInventory>();
 
-                if (consumableInventory == null) 
+                if (consumableInventory == null)
                     consumableInventory = player.GetComponentInParent<ConsumableInventory>();
 
                 if (consumableInventory == null)
                     return false;
 
-                consumableInventory.AddConsumable(lootDrop.consumable,amount);
+                consumableInventory.AddConsumable(lootDrop.consumable, amount);
 
                 return true;
 
             case LootType.Equipment:
-                EquipmentManager equipmentManager = player.GetComponent<EquipmentManager>();
 
                 if (lootDrop.equipment == null)
                     return false;
+
+                EquipmentManager equipmentManager = FindFirstObjectByType<EquipmentManager>();
 
                 if (equipmentManager == null)
                     return false;
 
                 ItemData equipment = Instantiate(lootDrop.equipment);
                 equipment.SetRarity(RarityManager.GetRandomRarity());
-                if (RarityManager.RollMisc()) equipment.SetMiscType(RarityManager.GetRandomMisc());
+
+                if (RarityManager.RollMisc())
+                    equipment.SetMiscType(RarityManager.GetRandomMisc());
+
                 equipmentManager.AddToInventory(equipment);
 
                 return true;
