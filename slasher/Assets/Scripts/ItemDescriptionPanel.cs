@@ -127,8 +127,8 @@ public class ItemDescriptionPanel : MonoBehaviour
             return;
         }
 
-        float newValue = GetEquipmentPower(item);
-        float oldValue = GetEquipmentPower(equippedItem);
+        float newValue = equipmentManager.GetEquipmentPower(item);
+        float oldValue = equipmentManager.GetEquipmentPower(equippedItem);
 
         if (newValue > oldValue)
             comparisonImage.color = Color.green;
@@ -140,10 +140,7 @@ public class ItemDescriptionPanel : MonoBehaviour
         comparisonImage.gameObject.SetActive(true);
     }
 
-    private float GetEquipmentPower(ItemData item)
-    {
-        return item.healthBonus + item.defenceBonus + item.staminaBonus + item.speedBonus + item.attackBonus + item.expBonus + item.GetMiscValue();
-    }
+   
 
     public void ShowConsumable(ConsumableData item, ConsumableHotbar hotbar)
     {

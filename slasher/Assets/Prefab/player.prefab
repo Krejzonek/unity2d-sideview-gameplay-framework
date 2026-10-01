@@ -365,9 +365,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3e0779bdc909184fae51e02f4942eeb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  followDistance: 2.5
-  detectionRange: 10
   formationSpacing: 2
   formationStopDistance: 0.2
-  attackRange: 1.5
-  rangedAttackRange: 6
+  combatSearchRange: 100
+  meleeAttackRange: 1.5
+  rangedAttackRange: 8
+  retreatDistance: 4

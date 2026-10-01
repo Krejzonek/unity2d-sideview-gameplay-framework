@@ -1,45 +1,43 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class RestRoom : MonoBehaviour
 {
     [SerializeField] private float healPerSecond = 5f;
 
-    private Player player;
-    private bool playerInside;
+    private List<Player> playersInside = new List<Player>();
 
     private void Update()
     {
-        if (!playerInside || player == null)
-            return;
+        foreach (Player player in playersInside)
+        {
+            if (player == null || player.IsDead())
+                continue;
 
-        player.SetCanAttack(false);
-        player.Heal(healPerSecond * Time.deltaTime);
+            player.SetCanAttack(false);
+            player.Heal(healPerSecond * Time.deltaTime);
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        Player playerComponent = collision.GetComponentInParent<Player>();
+        Player player = collision.GetComponentInParent<Player>();
 
-        if (playerComponent == null)
+        if (player == null || playersInside.Contains(player))
             return;
 
-        player = playerComponent;
-        playerInside = true;
+        playersInside.Add(player);
         player.SetCanAttack(false);
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        Player playerComponent = collision.GetComponentInParent<Player>();
+        Player player = collision.GetComponentInParent<Player>();
 
-        if (playerComponent == null)
+        if (player == null || !playersInside.Contains(player))
             return;
 
-        if (playerComponent == player)
-        {
-            player.SetCanAttack(true);
-            player = null;
-            playerInside = false;
-        }
+        playersInside.Remove(player);
+        player.SetCanAttack(true);
     }
 }

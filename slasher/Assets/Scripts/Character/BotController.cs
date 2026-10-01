@@ -13,13 +13,15 @@ public class BotController : MonoBehaviour
     [SerializeField] private float formationStopDistance = 0.8f;
 
     [Header("Combat")]
-    [SerializeField] private float combatSearchRange = 15f;
+    [SerializeField] private float combatSearchRange = 100f;
     [SerializeField] private float meleeAttackRange = 1.5f;
-    [SerializeField] private float rangedAttackRange = 8f;
+    [SerializeField] private float rangedAttackRange = 15f;
     [SerializeField] private float retreatDistance = 4f;
+    [SerializeField] private float attackMissChance = 20f;
 
     private Player player;
     private Stats stats;
+    private ClassSkillManager skillManager;
     private Rigidbody2D rb;
     private TeamManager teamManager;
 
@@ -27,12 +29,11 @@ public class BotController : MonoBehaviour
     private BotFormationMode formationMode = BotFormationMode.Idle;
     private EnemyAI target;
 
-    private float formationDirection = 1f;
-
     private void Awake()
     {
         player = GetComponent<Player>();
         stats = GetComponent<Stats>();
+        skillManager = GetComponent<ClassSkillManager>();
         rb = GetComponent<Rigidbody2D>();
     }
 
@@ -89,6 +90,8 @@ public class BotController : MonoBehaviour
             return;
         }
 
+        UseActiveSkill();
+
         string className = stats.characterClass.className;
 
         if (className == "Warrior")
@@ -97,6 +100,17 @@ public class BotController : MonoBehaviour
             CombatRanged();
         else
             RetreatFromEnemy();
+    }
+
+    private void UseActiveSkill()
+    {
+        if (skillManager == null)
+            return;
+
+        if (!skillManager.IsActiveSkillReady())
+            return;
+
+        skillManager.UseActiveSkill();
     }
 
     private void CombatMelee()
@@ -136,7 +150,9 @@ public class BotController : MonoBehaviour
         }
 
         rb.velocity = new Vector2(0f, rb.velocity.y);
-        player.BotRangedAttack(target);
+
+        bool shouldMiss = Random.Range(0f, 100f) < attackMissChance;
+        player.BotRangedAttack(target, shouldMiss);
     }
 
     private void RetreatFromEnemy()
@@ -178,9 +194,16 @@ public class BotController : MonoBehaviour
         EnemyAI closest = null;
         float closestDistance = combatSearchRange;
 
+        Room currentRoom = GetComponentInParent<Room>();
+
         foreach (EnemyAI enemy in enemies)
         {
             if (enemy == null || !enemy.gameObject.activeInHierarchy)
+                continue;
+
+            Room enemyRoom = enemy.GetComponentInParent<Room>();
+
+            if (currentRoom != null && enemyRoom != currentRoom)
                 continue;
 
             float distance = Vector2.Distance(transform.position, enemy.transform.position);

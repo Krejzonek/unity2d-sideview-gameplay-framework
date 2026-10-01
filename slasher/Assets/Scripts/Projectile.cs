@@ -68,8 +68,17 @@ public class Projectile : MonoBehaviour
         if (((1 << other.gameObject.layer) & groundLayer) != 0)
         {
             stuck = true;
+
+            Collider2D collider = GetComponent<Collider2D>();
+
+            if (collider != null)
+                collider.enabled = false;
+
             return;
         }
+
+        if (stuck)
+            return;
 
         if (isEnemyProjectile)
         {
@@ -120,7 +129,7 @@ public class Projectile : MonoBehaviour
 
                 Vector2 knockbackDirection = direction.normalized;
 
-                enemy.TakeDamage(finalDamage, hitPoint, knockback, knockbackDirection, stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage);
+                enemy.TakeDamage(finalDamage, hitPoint, knockback, knockbackDirection, stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage, owner);
 
                 if (owner != null)
                 {
