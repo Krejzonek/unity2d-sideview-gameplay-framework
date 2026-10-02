@@ -367,7 +367,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   formationSpacing: 2
   formationStopDistance: 0.2
+  maxFormationDistance: 5
   combatSearchRange: 100
+  maxCombatDistance: 20
   meleeAttackRange: 1.5
-  rangedAttackRange: 8
+  rangedAttackRange: 15
+  rangedPreferredDistance: 7
   retreatDistance: 4
+  attackMissChance: 20
+  targetChangeCooldown: 0.75
+  lowHealthPercent: 0.3
+  lowHealthRetreatDistance: 6

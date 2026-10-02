@@ -5,16 +5,24 @@ public enum EnemyClass
 {
     Melee,
     Ranged,
+    Mage,
     Tank,
     Assassin,
     Support,
     Boss
 }
 
+public enum EnemyAIType
+{
+    Simple,
+    Smart
+}
+
 public class EnemyAI : MonoBehaviour
 {
     [Header("Enemy")]
     [SerializeField] private EnemyClass enemyClass;
+    [SerializeField] private EnemyAIType aiType;
     [SerializeField] private ElementType enemyElement;
 
     [Header("Elite")]
@@ -29,6 +37,9 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float maxHealth = 50f;
     [SerializeField] private float health = 50f;
     [SerializeField] private float damage = 10f;
+
+    [Header("Tank")]
+    [SerializeField] private float tankDamageReduction = 0.5f;
 
     [Header("Experience")]
     [SerializeField] private int baseExp = 100;
@@ -64,16 +75,38 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float projectileCritRate = 0f;
     [SerializeField] private float projectileCritDamage = 1f;
 
+    [Header("Mage")]
+    [SerializeField] private float magePreferredDistance = 7f;
+    [SerializeField] private float mageRetreatDistance = 3.5f;
+
     [Header("Assassin")]
     [SerializeField] private float assassinSpeedMultiplier = 1.75f;
-
-    [Header("Tank")]
-    [SerializeField] private float tankSpeedMultiplier = 0.6f;
 
     [Header("Support")]
     [SerializeField] private float supportHealRange = 6f;
     [SerializeField] private float supportHealAmount = 15f;
     [SerializeField] private float supportHealCooldown = 5f;
+
+    [Header("Smart AI")]
+    [SerializeField] private float smartTargetChangeInterval = 0.75f;
+    [SerializeField] private float smartTargetRange = 20f;
+    [SerializeField] private float smartRangedPreferredDistance = 7f;
+    [SerializeField] private float smartRangedRetreatDistance = 4f;
+    [SerializeField] private float smartMagePreferredDistance = 8f;
+    [SerializeField] private float smartMageRetreatDistance = 4f;
+    [SerializeField] private float smartSupportDangerDistance = 4f;
+
+    [Header("Smart Dodge")]
+    [SerializeField] private float smartDodgeDistance = 1.2f;
+    [SerializeField] private float smartDodgeTime = 0.4f;
+    [SerializeField] private float smartDodgeCooldown = 1f;
+    [SerializeField] private float smartProjectileLookAhead = 1f;
+    [SerializeField] private float smartProjectileDetectionDistance = 10f;
+
+    [Header("Counter")]
+    [SerializeField] private float counterMemoryTime = 5f;
+    [SerializeField] private float counterDetectionDistance = 3f;
+    [SerializeField] private float counterDetectionWidth = 1.5f;
 
     [Header("Target")]
     [SerializeField] private Transform player;
@@ -88,6 +121,9 @@ public class EnemyAI : MonoBehaviour
     private float knockbackTimer;
     private float stunTimer;
     private float supportHealTimer;
+    private float smartTargetTimer;
+    private float counterTimer;
+    private float smartDodgeTimer;
 
     private bool isKnockedBack;
     private bool isStunned;
@@ -111,6 +147,13 @@ public class EnemyAI : MonoBehaviour
     private float normalMoveSpeed;
 
     private Player lastAttacker;
+    private Player smartTarget;
+    private Player counterTarget;
+
+    private Vector2 dodgeDirection;
+    private float dodgeTimer;
+
+    private Dictionary<Projectile, Vector3> projectilePreviousPositions = new();
 
     private void Start()
     {
@@ -155,6 +198,10 @@ public class EnemyAI : MonoBehaviour
                 attackCooldown *= 0.75f;
                 break;
 
+            case EnemyClass.Mage:
+                attackCooldown *= 0.75f;
+                break;
+
             case EnemyClass.Tank:
                 eliteKnockbackResistance = 0.25f;
                 break;
@@ -178,6 +225,11 @@ public class EnemyAI : MonoBehaviour
             return;
 
         attackTimer -= Time.deltaTime;
+        smartDodgeTimer -= Time.deltaTime;
+        counterTimer -= Time.deltaTime;
+
+        if (counterTimer <= 0f)
+            counterTarget = null;
 
         UpdateStatusEffects();
 
@@ -243,11 +295,38 @@ public class EnemyAI : MonoBehaviour
             return;
         }
 
+        if (aiType == EnemyAIType.Smart && enemyClass != EnemyClass.Boss)
+        {
+            if (UpdateSmartDodge())
+                return;
+        }
+
         UpdateNormalAI();
+    }
+
+    private void LateUpdate()
+    {
+        UpdateProjectilePositions();
     }
 
     private void UpdateNormalAI()
     {
+        if (aiType == EnemyAIType.Simple)
+            UpdateSimpleAI();
+        else
+            UpdateSmartAI();
+    }
+
+    private void UpdateSimpleAI()
+    {
+        if (counterTarget != null && !counterTarget.IsDead() && counterTimer > 0f)
+        {
+            UpdateSimpleCounter();
+            return;
+        }
+
+        counterTarget = null;
+
         float distance = Vector2.Distance(transform.position, player.position);
 
         if (isBlind)
@@ -267,8 +346,13 @@ public class EnemyAI : MonoBehaviour
                 RangedAI(distance);
                 break;
 
+            case EnemyClass.Mage:
+                moveSpeed = normalMoveSpeed;
+                MageAI(distance);
+                break;
+
             case EnemyClass.Tank:
-                moveSpeed = normalMoveSpeed * tankSpeedMultiplier;
+                moveSpeed = normalMoveSpeed * 0.6f;
                 TankAI(distance);
                 break;
 
@@ -287,66 +371,523 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    private void UpdateIllusionAI()
+    private void UpdateSimpleCounter()
     {
-        if (illusionTarget == null)
-            return;
-
-        EnemyAI targetEnemy = illusionTarget.GetComponentInParent<EnemyAI>();
-
-        if (targetEnemy == null || targetEnemy == this)
+        if (counterTarget == null || counterTarget.IsDead())
         {
-            illusionTarget = null;
+            counterTarget = null;
             return;
         }
 
-        targetEnemy.SetEnemyTarget(this);
+        if (enemyClass == EnemyClass.Support)
+        {
+            MoveAwayFromTarget(counterTarget.transform);
+            return;
+        }
 
-        float distance = Vector2.Distance(transform.position, illusionTarget.position);
+        player = counterTarget.transform;
+        playerScript = counterTarget;
+
+        float distance = Vector2.Distance(transform.position, counterTarget.transform.position);
+
+        if (enemyClass == EnemyClass.Ranged)
+        {
+            if (distance <= rangedRetreatDistance)
+            {
+                MoveAwayFromTarget(counterTarget.transform);
+                return;
+            }
+
+            if (distance <= rangedPreferredDistance)
+            {
+                StopMoving();
+                Shoot();
+                return;
+            }
+
+            MoveTowardsTarget(counterTarget.transform);
+            return;
+        }
+
+        if (enemyClass == EnemyClass.Mage)
+        {
+            if (distance <= mageRetreatDistance)
+            {
+                MoveAwayFromTarget(counterTarget.transform);
+                return;
+            }
+
+            if (distance <= magePreferredDistance)
+            {
+                StopMoving();
+                Shoot();
+                return;
+            }
+
+            MoveTowardsTarget(counterTarget.transform);
+            return;
+        }
+
+        if (enemyClass == EnemyClass.Melee || enemyClass == EnemyClass.Tank || enemyClass == EnemyClass.Assassin)
+        {
+            EnemyAI enemyTarget = FindEnemyOnCounterPath();
+
+            if (enemyTarget != null)
+            {
+                float enemyDistance = Vector2.Distance(transform.position, enemyTarget.transform.position);
+
+                if (enemyDistance <= attackRange)
+                {
+                    StopMoving();
+                    AttackEnemy(enemyTarget);
+                }
+                else
+                {
+                    MoveTowardsTarget(enemyTarget.transform);
+                }
+
+                return;
+            }
+        }
 
         if (distance <= attackRange)
         {
             StopMoving();
-            AttackEnemy(targetEnemy);
+            Attack();
+            return;
+        }
+
+        MoveTowardsTarget(counterTarget.transform);
+    }
+
+    private EnemyAI FindEnemyOnCounterPath()
+    {
+        if (counterTarget == null)
+            return null;
+
+        Vector2 direction = (counterTarget.transform.position - transform.position).normalized;
+
+        if (direction == Vector2.zero)
+            return null;
+
+        EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+
+        EnemyAI closestEnemy = null;
+        float closestDistance = Mathf.Infinity;
+
+        foreach (EnemyAI enemy in enemies)
+        {
+            if (enemy == null || enemy == this)
+                continue;
+
+            if (!enemy.gameObject.activeInHierarchy)
+                continue;
+
+            if (enemy.room != room)
+                continue;
+
+            if (enemy.enemyClass == EnemyClass.Boss)
+                continue;
+
+            Vector2 offset = enemy.transform.position - transform.position;
+            float forwardDistance = Vector2.Dot(offset, direction);
+
+            if (forwardDistance <= attackRange)
+                continue;
+
+            if (forwardDistance > counterDetectionDistance)
+                continue;
+
+            float sideDistance = Mathf.Abs(Vector2.Dot(offset, Vector2.Perpendicular(direction)));
+
+            if (sideDistance > counterDetectionWidth)
+                continue;
+
+            if (forwardDistance < closestDistance)
+            {
+                closestDistance = forwardDistance;
+                closestEnemy = enemy;
+            }
+        }
+
+        return closestEnemy;
+    }
+
+    private void UpdateSmartAI()
+    {
+        if (counterTarget != null && !counterTarget.IsDead())
+        {
+            smartTarget = counterTarget;
         }
         else
         {
-            MoveTowardsTarget(illusionTarget);
+            smartTargetTimer -= Time.deltaTime;
+
+            if (smartTarget == null || smartTarget.IsDead() || smartTargetTimer <= 0f)
+            {
+                smartTarget = FindSmartTarget();
+                smartTargetTimer = smartTargetChangeInterval;
+            }
+        }
+
+        if (enemyClass == EnemyClass.Support)
+        {
+            moveSpeed = normalMoveSpeed;
+            SmartSupportAI();
+            return;
+        }
+
+        if (smartTarget == null)
+        {
+            StopMoving();
+            return;
+        }
+
+        player = smartTarget.transform;
+        playerScript = smartTarget;
+
+        float distance = Vector2.Distance(transform.position, player.position);
+
+        if (isBlind)
+            detectionRange = normalDetectionRange * 0.5f;
+        else
+            detectionRange = normalDetectionRange;
+
+        switch (enemyClass)
+        {
+            case EnemyClass.Melee:
+                moveSpeed = normalMoveSpeed;
+                SmartMeleeAI(distance);
+                break;
+
+            case EnemyClass.Ranged:
+                moveSpeed = normalMoveSpeed;
+                SmartRangedAI(distance);
+                break;
+
+            case EnemyClass.Mage:
+                moveSpeed = normalMoveSpeed;
+                SmartMageAI(distance);
+                break;
+
+            case EnemyClass.Tank:
+                moveSpeed = normalMoveSpeed * 0.6f;
+                SmartTankAI(distance);
+                break;
+
+            case EnemyClass.Assassin:
+                moveSpeed = normalMoveSpeed * assassinSpeedMultiplier;
+                SmartAssassinAI(distance);
+                break;
+
+            case EnemyClass.Boss:
+                return;
         }
     }
 
-    private void UpdateEnemyDefense()
+    private Player FindSmartTarget()
     {
-        if (attackingEnemy == null)
-            return;
+        Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
 
-        if (attackingEnemy == this)
+        Player bestTarget = null;
+        float bestScore = float.MinValue;
+
+        foreach (Player targetPlayer in players)
         {
-            attackingEnemy = null;
-            return;
+            if (targetPlayer == null || targetPlayer.IsDead())
+                continue;
+
+            Room targetRoom = targetPlayer.GetComponentInParent<Room>();
+
+            if (room != null && targetRoom != null && targetRoom != room)
+                continue;
+
+            float distance = Vector2.Distance(transform.position, targetPlayer.transform.position);
+
+            if (distance > smartTargetRange)
+                continue;
+
+            float score = GetTargetScore(targetPlayer, distance);
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestTarget = targetPlayer;
+            }
         }
 
-        float distance = Vector2.Distance(transform.position, attackingEnemy.transform.position);
+        return bestTarget;
+    }
 
+    private float GetTargetScore(Player targetPlayer, float distance)
+    {
+        float score = 100f - distance * 5f;
+
+        if (targetPlayer == lastAttacker)
+            score += 40f;
+
+        CharacterData data = targetPlayer.GetCharacterData();
+
+        string className = "";
+
+        if (data != null && data.characterClass != null)
+            className = data.characterClass.className;
+
+        switch (enemyClass)
+        {
+            case EnemyClass.Melee:
+
+                if (className == "Warrior")
+                    score += 20f;
+
+                if (className == "Archer" || className == "Mage")
+                    score += 10f;
+
+                break;
+
+            case EnemyClass.Ranged:
+
+                if (className == "Archer")
+                    score += 25f;
+
+                if (className == "Mage")
+                    score += 30f;
+
+                if (className == "Warrior")
+                    score -= 20f;
+
+                break;
+
+            case EnemyClass.Mage:
+
+                if (className == "Mage")
+                    score += 35f;
+
+                if (className == "Archer")
+                    score += 25f;
+
+                if (className == "Warrior")
+                    score -= 20f;
+
+                break;
+
+            case EnemyClass.Tank:
+
+                if (targetPlayer == lastAttacker)
+                    score += 50f;
+
+                if (className == "Warrior")
+                    score += 20f;
+
+                break;
+
+            case EnemyClass.Assassin:
+
+                if (className == "Archer")
+                    score += 50f;
+
+                if (className == "Mage")
+                    score += 50f;
+
+                if (className == "Warrior")
+                    score -= 30f;
+
+                break;
+        }
+
+        return score;
+    }
+
+    private void SmartMeleeAI(float distance)
+    {
         if (distance <= attackRange)
         {
             StopMoving();
-
-            if (enemyClass != EnemyClass.Support)
-                AttackEnemy(attackingEnemy);
+            Attack();
+        }
+        else if (distance <= detectionRange || counterTarget != null)
+        {
+            MoveTowardsTarget(player);
         }
         else
         {
-            MoveTowardsTarget(attackingEnemy.transform);
+            StopMoving();
         }
     }
 
-    public void SetEnemyTarget(EnemyAI enemy)
+    private void SmartRangedAI(float distance)
     {
-        if (enemy == null || enemy == this)
-            return;
+        if (distance <= smartRangedRetreatDistance)
+        {
+            MoveAwayFromPlayer();
+        }
+        else if (distance <= smartRangedPreferredDistance)
+        {
+            StopMoving();
+            Shoot();
+        }
+        else if (distance <= detectionRange || counterTarget != null)
+        {
+            MoveTowardsTarget(player);
+        }
+        else
+        {
+            StopMoving();
+        }
+    }
 
-        attackingEnemy = enemy;
+    private void SmartMageAI(float distance)
+    {
+        if (distance <= smartMageRetreatDistance)
+        {
+            MoveAwayFromPlayer();
+        }
+        else if (distance <= smartMagePreferredDistance)
+        {
+            StopMoving();
+            Shoot();
+        }
+        else if (distance <= detectionRange || counterTarget != null)
+        {
+            MoveTowardsTarget(player);
+        }
+        else
+        {
+            StopMoving();
+        }
+    }
+
+    private void SmartTankAI(float distance)
+    {
+        if (distance <= attackRange)
+        {
+            StopMoving();
+            Attack();
+        }
+        else if (distance <= detectionRange || counterTarget != null)
+        {
+            MoveTowardsTarget(player);
+        }
+        else
+        {
+            StopMoving();
+        }
+    }
+
+    private void SmartAssassinAI(float distance)
+    {
+        if (distance <= attackRange)
+        {
+            StopMoving();
+            Attack();
+        }
+        else if (distance <= detectionRange || counterTarget != null)
+        {
+            MoveTowardsTarget(player);
+        }
+        else
+        {
+            StopMoving();
+        }
+    }
+
+    private void SmartSupportAI()
+    {
+        if (counterTarget != null && !counterTarget.IsDead())
+        {
+            float attackerDistance = Vector2.Distance(transform.position, counterTarget.transform.position);
+
+            if (attackerDistance <= smartSupportDangerDistance)
+            {
+                MoveAwayFromTarget(counterTarget.transform);
+                return;
+            }
+        }
+
+        EnemyAI woundedEnemy = FindSmartWoundedEnemy();
+
+        if (woundedEnemy == null)
+        {
+            StopMoving();
+            return;
+        }
+
+        float enemyDistance = Vector2.Distance(transform.position, woundedEnemy.transform.position);
+
+        if (enemyDistance <= supportHealRange)
+        {
+            StopMoving();
+            HealEnemy(woundedEnemy);
+        }
+        else if (enemyDistance <= detectionRange)
+        {
+            MoveTowardsTarget(woundedEnemy.transform);
+        }
+        else
+        {
+            StopMoving();
+        }
+    }
+
+    private EnemyAI FindSmartWoundedEnemy()
+    {
+        EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+
+        EnemyAI bestEnemy = null;
+        float bestScore = float.MinValue;
+
+        foreach (EnemyAI enemy in enemies)
+        {
+            if (enemy == null || enemy == this)
+                continue;
+
+            if (enemy.room != room)
+                continue;
+
+            if (enemy.health >= enemy.maxHealth)
+                continue;
+
+            float distance = Vector2.Distance(transform.position, enemy.transform.position);
+
+            if (distance > detectionRange)
+                continue;
+
+            float healthPercent = enemy.health / enemy.maxHealth;
+            float missingHealth = 1f - healthPercent;
+
+            float score = missingHealth * 100f - distance * 2f;
+
+            switch (enemy.enemyClass)
+            {
+                case EnemyClass.Tank:
+                    score += 15f;
+                    break;
+
+                case EnemyClass.Assassin:
+                    score += 10f;
+                    break;
+
+                case EnemyClass.Ranged:
+                    score += 20f;
+                    break;
+
+                case EnemyClass.Mage:
+                    score += 20f;
+                    break;
+
+                case EnemyClass.Support:
+                    score += 25f;
+                    break;
+            }
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestEnemy = enemy;
+            }
+        }
+
+        return bestEnemy;
     }
 
     private void MeleeAI(float distance)
@@ -373,6 +914,27 @@ public class EnemyAI : MonoBehaviour
             MoveAwayFromPlayer();
         }
         else if (distance <= rangedPreferredDistance)
+        {
+            StopMoving();
+            Shoot();
+        }
+        else if (distance <= detectionRange)
+        {
+            MoveTowardsPlayer();
+        }
+        else
+        {
+            StopMoving();
+        }
+    }
+
+    private void MageAI(float distance)
+    {
+        if (distance <= mageRetreatDistance)
+        {
+            MoveAwayFromPlayer();
+        }
+        else if (distance <= magePreferredDistance)
         {
             StopMoving();
             Shoot();
@@ -516,6 +1078,7 @@ public class EnemyAI : MonoBehaviour
             return;
 
         float direction = Mathf.Sign(target.position.x - transform.position.x);
+
         rb.velocity = new Vector2(direction * moveSpeed, rb.velocity.y);
 
         if (direction != 0)
@@ -531,7 +1094,16 @@ public class EnemyAI : MonoBehaviour
         if (player == null)
             return;
 
-        float direction = Mathf.Sign(transform.position.x - player.position.x);
+        MoveAwayFromTarget(player);
+    }
+
+    private void MoveAwayFromTarget(Transform target)
+    {
+        if (target == null)
+            return;
+
+        float direction = Mathf.Sign(transform.position.x - target.position.x);
+
         rb.velocity = new Vector2(direction * moveSpeed, rb.velocity.y);
 
         if (direction != 0)
@@ -559,7 +1131,6 @@ public class EnemyAI : MonoBehaviour
             return;
 
         playerScript.TakeDamage(damage);
-
         attackTimer = attackCooldown;
     }
 
@@ -608,12 +1179,29 @@ public class EnemyAI : MonoBehaviour
     public void TakeDamage(float damageAmount, Vector2 hitPoint, float knockback, Vector2 knockbackDirection, float stunChance, bool isCrit, StatusEffectType statusEffect = StatusEffectType.None, float statusChance = 0f, float statusDuration = 0f, float statusDamage = 0f, Player attacker = null)
     {
         if (attacker != null)
+        {
             lastAttacker = attacker;
+
+            if (enemyClass != EnemyClass.Boss)
+            {
+                counterTarget = attacker;
+                counterTimer = counterMemoryTime;
+
+                player = attacker.transform;
+                playerScript = attacker;
+
+                if (aiType == EnemyAIType.Smart)
+                    smartTarget = attacker;
+            }
+        }
 
         bool headshot = IsHeadshot(hitPoint);
 
         if (headshot)
             damageAmount *= headshotMultiplier;
+
+        if (enemyClass == EnemyClass.Tank && IsTankFrontHit(hitPoint))
+            damageAmount *= 1f - tankDamageReduction;
 
         health -= damageAmount;
         health = Mathf.Clamp(health, 0f, maxHealth);
@@ -631,6 +1219,256 @@ public class EnemyAI : MonoBehaviour
 
         if (health <= 0f)
             Die();
+    }
+
+    private bool IsTankFrontHit(Vector2 hitPoint)
+    {
+        Collider2D collider = GetComponent<Collider2D>();
+
+        if (collider == null)
+            return false;
+
+        float hitHeight = hitPoint.y - collider.bounds.center.y;
+
+        if (hitHeight > collider.bounds.size.y * 0.3f)
+            return false;
+
+        float hitDirection = hitPoint.x - collider.bounds.center.x;
+
+        return hitDirection < 0f;
+    }
+
+    private float GetDodgeChance()
+    {
+        switch (enemyClass)
+        {
+            case EnemyClass.Tank:
+                return 0.25f;
+
+            case EnemyClass.Melee:
+                return 0.5f;
+
+            case EnemyClass.Ranged:
+                return 0.75f;
+
+            case EnemyClass.Assassin:
+                return 1f;
+
+            case EnemyClass.Mage:
+            case EnemyClass.Support:
+            default:
+                return 0f;
+        }
+    }
+
+    private bool UpdateSmartDodge()
+    {
+        if (smartDodgeTimer > 0f)
+            return false;
+
+        if (dodgeTimer > 0f)
+        {
+            dodgeTimer -= Time.deltaTime;
+            rb.velocity = new Vector2(dodgeDirection.x * moveSpeed * 1.5f, rb.velocity.y);
+            return true;
+        }
+
+        Projectile projectile = FindIncomingProjectile();
+
+        if (projectile == null)
+            return false;
+
+        if (Random.value > GetDodgeChance())
+        {
+            smartDodgeTimer = smartDodgeCooldown;
+            return false;
+        }
+
+        Vector2 direction = GetDodgeDirection(projectile);
+
+        if (direction == Vector2.zero)
+            return false;
+
+        dodgeDirection = direction;
+        dodgeTimer = smartDodgeTime;
+        smartDodgeTimer = smartDodgeCooldown;
+
+        if (lastAttacker != null && !lastAttacker.IsDead())
+        {
+            counterTarget = lastAttacker;
+            counterTimer = counterMemoryTime;
+            smartTarget = lastAttacker;
+        }
+
+        rb.velocity = new Vector2(dodgeDirection.x * moveSpeed * 1.5f, rb.velocity.y);
+
+        return true;
+    }
+
+    private Projectile FindIncomingProjectile()
+    {
+        Projectile[] projectiles = FindObjectsByType<Projectile>(FindObjectsSortMode.None);
+
+        Projectile bestProjectile = null;
+        float bestTime = Mathf.Infinity;
+
+        foreach (Projectile projectile in projectiles)
+        {
+            if (projectile == null || !projectile.gameObject.activeInHierarchy)
+                continue;
+
+            Vector3 currentPosition = projectile.transform.position;
+
+            if (!projectilePreviousPositions.TryGetValue(projectile, out Vector3 previousPosition))
+                continue;
+
+            Vector2 velocity = (currentPosition - previousPosition) / Mathf.Max(Time.deltaTime, 0.001f);
+
+            if (velocity.sqrMagnitude < 0.1f)
+                continue;
+
+            Vector2 toEnemy = (Vector2)transform.position - (Vector2)currentPosition;
+
+            float distance = toEnemy.magnitude;
+
+            if (distance > smartProjectileDetectionDistance)
+                continue;
+
+            Vector2 velocityDirection = velocity.normalized;
+            float forwardDistance = Vector2.Dot(toEnemy, velocityDirection);
+
+            if (forwardDistance <= 0f)
+                continue;
+
+            float timeToEnemy = forwardDistance / velocity.magnitude;
+
+            if (timeToEnemy > smartProjectileLookAhead)
+                continue;
+
+            Vector2 closestPoint = (Vector2)currentPosition + velocityDirection * forwardDistance;
+            float closestDistance = Vector2.Distance(transform.position, closestPoint);
+
+            if (closestDistance > smartDodgeDistance)
+                continue;
+
+            if (timeToEnemy < bestTime)
+            {
+                bestTime = timeToEnemy;
+                bestProjectile = projectile;
+            }
+        }
+
+        return bestProjectile;
+    }
+
+    private Vector2 GetDodgeDirection(Projectile projectile)
+    {
+        if (projectile == null)
+            return Vector2.zero;
+
+        Vector2 projectilePosition = projectile.transform.position;
+
+        Vector2 leftPosition = (Vector2)transform.position + Vector2.left * smartDodgeDistance;
+        Vector2 rightPosition = (Vector2)transform.position + Vector2.right * smartDodgeDistance;
+
+        bool leftBlocked = Physics2D.Linecast(transform.position, leftPosition).collider != null;
+        bool rightBlocked = Physics2D.Linecast(transform.position, rightPosition).collider != null;
+
+        if (leftBlocked && rightBlocked)
+            return Vector2.zero;
+
+        if (leftBlocked)
+            return Vector2.right;
+
+        if (rightBlocked)
+            return Vector2.left;
+
+        if (projectilePosition.x < transform.position.x)
+            return Vector2.right;
+
+        return Vector2.left;
+    }
+
+    private void UpdateProjectilePositions()
+    {
+        Projectile[] projectiles = FindObjectsByType<Projectile>(FindObjectsSortMode.None);
+
+        HashSet<Projectile> activeProjectiles = new HashSet<Projectile>();
+
+        foreach (Projectile projectile in projectiles)
+        {
+            if (projectile == null)
+                continue;
+
+            activeProjectiles.Add(projectile);
+            projectilePreviousPositions[projectile] = projectile.transform.position;
+        }
+
+        List<Projectile> oldProjectiles = new List<Projectile>();
+
+        foreach (Projectile projectile in projectilePreviousPositions.Keys)
+        {
+            if (!activeProjectiles.Contains(projectile))
+                oldProjectiles.Add(projectile);
+        }
+
+        foreach (Projectile projectile in oldProjectiles)
+            projectilePreviousPositions.Remove(projectile);
+    }
+
+    private void UpdateIllusionAI()
+    {
+        if (illusionTarget == null)
+            return;
+
+        EnemyAI targetEnemy = illusionTarget.GetComponentInParent<EnemyAI>();
+
+        if (targetEnemy == null || targetEnemy.IsDead())
+        {
+            illusionTarget = null;
+            return;
+        }
+
+        float distance = Vector2.Distance(transform.position, illusionTarget.position);
+
+        if (distance <= attackRange)
+        {
+            StopMoving();
+            AttackEnemy(targetEnemy);
+        }
+        else
+        {
+            MoveTowardsTarget(illusionTarget);
+        }
+    }
+
+    private void UpdateEnemyDefense()
+    {
+        if (attackingEnemy == null || attackingEnemy.IsDead())
+        {
+            attackingEnemy = null;
+            return;
+        }
+
+        float distance = Vector2.Distance(transform.position, attackingEnemy.transform.position);
+
+        if (distance <= attackRange)
+        {
+            StopMoving();
+            AttackEnemy(attackingEnemy);
+        }
+        else
+        {
+            MoveTowardsTarget(attackingEnemy.transform);
+        }
+    }
+
+    public void SetEnemyTarget(EnemyAI enemy)
+    {
+        if (enemy == null || enemy == this)
+            return;
+
+        attackingEnemy = enemy;
     }
 
     private void ApplyStatusEffect(StatusEffectType type, float duration, float statusDamage)
@@ -876,6 +1714,11 @@ public class EnemyAI : MonoBehaviour
     public float GetHeadshotMultiplier()
     {
         return headshotMultiplier;
+    }
+
+    public bool IsDead()
+    {
+        return health <= 0f;
     }
 
     private void Die()

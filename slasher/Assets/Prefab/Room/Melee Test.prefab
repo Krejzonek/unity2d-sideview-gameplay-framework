@@ -162,10 +162,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyClass: 0
+  aiType: 1
   enemyElement: 0
+  eliteChance: 0.05
+  eliteScale: 1.5
+  eliteHealthMultiplier: 2
+  eliteDamageMultiplier: 1.5
+  eliteKnockbackResistance: 0.5
   maxHealth: 50
   health: 50
   damage: 10
+  baseExp: 100
+  eliteExpMultiplier: 2.5
   headshotMultiplier: 2
   headshotHeight: 0.8
   knockbackDuration: 0.2
@@ -187,6 +195,19 @@ MonoBehaviour:
   supportHealRange: 6
   supportHealAmount: 15
   supportHealCooldown: 5
+  smartTargetChangeInterval: 0.75
+  smartTargetRange: 20
+  smartRangedPreferredDistance: 7
+  smartRangedRetreatDistance: 4
+  smartSupportDangerDistance: 4
+  smartDodgeDistance: 1.2
+  smartDodgeTime: 0.4
+  smartDodgeCooldown: 1
+  smartProjectileLookAhead: 1
+  smartProjectileDetectionDistance: 10
+  counterMemoryTime: 5
+  counterDetectionDistance: 3
+  counterDetectionWidth: 1.5
   player: {fileID: 0}
   playerScript: {fileID: 0}
   lootTable: {fileID: 11400000, guid: 0527eb1ecfdf23e4b80a680219ddb6f5, type: 2}

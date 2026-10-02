@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   className: Mage
   classColor: {r: 0, g: 0.24705882, b: 1, a: 1}
-  description: A powerful spellcaster who uses elemental magic to deal heavy damage.
-    Perfect for players who prefer ranged combat and magical abilities.
+  description: A powerful spellcaster specialized in attack, stamina and elemental
+    magic. Excels at dealing heavy magical damage from a safe distance.
   healthBonus: 5
   staminaBonus: 50
   attackBonus: 20

@@ -11,13 +11,21 @@ public class BotController : MonoBehaviour
     [Header("Formation")]
     [SerializeField] private float formationSpacing = 2f;
     [SerializeField] private float formationStopDistance = 0.8f;
+    [SerializeField] private float maxFormationDistance = 5f;
 
     [Header("Combat")]
     [SerializeField] private float combatSearchRange = 100f;
+    [SerializeField] private float maxCombatDistance = 20f;
     [SerializeField] private float meleeAttackRange = 1.5f;
     [SerializeField] private float rangedAttackRange = 15f;
+    [SerializeField] private float rangedPreferredDistance = 7f;
     [SerializeField] private float retreatDistance = 4f;
     [SerializeField] private float attackMissChance = 20f;
+    [SerializeField] private float targetChangeCooldown = 0.75f;
+
+    [Header("Low Health")]
+    [SerializeField] private float lowHealthPercent = 0.3f;
+    [SerializeField] private float lowHealthRetreatDistance = 6f;
 
     private Player player;
     private Stats stats;
@@ -27,7 +35,9 @@ public class BotController : MonoBehaviour
 
     private int formationPosition;
     private BotFormationMode formationMode = BotFormationMode.Idle;
+
     private EnemyAI target;
+    private float targetChangeTimer;
 
     private void Awake()
     {
@@ -46,6 +56,9 @@ public class BotController : MonoBehaviour
             return;
 
         teamManager = TeamManager.Instance;
+
+        if (targetChangeTimer > 0f)
+            targetChangeTimer -= Time.fixedDeltaTime;
 
         if (formationMode == BotFormationMode.Idle)
             FollowFormation();
@@ -78,16 +91,53 @@ public class BotController : MonoBehaviour
     {
         if (stats == null || stats.characterClass == null)
         {
-            RetreatFromEnemy();
+            ReturnToFormation();
             return;
         }
 
-        target = GetClosestEnemy();
+        Player leader = teamManager.CurrentPlayer;
+
+        if (leader == null)
+        {
+            ReturnToFormation();
+            return;
+        }
+
+        if (Vector2.Distance(transform.position, leader.transform.position) > maxFormationDistance + maxCombatDistance)
+        {
+            target = null;
+            ReturnToFormation();
+            return;
+        }
+
+        if (target == null || !IsValidTarget(target) || targetChangeTimer <= 0f)
+        {
+            EnemyAI newTarget = FindBestTarget();
+
+            if (newTarget != null)
+            {
+                target = newTarget;
+                targetChangeTimer = targetChangeCooldown;
+            }
+            else if (target == null)
+            {
+                ReturnToFormation();
+                return;
+            }
+        }
 
         if (target == null)
         {
-            rb.velocity = new Vector2(0f, rb.velocity.y);
+            ReturnToFormation();
             return;
+        }
+
+        if (ShouldProtectTeam())
+        {
+            EnemyAI threat = FindThreatToTeam();
+
+            if (threat != null)
+                target = threat;
         }
 
         UseActiveSkill();
@@ -95,11 +145,86 @@ public class BotController : MonoBehaviour
         string className = stats.characterClass.className;
 
         if (className == "Warrior")
-            CombatMelee();
-        else if (className == "Archer" || className == "Mage")
-            CombatRanged();
+            CombatWarrior();
+        else if (className == "Archer")
+            CombatArcher();
+        else if (className == "Mage")
+            CombatMage();
         else
-            RetreatFromEnemy();
+            ReturnToFormation();
+    }
+
+    private void CombatWarrior()
+    {
+        if (target == null)
+            return;
+
+        float distance = Vector2.Distance(transform.position, target.transform.position);
+
+        if (distance > meleeAttackRange)
+        {
+            MoveTowardsCombatTarget(target.transform.position);
+            return;
+        }
+
+        rb.velocity = new Vector2(0f, rb.velocity.y);
+        player.BotMeleeAttack();
+    }
+
+    private void CombatArcher()
+    {
+        if (target == null)
+            return;
+
+        float retreatRange = IsLowHealth() ? lowHealthRetreatDistance : retreatDistance;
+        EnemyAI threat = FindClosestEnemyInRange(retreatRange);
+
+        if (threat != null)
+        {
+            MoveAwayFrom(threat.transform.position);
+            return;
+        }
+
+        float distance = Vector2.Distance(transform.position, target.transform.position);
+
+        if (distance > rangedPreferredDistance)
+        {
+            MoveTowardsCombatTarget(target.transform.position);
+            return;
+        }
+
+        rb.velocity = new Vector2(0f, rb.velocity.y);
+
+        bool shouldMiss = Random.Range(0f, 100f) < attackMissChance;
+        player.BotRangedAttack(target, shouldMiss);
+    }
+
+    private void CombatMage()
+    {
+        if (target == null)
+            return;
+
+        float retreatRange = IsLowHealth() ? lowHealthRetreatDistance : retreatDistance;
+        EnemyAI threat = FindClosestEnemyInRange(retreatRange);
+
+        if (threat != null)
+        {
+            MoveAwayFrom(threat.transform.position);
+            return;
+        }
+
+        float distance = Vector2.Distance(transform.position, target.transform.position);
+
+        if (distance > rangedPreferredDistance)
+        {
+            MoveTowardsCombatTarget(target.transform.position);
+            return;
+        }
+
+        rb.velocity = new Vector2(0f, rb.velocity.y);
+
+        bool shouldMiss = Random.Range(0f, 100f) < attackMissChance;
+        player.BotRangedAttack(target, shouldMiss);
     }
 
     private void UseActiveSkill()
@@ -110,71 +235,208 @@ public class BotController : MonoBehaviour
         if (!skillManager.IsActiveSkillReady())
             return;
 
-        skillManager.UseActiveSkill();
+        string className = stats.characterClass.className;
+
+        if (className == "Warrior")
+        {
+            if (target != null && Vector2.Distance(transform.position, target.transform.position) <= meleeAttackRange)
+                skillManager.UseActiveSkill();
+        }
+        else if (className == "Archer" || className == "Mage")
+        {
+            if (target != null && Vector2.Distance(transform.position, target.transform.position) <= rangedAttackRange)
+                skillManager.UseActiveSkill();
+        }
     }
 
-    private void CombatMelee()
+    private EnemyAI FindBestTarget()
     {
-        if (target == null)
+        EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+
+        EnemyAI bestTarget = null;
+        float bestScore = float.MinValue;
+
+        foreach (EnemyAI enemy in enemies)
+        {
+            if (!IsValidTarget(enemy))
+                continue;
+
+            float distance = Vector2.Distance(transform.position, enemy.transform.position);
+
+            if (distance > combatSearchRange)
+                continue;
+
+            float score = GetTargetScore(enemy, distance);
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestTarget = enemy;
+            }
+        }
+
+        return bestTarget;
+    }
+
+    private float GetTargetScore(EnemyAI enemy, float distance)
+    {
+        float score = 100f - distance * 5f;
+
+        EnemyClass enemyClass = enemy.GetEnemyClass();
+        string className = stats.characterClass.className;
+
+        if (enemyClass == EnemyClass.Support)
+            score += 50f;
+
+        if (enemyClass == EnemyClass.Ranged)
+            score += 25f;
+
+        if (enemyClass == EnemyClass.Assassin)
+            score += 35f;
+
+        if (IsAttackingLeader(enemy))
+            score += 70f;
+
+        if (IsAttackingTeammate(enemy))
+            score += 60f;
+
+        if (className == "Warrior")
+        {
+            if (enemyClass == EnemyClass.Melee || enemyClass == EnemyClass.Tank)
+                score += 20f;
+        }
+
+        if (className == "Archer" || className == "Mage")
+        {
+            if (enemyClass == EnemyClass.Support)
+                score += 30f;
+
+            if (enemyClass == EnemyClass.Ranged)
+                score += 20f;
+
+            if (enemyClass == EnemyClass.Assassin)
+                score += 25f;
+        }
+
+        return score;
+    }
+
+    private bool ShouldProtectTeam()
+    {
+        string className = stats.characterClass.className;
+
+        return className == "Warrior";
+    }
+
+    private EnemyAI FindThreatToTeam()
+    {
+        EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+
+        EnemyAI closestThreat = null;
+        float closestDistance = Mathf.Infinity;
+
+        foreach (EnemyAI enemy in enemies)
+        {
+            if (!IsValidTarget(enemy))
+                continue;
+
+            if (!IsAttackingTeammate(enemy) && !IsAttackingLeader(enemy))
+                continue;
+
+            float distance = Vector2.Distance(transform.position, enemy.transform.position);
+
+            if (distance > maxCombatDistance)
+                continue;
+
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestThreat = enemy;
+            }
+        }
+
+        return closestThreat;
+    }
+
+    private EnemyAI FindClosestEnemyInRange(float range)
+    {
+        EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+
+        EnemyAI closestEnemy = null;
+        float closestDistance = range;
+
+        foreach (EnemyAI enemy in enemies)
+        {
+            if (!IsValidTarget(enemy))
+                continue;
+
+            float distance = Vector2.Distance(transform.position, enemy.transform.position);
+
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestEnemy = enemy;
+            }
+        }
+
+        return closestEnemy;
+    }
+
+    private bool IsAttackingLeader(EnemyAI enemy)
+    {
+        Player leader = teamManager.CurrentPlayer;
+
+        if (leader == null)
+            return false;
+
+        return enemy.GetPlayerScript() == leader;
+    }
+
+    private bool IsAttackingTeammate(EnemyAI enemy)
+    {
+        Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
+
+        foreach (Player teammate in players)
+        {
+            if (teammate == null || teammate == player || teammate.IsDead())
+                continue;
+
+            if (enemy.GetPlayerScript() == teammate)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsValidTarget(EnemyAI enemy)
+    {
+        if (enemy == null || !enemy.gameObject.activeInHierarchy)
+            return false;
+
+        Room currentRoom = GetComponentInParent<Room>();
+        Room enemyRoom = enemy.GetComponentInParent<Room>();
+
+        if (currentRoom != null && enemyRoom != currentRoom)
+            return false;
+
+        return true;
+    }
+
+    private void MoveTowardsCombatTarget(Vector3 position)
+    {
+        Player leader = teamManager.CurrentPlayer;
+
+        if (leader == null)
             return;
 
-        float distance = Vector2.Distance(transform.position, target.transform.position);
+        float leaderDistance = Vector2.Distance(transform.position, leader.transform.position);
 
-        if (distance > meleeAttackRange)
+        if (leaderDistance > maxFormationDistance + maxCombatDistance)
         {
-            MoveTowards(target.transform.position);
+            ReturnToFormation();
             return;
         }
 
-        rb.velocity = new Vector2(0f, rb.velocity.y);
-        player.BotMeleeAttack();
-    }
-
-    private void CombatRanged()
-    {
-        if (target == null)
-            return;
-
-        float distance = Vector2.Distance(transform.position, target.transform.position);
-
-        if (distance > rangedAttackRange)
-        {
-            MoveTowards(target.transform.position);
-            return;
-        }
-
-        if (distance < retreatDistance)
-        {
-            MoveAwayFrom(target.transform.position);
-            return;
-        }
-
-        rb.velocity = new Vector2(0f, rb.velocity.y);
-
-        bool shouldMiss = Random.Range(0f, 100f) < attackMissChance;
-        player.BotRangedAttack(target, shouldMiss);
-    }
-
-    private void RetreatFromEnemy()
-    {
-        target = GetClosestEnemy();
-
-        if (target == null)
-        {
-            rb.velocity = new Vector2(0f, rb.velocity.y);
-            return;
-        }
-
-        float distance = Vector2.Distance(transform.position, target.transform.position);
-
-        if (distance < retreatDistance)
-            MoveAwayFrom(target.transform.position);
-        else
-            rb.velocity = new Vector2(0f, rb.velocity.y);
-    }
-
-    private void MoveTowards(Vector3 position)
-    {
         float direction = Mathf.Sign(position.x - transform.position.x);
 
         rb.velocity = new Vector2(direction * stats.speed, rb.velocity.y);
@@ -187,35 +449,30 @@ public class BotController : MonoBehaviour
         rb.velocity = new Vector2(direction * stats.speed, rb.velocity.y);
     }
 
-    private EnemyAI GetClosestEnemy()
+    private void ReturnToFormation()
     {
-        EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+        Player leader = teamManager.CurrentPlayer;
 
-        EnemyAI closest = null;
-        float closestDistance = combatSearchRange;
+        if (leader == null || leader == player)
+            return;
 
-        Room currentRoom = GetComponentInParent<Room>();
+        float targetX = leader.transform.position.x + formationPosition * formationSpacing;
+        float distance = targetX - transform.position.x;
 
-        foreach (EnemyAI enemy in enemies)
+        if (Mathf.Abs(distance) <= formationStopDistance)
         {
-            if (enemy == null || !enemy.gameObject.activeInHierarchy)
-                continue;
-
-            Room enemyRoom = enemy.GetComponentInParent<Room>();
-
-            if (currentRoom != null && enemyRoom != currentRoom)
-                continue;
-
-            float distance = Vector2.Distance(transform.position, enemy.transform.position);
-
-            if (distance < closestDistance)
-            {
-                closestDistance = distance;
-                closest = enemy;
-            }
+            rb.velocity = new Vector2(0f, rb.velocity.y);
+            return;
         }
 
-        return closest;
+        float direction = Mathf.Sign(distance);
+
+        rb.velocity = new Vector2(direction * teamManager.GetFormationSpeed(), rb.velocity.y);
+    }
+
+    private bool IsLowHealth()
+    {
+        return player.GetHealthPercent() <= lowHealthPercent;
     }
 
     public void SetFormationPosition(int position)
