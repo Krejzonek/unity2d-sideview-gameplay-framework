@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class EquipmentManager : MonoBehaviour
 {
@@ -8,6 +9,8 @@ public class EquipmentManager : MonoBehaviour
     [SerializeField] private Transform itemListContent;
     [SerializeField] private GameObject itemButtonPrefab;
     [SerializeField] private EquipmentSlot[] equipmentSlots;
+    [SerializeField] private Button closeButton;
+
 
     [SerializeField] private List<ItemData> inventory = new();
 
@@ -17,6 +20,8 @@ public class EquipmentManager : MonoBehaviour
     private void Awake()
     {
         FindUI();
+        if (closeButton != null)
+            closeButton.onClick.AddListener(CloseItemList);
     }
 
     private void Start()
@@ -74,6 +79,7 @@ public class EquipmentManager : MonoBehaviour
             return;
 
         selectedSlot = slot;
+        currentPlayer.SetCanAttack(false);
         itemSelectionPanel.SetActive(true);
 
         RefreshItemList();
@@ -150,6 +156,9 @@ public class EquipmentManager : MonoBehaviour
             itemSelectionPanel.SetActive(false);
 
         selectedSlot = null;
+
+        if (currentPlayer != null)
+            currentPlayer.SetCanAttack(true);
     }
 
     public void SelectItem(ItemData item)
@@ -165,10 +174,7 @@ public class EquipmentManager : MonoBehaviour
 
         selectedSlot.Equip(item);
 
-        if (itemSelectionPanel != null)
-            itemSelectionPanel.SetActive(false);
-
-        selectedSlot = null;
+        CloseItemList();
     }
 
     public ItemData GetEquippedItem(EquipmentType type)
@@ -218,7 +224,7 @@ public class EquipmentManager : MonoBehaviour
         currentPlayer.GetStats().UpdateStats();
 
         RefreshEquipmentUI();
-        RefreshItemList();
+        CloseItemList();
     }
 
     public void RefreshEquipmentUI()
@@ -384,7 +390,6 @@ public class EquipmentManager : MonoBehaviour
             currentPlayer.RefreshStats();
 
         RefreshEquipmentUI();
-        RefreshItemList();
+        CloseItemList();
     }
 }
-

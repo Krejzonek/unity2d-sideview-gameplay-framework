@@ -161,11 +161,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ffbc631c8aba8754f9fb27cfbc65bce5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyClass: 2
+  enemyClass: 3
+  aiType: 1
   enemyElement: 0
+  eliteChance: 0.05
+  eliteScale: 1.5
+  eliteHealthMultiplier: 2
+  eliteDamageMultiplier: 1.5
+  eliteKnockbackResistance: 0.5
   maxHealth: 150
   health: 150
   damage: 18
+  tankDamageReduction: 0.5
+  baseExp: 100
+  eliteExpMultiplier: 2.5
   headshotMultiplier: 2
   headshotHeight: 0.8
   knockbackDuration: 0.2
@@ -182,11 +191,27 @@ MonoBehaviour:
   rangedRetreatDistance: 2.5
   projectileCritRate: 0
   projectileCritDamage: 1
+  magePreferredDistance: 7
+  mageRetreatDistance: 3.5
   assassinSpeedMultiplier: 1.75
-  tankSpeedMultiplier: 0.6
   supportHealRange: 6
   supportHealAmount: 15
   supportHealCooldown: 5
+  smartTargetChangeInterval: 0.75
+  smartTargetRange: 20
+  smartRangedPreferredDistance: 7
+  smartRangedRetreatDistance: 4
+  smartMagePreferredDistance: 8
+  smartMageRetreatDistance: 4
+  smartSupportDangerDistance: 4
+  smartDodgeDistance: 1.2
+  smartDodgeTime: 0.4
+  smartDodgeCooldown: 1
+  smartProjectileLookAhead: 1
+  smartProjectileDetectionDistance: 10
+  counterMemoryTime: 5
+  counterDetectionDistance: 3
+  counterDetectionWidth: 1.5
   player: {fileID: 0}
   playerScript: {fileID: 0}
   lootTable: {fileID: 11400000, guid: 0527eb1ecfdf23e4b80a680219ddb6f5, type: 2}

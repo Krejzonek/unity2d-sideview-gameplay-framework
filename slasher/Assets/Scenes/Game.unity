@@ -4651,6 +4651,7 @@ MonoBehaviour:
   - {fileID: 816028017}
   - {fileID: 673515984}
   - {fileID: 121322878}
+  closeButton: {fileID: 1489620015}
   inventory:
   - {fileID: 11400000, guid: 05955358e5068cd469d691fa365602f6, type: 2}
   - {fileID: 11400000, guid: 87065221eadd9574d8dc8540503ccab8, type: 2}

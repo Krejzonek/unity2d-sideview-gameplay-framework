@@ -86,18 +86,6 @@ public class ButtonScript : MonoBehaviour
         eqPanelVisible = true;
     }
 
-    public void SelectButton()
-    {
-        Player player = GetCurrentPlayer();
-
-        if (player == null)
-            return;
-
-        selectPanel.SetActive(false);
-        CloseDescriptionPanel();
-        player.SetCanAttack(false);
-    }
-
     public void ConsumableButton()
     {
         Player player = GetCurrentPlayer();

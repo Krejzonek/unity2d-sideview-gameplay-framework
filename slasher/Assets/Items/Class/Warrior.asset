@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   className: Warrior
   classColor: {r: 1, g: 0, b: 0, a: 1}
-  description: A strong melee fighter focused on powerful attacks and durability.
-    Perfect for players who prefer fighting enemies up close.
+  description: A strong melee fighter specialized in health, defence and attack.
+    Excels at close-range combat and absorbing heavy damage.
   healthBonus: 20
   staminaBonus: 25
   attackBonus: 15
