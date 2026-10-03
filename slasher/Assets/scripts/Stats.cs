@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 
 public enum CharacterClass
@@ -41,12 +40,6 @@ public class Stats : MonoBehaviour
     [Header("Points")]
     public int freePoint;
 
-    private float healthPoint;
-    private float staminaPoint;
-    private float speedPoint;
-    private float attackPoint;
-    private float luckPoint;
-
     [Header("Final Stats")]
     public float health;
     public float defence;
@@ -66,12 +59,42 @@ public class Stats : MonoBehaviour
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+
+        LoadCharacterData();
         UpdateStats();
         UpdateClassColor();
     }
 
+    private void LoadCharacterData()
+    {
+        Player player = GetComponent<Player>();
+
+        if (player == null || player.GetCharacterData() == null)
+            return;
+
+        CharacterData character = player.GetCharacterData();
+
+        characterClass = character.characterClass;
+        freePoint = character.freePoint;
+    }
+
     public void UpdateStats()
     {
+        Player player = GetComponent<Player>();
+        CharacterData character = player != null ? player.GetCharacterData() : null;
+
+        float healthPoint = character != null ? character.healthPoint : 0f;
+        float staminaPoint = character != null ? character.staminaPoint : 0f;
+        float speedPoint = character != null ? character.speedPoint : 0f;
+        float attackPoint = character != null ? character.attackPoint : 0f;
+        float luckPoint = character != null ? character.luckPoint : 0f;
+
+        if (character != null)
+        {
+            characterClass = character.characterClass;
+            freePoint = character.freePoint;
+        }
+
         health = baseHealth + healthPoint;
         defence = baseDefence;
         stamina = baseStamina + staminaPoint;
@@ -92,12 +115,12 @@ public class Stats : MonoBehaviour
             stamina += characterClass.staminaBonus;
             speed += characterClass.speedBonus;
             attack += characterClass.attackBonus;
+            defence += characterClass.defenceBonus;
         }
-        Player player = GetComponent<Player>();
 
-        if (player != null && player.GetCharacterData() != null)
+        if (character != null && character.equippedItems != null)
         {
-            foreach (ItemData item in player.GetCharacterData().equippedItems)
+            foreach (ItemData item in character.equippedItems)
             {
                 if (item == null)
                     continue;
@@ -125,7 +148,6 @@ public class Stats : MonoBehaviour
                 }
             }
         }
-
 
         foreach (StatEffect effect in activeEffects)
         {
@@ -169,55 +191,100 @@ public class Stats : MonoBehaviour
 
     public void HealthAdd()
     {
-        if (freePoint <= 0)
+        Player player = GetComponent<Player>();
+
+        if (player == null || player.GetCharacterData() == null)
             return;
 
-        healthPoint += 50;
-        freePoint--;
+        CharacterData character = player.GetCharacterData();
+
+        if (character.freePoint <= 0)
+            return;
+
+        character.healthPoint += 50;
+        character.freePoint--;
+
+        freePoint = character.freePoint;
 
         UpdateStats();
     }
 
     public void StaminaAdd()
     {
-        if (freePoint <= 0)
+        Player player = GetComponent<Player>();
+
+        if (player == null || player.GetCharacterData() == null)
             return;
 
-        staminaPoint += 25;
-        freePoint--;
+        CharacterData character = player.GetCharacterData();
+
+        if (character.freePoint <= 0)
+            return;
+
+        character.staminaPoint += 25;
+        character.freePoint--;
+
+        freePoint = character.freePoint;
 
         UpdateStats();
     }
 
     public void SpeedAdd()
     {
-        if (freePoint <= 0)
+        Player player = GetComponent<Player>();
+
+        if (player == null || player.GetCharacterData() == null)
             return;
 
-        speedPoint += 1;
-        freePoint--;
+        CharacterData character = player.GetCharacterData();
+
+        if (character.freePoint <= 0)
+            return;
+
+        character.speedPoint += 1;
+        character.freePoint--;
+
+        freePoint = character.freePoint;
 
         UpdateStats();
     }
 
     public void AttackAdd()
     {
-        if (freePoint <= 0)
+        Player player = GetComponent<Player>();
+
+        if (player == null || player.GetCharacterData() == null)
             return;
 
-        attackPoint += 10;
-        freePoint--;
+        CharacterData character = player.GetCharacterData();
+
+        if (character.freePoint <= 0)
+            return;
+
+        character.attackPoint += 10;
+        character.freePoint--;
+
+        freePoint = character.freePoint;
 
         UpdateStats();
     }
 
     public void LuckAdd()
     {
-        if (freePoint <= 0)
+        Player player = GetComponent<Player>();
+
+        if (player == null || player.GetCharacterData() == null)
             return;
 
-        luckPoint += 1;
-        freePoint--;
+        CharacterData character = player.GetCharacterData();
+
+        if (character.freePoint <= 0)
+            return;
+
+        character.luckPoint += 1;
+        character.freePoint--;
+
+        freePoint = character.freePoint;
 
         UpdateStats();
     }
@@ -258,29 +325,59 @@ public class Stats : MonoBehaviour
     private IEnumerator BuffCoroutine(List<StatEffect> effects, float duration)
     {
         foreach (StatEffect effect in effects)
-        {
             activeEffects.Add(effect);
-        }
 
         UpdateStats();
 
         yield return new WaitForSeconds(duration);
 
         foreach (StatEffect effect in effects)
-        {
             activeEffects.Remove(effect);
-        }
 
         UpdateStats();
     }
+
     public void GetStatPoints(out float health, out float stamina, out float speed, out float attack, out float luck)
     {
-        health = healthPoint;
-        stamina = staminaPoint;
-        speed = speedPoint;
-        attack = attackPoint;
-        luck = luckPoint;
+        Player player = GetComponent<Player>();
+
+        if (player == null || player.GetCharacterData() == null)
+        {
+            health = 0;
+            stamina = 0;
+            speed = 0;
+            attack = 0;
+            luck = 0;
+            return;
+        }
+
+        CharacterData character = player.GetCharacterData();
+
+        health = character.healthPoint;
+        stamina = character.staminaPoint;
+        speed = character.speedPoint;
+        attack = character.attackPoint;
+        luck = character.luckPoint;
     }
+
+    public void SetStatPoints(float health, float stamina, float speed, float attack, float luck)
+    {
+        Player player = GetComponent<Player>();
+
+        if (player == null || player.GetCharacterData() == null)
+            return;
+
+        CharacterData character = player.GetCharacterData();
+
+        character.healthPoint = health;
+        character.staminaPoint = stamina;
+        character.speedPoint = speed;
+        character.attackPoint = attack;
+        character.luckPoint = luck;
+
+        UpdateStats();
+    }
+
     private void UpdateClassColor()
     {
         if (spriteRenderer == null)
@@ -293,15 +390,5 @@ public class Stats : MonoBehaviour
         }
 
         spriteRenderer.color = characterClass.classColor;
-    }
-    public void SetStatPoints(float health, float stamina, float speed, float attack, float luck)
-    {
-        healthPoint = health;
-        staminaPoint = stamina;
-        speedPoint = speed;
-        attackPoint = attack;
-        luckPoint = luck;
-
-        UpdateStats();
     }
 }

@@ -3,14 +3,13 @@ using UnityEngine.UI;
 
 public class ItemButton : MonoBehaviour
 {
-    [SerializeField] private ItemDescriptionPanel descriptionPanel;
-
     private ItemData item;
+    private UiEq uiEq;
 
-    
-    public void Setup(ItemData newItem)
+    public void Setup(ItemData newItem, UiEq sourceUiEq)
     {
         item = newItem;
+        uiEq = sourceUiEq;
 
         Button button = GetComponent<Button>();
 
@@ -20,12 +19,9 @@ public class ItemButton : MonoBehaviour
 
     public void Select()
     {
-        if (item == null)
+        if (item == null || uiEq == null)
             return;
 
-        if (ItemDescriptionPanel.Instance == null)
-            return;
-
-        ItemDescriptionPanel.Instance.ShowEquipment(item);
+        uiEq.ShowItemDescription(item);
     }
 }

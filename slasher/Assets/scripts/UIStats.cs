@@ -18,49 +18,142 @@ public class UIStats : MonoBehaviour
     [SerializeField] private TMP_Text className;
     [SerializeField] private TMP_Text lvltext;
 
+    private CharacterData character;
+    private Player player;
+    private Stats stats;
+
+    public void Setup(CharacterData characterData)
+    {
+        character = characterData;
+        FindPlayer();
+        Refresh();
+    }
+
     private void Update()
     {
-        if (TeamManager.Instance == null)
+        Refresh();
+    }
+
+    private void FindPlayer()
+    {
+        if (character == null)
             return;
 
-        Player player = TeamManager.Instance.CurrentPlayer;
+        Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
 
-        if (player == null)
+        foreach (Player currentPlayer in players)
+        {
+            if (currentPlayer != null && currentPlayer.GetCharacterData() == character)
+            {
+                player = currentPlayer;
+                stats = player.GetStats();
+                return;
+            }
+        }
+
+        player = null;
+        stats = null;
+    }
+
+    public void Refresh()
+    {
+        if (character == null)
             return;
 
-        Stats stats = player.GetStats();
+        if (player == null || stats == null)
+            FindPlayer();
+
+        if (freePoints != null)
+            freePoints.text = $"Points: {character.freePoint}";
+
+        if (stats != null)
+        {
+            if (health != null)
+                health.text = $"Health: {stats.health}";
+
+            if (stamina != null)
+                stamina.text = $"Stamina: {stats.stamina}";
+
+            if (speed != null)
+                speed.text = $"Speed: {stats.speed}";
+
+            if (attack != null)
+                attack.text = $"Attack: {stats.attack}";
+
+            if (luck != null)
+                luck.text = $"Luck: {stats.luck}";
+        }
+
+        if (characterNameText != null)
+            characterNameText.text = character.characterName;
+
+        if (classImage != null)
+            classImage.color = character.characterClass != null ? character.characterClass.classColor : Color.gray;
+
+        if (className != null)
+            className.text = character.characterClass != null ? character.characterClass.className : "None";
+
+        if (lvltext != null)
+            lvltext.text = $"LVL: {character.level}";
+    }
+
+    public void HealthAdd()
+    {
+        if (stats == null)
+            FindPlayer();
 
         if (stats == null)
             return;
 
-        if (freePoints != null)
-            freePoints.text = $"Points: {stats.freePoint}";
+        stats.HealthAdd();
+        Refresh();
+    }
 
-        if (health != null)
-            health.text = $"Health: {stats.health}";
+    public void StaminaAdd()
+    {
+        if (stats == null)
+            FindPlayer();
 
-        if (stamina != null)
-            stamina.text = $"Stamina: {stats.stamina}";
+        if (stats == null)
+            return;
 
-        if (speed != null)
-            speed.text = $"Speed: {stats.speed}";
+        stats.StaminaAdd();
+        Refresh();
+    }
 
-        if (attack != null)
-            attack.text = $"Attack: {stats.attack}";
+    public void SpeedAdd()
+    {
+        if (stats == null)
+            FindPlayer();
 
-        if (luck != null)
-            luck.text = $"Luck: {stats.luck}";
+        if (stats == null)
+            return;
 
-        if (characterNameText != null)
-            characterNameText.text = player.GetCharacterData() != null ? player.GetCharacterData().characterName : "None";
+        stats.SpeedAdd();
+        Refresh();
+    }
 
-        if (classImage != null)
-            classImage.color = stats.characterClass != null ? stats.characterClass.classColor : Color.gray;
+    public void AttackAdd()
+    {
+        if (stats == null)
+            FindPlayer();
 
-        if (className != null)
-            className.text = stats.characterClass != null ? stats.characterClass.className : "None";
+        if (stats == null)
+            return;
 
-        if (lvltext != null)
-            lvltext.text = $"LVL: {player.lvl}";
+        stats.AttackAdd();
+        Refresh();
+    }
+
+    public void LuckAdd()
+    {
+        if (stats == null)
+            FindPlayer();
+
+        if (stats == null)
+            return;
+
+        stats.LuckAdd();
+        Refresh();
     }
 }

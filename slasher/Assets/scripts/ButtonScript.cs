@@ -1,13 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ButtonScript : MonoBehaviour
 {
     [SerializeField] private GameObject statsPanel;
     [SerializeField] private GameObject eqPanel;
-    [SerializeField] private GameObject selectPanel;
     [SerializeField] private GameObject consumablePanel;
+    [SerializeField] private StatsPanelManager statsPanelManager;
+    [SerializeField] private EquipmentPanelManager equipmentPanelManager;
 
     private bool statsPanelVisible = false;
     private bool eqPanelVisible = false;
@@ -23,10 +22,14 @@ public class ButtonScript : MonoBehaviour
 
     private void Start()
     {
-        statsPanel.SetActive(false);
-        eqPanel.SetActive(false);
-        selectPanel.SetActive(false);
-        consumablePanel.SetActive(false);
+        if (statsPanel != null)
+            statsPanel.SetActive(false);
+
+        if (eqPanel != null)
+            eqPanel.SetActive(false);
+
+        if (consumablePanel != null)
+            consumablePanel.SetActive(false);
     }
 
     public void StatsButton()
@@ -42,13 +45,15 @@ public class ButtonScript : MonoBehaviour
             statsPanelVisible = false;
 
             CloseDescriptionPanel();
-
             player.SetCanAttack(true);
             return;
         }
 
         if (eqPanelVisible || consumablePanelVisible)
             return;
+
+        if (statsPanelManager != null)
+            statsPanelManager.Refresh();
 
         player.SetCanAttack(false);
         statsPanel.SetActive(true);
@@ -67,11 +72,6 @@ public class ButtonScript : MonoBehaviour
             eqPanel.SetActive(false);
             eqPanelVisible = false;
 
-            EquipmentManager equipmentManager = player.GetComponent<EquipmentManager>();
-
-            if (equipmentManager != null)
-                equipmentManager.CloseItemList();
-
             CloseDescriptionPanel();
 
             player.SetCanAttack(true);
@@ -80,6 +80,9 @@ public class ButtonScript : MonoBehaviour
 
         if (statsPanelVisible || consumablePanelVisible)
             return;
+
+        if (equipmentPanelManager != null)
+            equipmentPanelManager.Refresh();
 
         player.SetCanAttack(false);
         eqPanel.SetActive(true);

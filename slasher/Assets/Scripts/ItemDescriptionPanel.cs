@@ -16,6 +16,7 @@ public class ItemDescriptionPanel : MonoBehaviour
     private ItemData equipmentItem;
     private ConsumableData consumableItem;
     private ConsumableHotbar consumableHotbar;
+    private UiEq uiEq;
 
     private void Awake()
     {
@@ -27,16 +28,26 @@ public class ItemDescriptionPanel : MonoBehaviour
         gameObject.SetActive(false);
 
         if (closeButton != null)
+        {
+            closeButton.onClick.RemoveListener(Close);
             closeButton.onClick.AddListener(Close);
+        }
     }
 
     public void ShowEquipment(ItemData item)
+    {
+        ShowEquipment(item, null);
+    }
+
+    public void ShowEquipment(ItemData item, UiEq sourceUiEq)
     {
         if (item == null)
             return;
 
         equipmentItem = item;
         consumableItem = null;
+        consumableHotbar = null;
+        uiEq = sourceUiEq;
 
         itemNameText.text = item.itemName;
         descriptionText.text = "";
@@ -140,8 +151,6 @@ public class ItemDescriptionPanel : MonoBehaviour
         comparisonImage.gameObject.SetActive(true);
     }
 
-   
-
     public void ShowConsumable(ConsumableData item, ConsumableHotbar hotbar)
     {
         if (item == null)
@@ -150,6 +159,7 @@ public class ItemDescriptionPanel : MonoBehaviour
         consumableItem = item;
         equipmentItem = null;
         consumableHotbar = hotbar;
+        uiEq = null;
 
         itemNameText.text = item.itemName;
         descriptionText.text = item.description;
@@ -174,6 +184,7 @@ public class ItemDescriptionPanel : MonoBehaviour
         equipmentItem = null;
         consumableItem = null;
         consumableHotbar = null;
+        uiEq = null;
 
         itemNameText.text = item.itemName;
         descriptionText.text = item.description;
@@ -191,6 +202,13 @@ public class ItemDescriptionPanel : MonoBehaviour
     {
         if (equipmentItem == null)
             return;
+
+        if (uiEq != null)
+        {
+            uiEq.SelectItem(equipmentItem);
+            Close();
+            return;
+        }
 
         EquipmentManager equipmentManager = FindFirstObjectByType<EquipmentManager>();
 
@@ -225,10 +243,13 @@ public class ItemDescriptionPanel : MonoBehaviour
 
     public void Close()
     {
+        
+
         gameObject.SetActive(false);
 
         equipmentItem = null;
         consumableItem = null;
         consumableHotbar = null;
+        uiEq = null;
     }
 }

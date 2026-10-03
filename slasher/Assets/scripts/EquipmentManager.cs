@@ -1,28 +1,11 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class EquipmentManager : MonoBehaviour
 {
-    [SerializeField] private GameObject itemSelectionPanel;
-    [SerializeField] private Transform itemListContent;
-    [SerializeField] private GameObject itemButtonPrefab;
-    [SerializeField] private EquipmentSlot[] equipmentSlots;
-    [SerializeField] private Button closeButton;
-
-
     [SerializeField] private List<ItemData> inventory = new();
 
-    private EquipmentSlot selectedSlot;
     private Player currentPlayer;
-
-    private void Awake()
-    {
-        FindUI();
-        if (closeButton != null)
-            closeButton.onClick.AddListener(CloseItemList);
-    }
 
     private void Start()
     {
@@ -46,135 +29,9 @@ public class EquipmentManager : MonoBehaviour
         currentPlayer = TeamManager.Instance != null ? TeamManager.Instance.CurrentPlayer : null;
     }
 
-    private void FindUI()
+    public List<ItemData> GetInventory()
     {
-        if (itemSelectionPanel == null)
-        {
-            GameObject panel = GameObject.Find("ItemSelectionPanel");
-
-            if (panel != null)
-                itemSelectionPanel = panel;
-        }
-
-        if (itemListContent == null && itemSelectionPanel != null)
-        {
-            Transform content = itemSelectionPanel.transform.Find("ItemListContent");
-
-            if (content != null)
-                itemListContent = content;
-        }
-    }
-
-    public void OpenItemList(EquipmentSlot slot)
-    {
-        if (itemSelectionPanel == null)
-            FindUI();
-
-        if (itemSelectionPanel == null || itemListContent == null)
-            return;
-
-        UpdateCurrentPlayer();
-
-        if (currentPlayer == null)
-            return;
-
-        selectedSlot = slot;
-        currentPlayer.SetCanAttack(false);
-        itemSelectionPanel.SetActive(true);
-
-        RefreshItemList();
-    }
-
-    public void RefreshItemList()
-    {
-        if (itemListContent == null)
-            return;
-
-        foreach (Transform child in itemListContent)
-            Destroy(child.gameObject);
-
-        if (selectedSlot == null)
-            return;
-
-        ItemData equippedItem = GetEquippedItem(selectedSlot.Type);
-        float equippedPower = equippedItem != null ? GetEquipmentPower(equippedItem) : 0f;
-
-        List<ItemData> availableItems = new List<ItemData>();
-
-        foreach (ItemData item in inventory)
-        {
-            if (item == null)
-                continue;
-
-            if (IsItemEquippedByOtherCharacter(item))
-                continue;
-
-            if (!selectedSlot.CanEquip(item))
-                continue;
-
-            availableItems.Add(item);
-        }
-
-        availableItems = availableItems.OrderByDescending(item => GetEquipmentPower(item) >= equippedPower).ThenByDescending(item => GetEquipmentPower(item)).ToList();
-
-        foreach (ItemData item in availableItems)
-        {
-            GameObject button = Instantiate(itemButtonPrefab, itemListContent);
-
-            ItemButton itemButton = button.GetComponent<ItemButton>();
-
-            if (itemButton != null)
-                itemButton.Setup(item);
-        }
-    }
-
-    private bool IsItemEquippedByOtherCharacter(ItemData item)
-    {
-        if (item == null || CharacterManager.Instance == null || currentPlayer == null)
-            return false;
-
-        CharacterData currentCharacter = currentPlayer.GetCharacterData();
-
-        foreach (CharacterData character in CharacterManager.Instance.Characters)
-        {
-            if (character == null || character == currentCharacter)
-                continue;
-
-            if (character.equippedItems != null && character.equippedItems.Contains(item))
-                return true;
-        }
-
-        return false;
-    }
-
-    public void CloseItemList()
-    {
-        if (itemSelectionPanel == null)
-            FindUI();
-
-        if (itemSelectionPanel != null)
-            itemSelectionPanel.SetActive(false);
-
-        selectedSlot = null;
-
-        if (currentPlayer != null)
-            currentPlayer.SetCanAttack(true);
-    }
-
-    public void SelectItem(ItemData item)
-    {
-        if (selectedSlot == null)
-            return;
-
-        if (!selectedSlot.CanEquip(item))
-            return;
-
-        if (IsItemEquippedByOtherCharacter(item))
-            return;
-
-        selectedSlot.Equip(item);
-
-        CloseItemList();
+        return inventory;
     }
 
     public ItemData GetEquippedItem(EquipmentType type)
@@ -184,7 +41,15 @@ public class EquipmentManager : MonoBehaviour
         if (currentPlayer == null || currentPlayer.GetCharacterData() == null)
             return null;
 
-        foreach (ItemData item in currentPlayer.GetCharacterData().equippedItems)
+        return GetEquippedItemForCharacter(currentPlayer.GetCharacterData(), type);
+    }
+
+    public ItemData GetEquippedItemForCharacter(CharacterData character, EquipmentType type)
+    {
+        if (character == null || character.equippedItems == null)
+            return null;
+
+        foreach (ItemData item in character.equippedItems)
         {
             if (item != null && item.equipmentType == type)
                 return item;
@@ -193,25 +58,37 @@ public class EquipmentManager : MonoBehaviour
         return null;
     }
 
+    public bool IsItemEquippedByOtherCharacter(ItemData item, CharacterData ignoredCharacter = null)
+    {
+        if (item == null || CharacterManager.Instance == null)
+            return false;
+
+        foreach (CharacterData character in CharacterManager.Instance.Characters)
+        {
+            if (character == null || character == ignoredCharacter)
+                continue;
+
+            if (character.equippedItems != null && character.equippedItems.Contains(item))
+                return true;
+        }
+
+        return false;
+    }
+
     public void EquipItem(EquipmentSlot slot, ItemData item)
     {
-        UpdateCurrentPlayer();
-
-        if (currentPlayer == null || currentPlayer.GetCharacterData() == null)
+        if (slot == null || item == null || slot.Character == null)
             return;
 
-        if (slot == null || item == null)
-            return;
-
-        if (IsItemEquippedByOtherCharacter(item))
-            return;
+        CharacterData character = slot.Character;
 
         if (!slot.CanEquip(item))
             return;
 
-        CharacterData character = currentPlayer.GetCharacterData();
+        if (IsItemEquippedByOtherCharacter(item, character))
+            return;
 
-        ItemData oldItem = GetEquippedItem(slot.Type);
+        ItemData oldItem = GetEquippedItemForCharacter(character, slot.Type);
 
         if (oldItem != null)
             inventory.Add(oldItem);
@@ -221,20 +98,72 @@ public class EquipmentManager : MonoBehaviour
 
         inventory.Remove(item);
 
-        currentPlayer.GetStats().UpdateStats();
+        Player player = FindPlayerForCharacter(character);
+
+        if (player != null)
+            player.RefreshStats();
 
         RefreshEquipmentUI();
-        CloseItemList();
+    }
+
+    public void EquipItemToCharacter(CharacterData character, ItemData item)
+    {
+        if (character == null || item == null)
+            return;
+
+        if (IsItemEquippedByOtherCharacter(item, character))
+            return;
+
+        if (item.equipmentType == EquipmentType.Weapon)
+        {
+            if (character.characterClass == null)
+                return;
+
+            switch (item.weaponType)
+            {
+                case WeaponType.Sword:
+                    if (character.characterClass.className != "Warrior")
+                        return;
+                    break;
+
+                case WeaponType.Bow:
+                    if (character.characterClass.className != "Archer")
+                        return;
+                    break;
+
+                case WeaponType.Staff:
+                    if (character.characterClass.className != "Mage")
+                        return;
+                    break;
+
+                default:
+                    return;
+            }
+        }
+
+        ItemData oldItem = GetEquippedItemForCharacter(character, item.equipmentType);
+
+        if (oldItem != null)
+            inventory.Add(oldItem);
+
+        character.equippedItems.RemoveAll(x => x != null && x.equipmentType == item.equipmentType);
+        character.equippedItems.Add(item);
+
+        inventory.Remove(item);
+
+        Player player = FindPlayerForCharacter(character);
+
+        if (player != null)
+            player.RefreshStats();
+
+        RefreshEquipmentUI();
     }
 
     public void RefreshEquipmentUI()
     {
-        UpdateCurrentPlayer();
+        EquipmentSlot[] slots = FindObjectsByType<EquipmentSlot>(FindObjectsSortMode.None);
 
-        if (currentPlayer == null)
-            return;
-
-        foreach (EquipmentSlot slot in equipmentSlots)
+        foreach (EquipmentSlot slot in slots)
         {
             if (slot != null)
                 slot.Refresh();
@@ -262,31 +191,14 @@ public class EquipmentManager : MonoBehaviour
         inventory.Remove(item);
     }
 
-    public ItemData GetEquippedItemForCharacter(CharacterData character, EquipmentType type)
-    {
-        if (character == null || character.equippedItems == null)
-            return null;
-
-        foreach (ItemData item in character.equippedItems)
-        {
-            if (item != null && item.equipmentType == type)
-                return item;
-        }
-
-        return null;
-    }
-
     public float GetEquipmentPower(ItemData item)
     {
-        if (TeamManager.Instance == null || TeamManager.Instance.CurrentPlayer == null)
+        UpdateCurrentPlayer();
+
+        if (currentPlayer == null || currentPlayer.GetCharacterData() == null)
             return 0f;
 
-        CharacterData character = TeamManager.Instance.CurrentPlayer.GetCharacterData();
-
-        if (character == null)
-            return 0f;
-
-        return GetEquipmentPowerForCharacter(item, character);
+        return GetEquipmentPowerForCharacter(item, currentPlayer.GetCharacterData());
     }
 
     public float GetEquipmentPowerForCharacter(ItemData item, CharacterData character)
@@ -339,57 +251,16 @@ public class EquipmentManager : MonoBehaviour
                item.GetMiscValue();
     }
 
-    public void EquipItemToCharacter(CharacterData character, ItemData item)
+    private Player FindPlayerForCharacter(CharacterData character)
     {
-        if (character == null || item == null)
-            return;
+        Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
 
-        if (IsItemEquippedByOtherCharacter(item))
-            return;
-
-        if (item.equipmentType == EquipmentType.Weapon)
+        foreach (Player player in players)
         {
-            if (character.characterClass == null)
-                return;
-
-            switch (item.weaponType)
-            {
-                case WeaponType.Sword:
-                    if (character.characterClass.className != "Warrior")
-                        return;
-                    break;
-
-                case WeaponType.Bow:
-                    if (character.characterClass.className != "Archer")
-                        return;
-                    break;
-
-                case WeaponType.Staff:
-                    if (character.characterClass.className != "Mage")
-                        return;
-                    break;
-
-                default:
-                    return;
-            }
+            if (player != null && player.GetCharacterData() == character)
+                return player;
         }
 
-        ItemData oldItem = GetEquippedItemForCharacter(character, item.equipmentType);
-
-        if (oldItem != null)
-            inventory.Add(oldItem);
-
-        character.equippedItems.RemoveAll(x => x != null && x.equipmentType == item.equipmentType);
-        character.equippedItems.Add(item);
-
-        inventory.Remove(item);
-
-        Player currentPlayer = TeamManager.Instance != null ? TeamManager.Instance.CurrentPlayer : null;
-
-        if (currentPlayer != null && currentPlayer.GetCharacterData() == character)
-            currentPlayer.RefreshStats();
-
-        RefreshEquipmentUI();
-        CloseItemList();
+        return null;
     }
 }
