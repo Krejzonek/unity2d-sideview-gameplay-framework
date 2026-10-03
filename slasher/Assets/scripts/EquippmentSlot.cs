@@ -17,31 +17,46 @@ public class EquipmentSlot : MonoBehaviour
     [SerializeField] private Button button;
 
     private EquipmentManager equipmentManager;
+    private UiEq uiEq;
+    private CharacterData character;
 
     public EquipmentType Type => equipmentType;
+    public CharacterData Character => character;
 
     private void Awake()
     {
         if (button == null)
             button = GetComponent<Button>();
 
+        if (button == null)
+            button = GetComponentInChildren<Button>(true);
+
+        uiEq = GetComponentInParent<UiEq>();
+
         equipmentManager = FindFirstObjectByType<EquipmentManager>();
 
         if (button != null)
+        {
+            button.onClick.RemoveListener(OpenItemList);
             button.onClick.AddListener(OpenItemList);
+        }
+    }
+
+    public void Setup(CharacterData characterData)
+    {
+        character = characterData;
+        Refresh();
     }
 
     public void OpenItemList()
     {
-        if (equipmentManager == null)
-        {
-            equipmentManager = FindFirstObjectByType<EquipmentManager>();
+        if (uiEq == null)
+            uiEq = GetComponentInParent<UiEq>();
 
-            if (equipmentManager == null)
-                return;
-        }
+        if (uiEq == null)
+            return;
 
-        equipmentManager.OpenItemList(this);
+        uiEq.OpenItemList(this);
     }
 
     public bool CanEquip(ItemData item)
@@ -55,26 +70,19 @@ public class EquipmentSlot : MonoBehaviour
         if (equipmentType != EquipmentType.Weapon)
             return true;
 
-        Player player = TeamManager.Instance != null ? TeamManager.Instance.CurrentPlayer : null;
-
-        if (player == null)
-            return false;
-
-        Stats stats = player.GetStats();
-
-        if (stats == null || stats.characterClass == null)
+        if (character == null || character.characterClass == null)
             return false;
 
         switch (item.weaponType)
         {
             case WeaponType.Sword:
-                return stats.characterClass.className == "Warrior";
+                return character.characterClass.className == "Warrior";
 
             case WeaponType.Bow:
-                return stats.characterClass.className == "Archer";
+                return character.characterClass.className == "Archer";
 
             case WeaponType.Staff:
-                return stats.characterClass.className == "Mage";
+                return character.characterClass.className == "Mage";
 
             default:
                 return false;
@@ -86,6 +94,9 @@ public class EquipmentSlot : MonoBehaviour
         if (!CanEquip(item))
             return;
 
+        if (equipmentManager == null)
+            equipmentManager = FindFirstObjectByType<EquipmentManager>();
+
         if (equipmentManager != null)
             equipmentManager.EquipItem(this, item);
     }
@@ -95,10 +106,10 @@ public class EquipmentSlot : MonoBehaviour
         if (equipmentManager == null)
             equipmentManager = FindFirstObjectByType<EquipmentManager>();
 
-        if (equipmentManager == null)
+        if (equipmentManager == null || character == null)
             return;
 
-        ItemData item = equipmentManager.GetEquippedItem(equipmentType);
+        ItemData item = equipmentManager.GetEquippedItemForCharacter(character, equipmentType);
 
         if (icon != null)
         {
