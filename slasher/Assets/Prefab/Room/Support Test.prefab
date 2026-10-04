@@ -173,7 +173,7 @@ MonoBehaviour:
   health: 45
   damage: 0
   tankDamageReduction: 0.5
-  baseExp: 100
+  baseExp: 5
   eliteExpMultiplier: 2.5
   headshotMultiplier: 2
   headshotHeight: 0.8

@@ -4,6 +4,7 @@ public class LootItem : MonoBehaviour
 {
     private LootDrop lootDrop;
     private int amount;
+    private float luck;
     private Rigidbody2D rb;
 
     private void Awake()
@@ -17,10 +18,15 @@ public class LootItem : MonoBehaviour
         }
     }
 
-    public void Setup(LootDrop drop, int itemAmount)
+    public void Setup(LootDrop drop, int itemAmount, Player killer)
     {
         lootDrop = drop;
         amount = itemAmount;
+
+        luck = 1f;
+
+        if (killer != null && killer.GetStats() != null)
+            luck = killer.GetStats().luck;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -31,41 +37,52 @@ public class LootItem : MonoBehaviour
         if (lootDrop == null)
             return;
 
-        if (!TryGiveLoot(other))
+        if (!TryGiveLoot())
             return;
 
         Destroy(gameObject);
     }
 
-    private bool TryGiveLoot(Collider2D player)
+    private bool TryGiveLoot()
     {
         switch (lootDrop.lootType)
         {
             case LootType.Ingredient:
 
-                IngredientInventory ingredientInventory = player.GetComponent<IngredientInventory>();
+                ConsumableManager consumableManager = FindFirstObjectByType<ConsumableManager>();
 
-                if (ingredientInventory == null)
-                    ingredientInventory = player.GetComponentInParent<IngredientInventory>();
-
-                if (ingredientInventory == null)
+                if (consumableManager == null)
                     return false;
 
-                ingredientInventory.AddIngredient(lootDrop.ingredient, amount);
+                IngredientInventory ingredientInventory = consumableManager.GetIngredientInventory();
+
+                if (ingredientInventory == null || lootDrop.ingredient == null)
+                    return false;
+
+                int ingredientAmount = LuckSystem.GetAmount(amount, luck);
+
+                ingredientInventory.AddIngredient(lootDrop.ingredient, ingredientAmount);
 
                 return true;
 
             case LootType.Consumable:
 
-                ConsumableInventory consumableInventory = player.GetComponent<ConsumableInventory>();
+                ConsumableManager manager = FindFirstObjectByType<ConsumableManager>();
 
-                if (consumableInventory == null)
-                    consumableInventory = player.GetComponentInParent<ConsumableInventory>();
-
-                if (consumableInventory == null)
+                if (manager == null)
                     return false;
 
-                consumableInventory.AddConsumable(lootDrop.consumable, amount);
+                ConsumableInventory consumableInventory = manager.GetConsumableInventory();
+
+                if (consumableInventory == null || lootDrop.consumable == null)
+                    return false;
+
+                int consumableAmount = LuckSystem.GetAmount(amount, luck);
+
+                ConsumableData consumable = Instantiate(lootDrop.consumable);
+                consumable.rarity = LuckSystem.GetConsumableRarity(luck);
+
+                consumableInventory.AddConsumable(consumable, consumableAmount);
 
                 return true;
 
@@ -80,7 +97,7 @@ public class LootItem : MonoBehaviour
                     return false;
 
                 ItemData equipment = Instantiate(lootDrop.equipment);
-                equipment.SetRarity(RarityManager.GetRandomRarity());
+                equipment.SetRarity(LuckSystem.GetItemRarity(luck));
 
                 if (RarityManager.RollMisc())
                     equipment.SetMiscType(RarityManager.GetRandomMisc());

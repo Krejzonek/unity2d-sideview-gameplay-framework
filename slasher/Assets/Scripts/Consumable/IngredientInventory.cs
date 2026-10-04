@@ -53,9 +53,7 @@ public class IngredientInventory : MonoBehaviour
         stack.amount -= amount;
 
         if (stack.amount <= 0)
-        {
             ingredients.Remove(stack);
-        }
 
         return true;
     }
@@ -69,6 +67,7 @@ public class IngredientInventory : MonoBehaviour
 
         return stack.amount;
     }
+
     public List<IngredientStack> GetIngredients()
     {
         return ingredients;

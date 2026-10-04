@@ -1740,10 +1740,10 @@ public class EnemyAI : MonoBehaviour
 
         if (lootManager != null && lootTable != null)
         {
-            lootManager.GenerateLoot(lootTable, transform.position);
+            lootManager.GenerateLoot(lootTable, transform.position, lastAttacker);
 
             if (isElite)
-                lootManager.GenerateLoot(lootTable, transform.position);
+                lootManager.GenerateLoot(lootTable, transform.position, lastAttacker);
         }
 
         if (room != null)

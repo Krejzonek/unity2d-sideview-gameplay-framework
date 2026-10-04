@@ -76,9 +76,6 @@ GameObject:
   - component: {fileID: 2399386596800981081}
   - component: {fileID: 1172601395220092817}
   - component: {fileID: 6493098498940162196}
-  - component: {fileID: 8061368195527097820}
-  - component: {fileID: 600575637574920754}
-  - component: {fileID: 5798616679648062507}
   - component: {fileID: 8539261783837966337}
   - component: {fileID: 6152890624656137417}
   - component: {fileID: 8906405906093625272}
@@ -286,48 +283,6 @@ MonoBehaviour:
   critDamage: 0
   knockback: 0
   stunChance: 0
---- !u!114 &8061368195527097820
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8062126315278442476}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9fe642243d23ef34493d0b12f17d9eb0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  player: {fileID: 1172601395220092817}
-  stats: {fileID: 6493098498940162196}
---- !u!114 &600575637574920754
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8062126315278442476}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9ed04eb0c944bea4a92a7f814a434963, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ingredients: []
---- !u!114 &5798616679648062507
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8062126315278442476}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 44937fd09ebd1874e9ebce5839426ecd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  consumables:
-  - item: {fileID: 11400000, guid: 1a913ab770ecd554fb599d4e67024b06, type: 2}
-    amount: 10
 --- !u!114 &8539261783837966337
 MonoBehaviour:
   m_ObjectHideFlags: 0

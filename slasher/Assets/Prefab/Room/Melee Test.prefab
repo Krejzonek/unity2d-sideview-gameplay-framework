@@ -172,7 +172,8 @@ MonoBehaviour:
   maxHealth: 50
   health: 50
   damage: 10
-  baseExp: 100
+  tankDamageReduction: 0.5
+  baseExp: 10
   eliteExpMultiplier: 2.5
   headshotMultiplier: 2
   headshotHeight: 0.8
@@ -190,8 +191,9 @@ MonoBehaviour:
   rangedRetreatDistance: 2.5
   projectileCritRate: 0
   projectileCritDamage: 1
+  magePreferredDistance: 7
+  mageRetreatDistance: 3.5
   assassinSpeedMultiplier: 1.75
-  tankSpeedMultiplier: 0.6
   supportHealRange: 6
   supportHealAmount: 15
   supportHealCooldown: 5
@@ -199,6 +201,8 @@ MonoBehaviour:
   smartTargetRange: 20
   smartRangedPreferredDistance: 7
   smartRangedRetreatDistance: 4
+  smartMagePreferredDistance: 8
+  smartMageRetreatDistance: 4
   smartSupportDangerDistance: 4
   smartDodgeDistance: 1.2
   smartDodgeTime: 0.4
