@@ -48,15 +48,12 @@ public class ConsumableInventory : MonoBehaviour
         if (!HasConsumable(item, amount))
             return false;
 
-        ConsumableStack stack =
-            consumables.Find(x => x.item == item);
+        ConsumableStack stack = consumables.Find(x => x.item == item);
 
         stack.amount -= amount;
 
         if (stack.amount <= 0)
-        {
             consumables.Remove(stack);
-        }
 
         return true;
     }

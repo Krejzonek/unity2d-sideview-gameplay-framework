@@ -18,17 +18,16 @@ public class ConsumableHotbar : MonoBehaviour
     [SerializeField] private Button allButton;
     [SerializeField] private Button foodButton;
     [SerializeField] private Button potionButton;
-    
 
-    [Header("Player")]
+    [Header("Consumable System")]
     [SerializeField] private ConsumableManager consumableManager;
-    [SerializeField] private ConsumableInventory consumableInventory;
-    [SerializeField] private IngredientInventory ingredientInventory;
 
     [Header("Selected Items")]
     [SerializeField] private ConsumableData foodItem;
     [SerializeField] private ConsumableData potionItem;
 
+    private ConsumableInventory consumableInventory;
+    private IngredientInventory ingredientInventory;
 
     private int selectedSlot = -1;
 
@@ -36,28 +35,45 @@ public class ConsumableHotbar : MonoBehaviour
 
     private void Start()
     {
-        foodSlot.onClick.AddListener(UseFood);
-        potionSlot.onClick.AddListener(UsePotion);
+        if (consumableManager == null)
+            consumableManager = FindFirstObjectByType<ConsumableManager>();
 
-        allButton.onClick.AddListener(ShowAllItems);
-        foodButton.onClick.AddListener(() => ShowItems(ConsumableType.Food));
-        potionButton.onClick.AddListener(() => ShowItems(ConsumableType.Potion));
+        if (consumableManager != null)
+        {
+            consumableInventory = consumableManager.GetConsumableInventory();
+            ingredientInventory = consumableManager.GetIngredientInventory();
+        }
 
-        selectionPanel.SetActive(false);
+        if (foodSlot != null)
+            foodSlot.onClick.AddListener(UseFood);
+
+        if (potionSlot != null)
+            potionSlot.onClick.AddListener(UsePotion);
+
+        if (allButton != null)
+            allButton.onClick.AddListener(ShowAllItems);
+
+        if (foodButton != null)
+            foodButton.onClick.AddListener(() => ShowItems(ConsumableType.Food));
+
+        if (potionButton != null)
+            potionButton.onClick.AddListener(() => ShowItems(ConsumableType.Potion));
+
+        if (selectionPanel != null)
+            selectionPanel.SetActive(false);
 
         GameObject cameraObject = GameObject.FindGameObjectWithTag("MainCamera");
 
         if (cameraObject != null)
-        {
             buttonScript = cameraObject.GetComponent<ButtonScript>();
-        }
     }
 
     public void SelectFoodSlot()
     {
         selectedSlot = 0;
 
-        selectionPanel.SetActive(true);
+        if (selectionPanel != null)
+            selectionPanel.SetActive(true);
 
         ShowAllItems();
     }
@@ -66,7 +82,8 @@ public class ConsumableHotbar : MonoBehaviour
     {
         selectedSlot = 1;
 
-        selectionPanel.SetActive(true);
+        if (selectionPanel != null)
+            selectionPanel.SetActive(true);
 
         ShowAllItems();
     }
@@ -140,12 +157,22 @@ public class ConsumableHotbar : MonoBehaviour
         itemButton.Setup(item, this);
     }
 
+    private void CreateIngredientButton(IngredientData ingredient, int amount)
+    {
+        GameObject buttonObject = Instantiate(ingredientButtonPrefab, itemListContent);
+
+        IngredientItemButton itemButton = buttonObject.GetComponent<IngredientItemButton>();
+
+        if (itemButton == null)
+            return;
+
+        itemButton.Setup(ingredient, amount);
+    }
+
     private void ClearList()
     {
         foreach (Transform child in itemListContent)
-        {
             Destroy(child.gameObject);
-        }
     }
 
     public void SelectItem(ConsumableData item)
@@ -182,10 +209,15 @@ public class ConsumableHotbar : MonoBehaviour
         if (foodItem == null)
             return;
 
-        if (consumableManager == null)
+        if (consumableManager == null || consumableInventory == null)
             return;
 
-        if (consumableInventory == null)
+        if (TeamManager.Instance == null)
+            return;
+
+        Player player = TeamManager.Instance.CurrentPlayer;
+
+        if (player == null)
             return;
 
         if (!consumableInventory.HasConsumable(foodItem, 1))
@@ -196,12 +228,10 @@ public class ConsumableHotbar : MonoBehaviour
 
         consumableInventory.RemoveConsumable(foodItem, 1);
 
-        consumableManager.UseConsumable(foodItem);
+        consumableManager.UseConsumable(foodItem, player);
 
         if (consumableInventory.GetAmount(foodItem) <= 0)
-        {
             foodItem = null;
-        }
     }
 
     public void UsePotion()
@@ -209,10 +239,15 @@ public class ConsumableHotbar : MonoBehaviour
         if (potionItem == null)
             return;
 
-        if (consumableManager == null)
+        if (consumableManager == null || consumableInventory == null)
             return;
 
-        if (consumableInventory == null)
+        if (TeamManager.Instance == null)
+            return;
+
+        Player player = TeamManager.Instance.CurrentPlayer;
+
+        if (player == null)
             return;
 
         if (!consumableInventory.HasConsumable(potionItem, 1))
@@ -223,22 +258,19 @@ public class ConsumableHotbar : MonoBehaviour
 
         consumableInventory.RemoveConsumable(potionItem, 1);
 
-        consumableManager.UseConsumable(potionItem);
+        consumableManager.UseConsumable(potionItem, player);
 
         if (consumableInventory.GetAmount(potionItem) <= 0)
-        {
             potionItem = null;
-        }
     }
 
     private void CloseSelection()
     {
-        selectionPanel.SetActive(false);
+        if (selectionPanel != null)
+            selectionPanel.SetActive(false);
 
         if (buttonScript != null)
-        {
             buttonScript.consumablePanelVisible = false;
-        }
 
         selectedSlot = -1;
     }
@@ -252,45 +284,12 @@ public class ConsumableHotbar : MonoBehaviour
     {
         return potionItem;
     }
-    private void CreateIngredientButton(IngredientData ingredient, int amount)
-    {
-        GameObject buttonObject = Instantiate(ingredientButtonPrefab, itemListContent);
 
-        IngredientItemButton itemButton = buttonObject.GetComponent<IngredientItemButton>();
-
-        if (itemButton == null)
-            return;
-
-        itemButton.Setup(ingredient, amount);
-    }
     public void SelectItemFromDescription(ConsumableData item)
     {
-        if (item == null)
-            return;
-
-        if (consumableInventory == null)
-            return;
-
-        if (!consumableInventory.HasConsumable(item, 1))
-            return;
-
-        if (selectedSlot == 0)
-        {
-            if (item.consumableType != ConsumableType.Food)
-                return;
-
-            foodItem = item;
-        }
-        else if (selectedSlot == 1)
-        {
-            if (item.consumableType != ConsumableType.Potion)
-                return;
-
-            potionItem = item;
-        }
-
-        CloseSelection();
+        SelectItem(item);
     }
+
     public void ShowConsumableDescription(ConsumableData item)
     {
         if (ItemDescriptionPanel.Instance == null)

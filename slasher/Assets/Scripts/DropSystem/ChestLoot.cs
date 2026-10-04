@@ -23,8 +23,16 @@ public class ChestDrop : MonoBehaviour
         if (lootTable == null)
             return;
 
+        if (TeamManager.Instance == null)
+            return;
+
+        Player player = TeamManager.Instance.CurrentPlayer;
+
+        if (player == null)
+            return;
+
         opened = true;
 
-        lootManager.GenerateLoot(lootTable,transform.position);
+        lootManager.GenerateLoot(lootTable, transform.position, player);
     }
 }

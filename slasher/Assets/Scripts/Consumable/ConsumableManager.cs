@@ -1,60 +1,90 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ConsumableManager : MonoBehaviour
 {
-    [SerializeField] private Player player;
-    [SerializeField] private Stats stats;
+    [SerializeField] private ConsumableInventory consumableInventory;
+    [SerializeField] private IngredientInventory ingredientInventory;
 
-    private Coroutine regenerationCoroutine;
+    private Dictionary<Player, Coroutine> regenerationCoroutines = new();
 
-    public void UseConsumable(ConsumableData item)
+    public ConsumableInventory GetConsumableInventory()
     {
-        if (item == null)
+        return consumableInventory;
+    }
+
+    public IngredientInventory GetIngredientInventory()
+    {
+        return ingredientInventory;
+    }
+
+    public void UseConsumable(ConsumableData item, Player player)
+    {
+        if (item == null || player == null)
             return;
 
         if (item.consumableType == ConsumableType.Potion)
-        {
-            UsePotion(item);
-        }
+            UsePotion(item, player);
         else if (item.consumableType == ConsumableType.Food)
-        {
-            UseFood(item);
-        }
+            UseFood(item, player);
     }
 
-    private void UsePotion(ConsumableData item)
+    private void UsePotion(ConsumableData item, Player player)
     {
         if (item.healAmount > 0)
-        {
             player.Heal(item.healAmount);
-        }
 
         if (item.effects.Count > 0)
         {
-            stats.AddBuff(item.effects, item.buffDuration);
+            Stats stats = player.GetStats();
+
+            if (stats != null)
+            {
+                List<StatEffect> effects = new();
+                float debuffReduction = item.GetDebuffReduction();
+
+                foreach (StatEffect effect in item.effects)
+                {
+                    StatEffect newEffect = new StatEffect
+                    {
+                        statType = effect.statType,
+                        amount = effect.amount
+                    };
+
+                    if (newEffect.amount < 0f)
+                        newEffect.amount *= 1f - debuffReduction;
+
+                    effects.Add(newEffect);
+                }
+
+                stats.AddBuff(effects, item.buffDuration);
+                player.RefreshStats();
+            }
         }
     }
 
-    private void UseFood(ConsumableData item)
+    private void UseFood(ConsumableData item, Player player)
     {
-        if (regenerationCoroutine != null)
+        if (regenerationCoroutines.TryGetValue(player, out Coroutine coroutine))
         {
-            StopCoroutine(regenerationCoroutine);
+            if (coroutine != null)
+                StopCoroutine(coroutine);
         }
 
-        regenerationCoroutine = StartCoroutine(RegenerateHealth(item.regenerationAmount,item.regenerationDuration));
+        regenerationCoroutines[player] = StartCoroutine(RegenerateHealth(item.regenerationAmount, item.regenerationDuration, player));
     }
 
-    private IEnumerator RegenerateHealth(
-        float amount,
-        float duration)
+    private IEnumerator RegenerateHealth(float amount, float duration, Player player)
     {
         float timer = 0f;
         float healPerSecond = amount / duration;
 
         while (timer < duration)
         {
+            if (player == null)
+                yield break;
+
             player.Heal(healPerSecond * Time.deltaTime);
 
             timer += Time.deltaTime;
@@ -62,6 +92,7 @@ public class ConsumableManager : MonoBehaviour
             yield return null;
         }
 
-        regenerationCoroutine = null;
+        if (regenerationCoroutines.ContainsKey(player))
+            regenerationCoroutines.Remove(player);
     }
 }

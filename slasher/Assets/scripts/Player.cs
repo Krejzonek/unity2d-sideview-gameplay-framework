@@ -276,10 +276,26 @@ public class Player : MonoBehaviour
             return;
 
         ItemData weapon = stats.GetWeapon();
-        float staminaCost = 25f;
+        float staminaCost = 5f;
 
-        if (weapon != null && weapon.weaponType == WeaponType.Staff)
-            staminaCost = 50f;
+        if (weapon != null)
+        {
+            switch (weapon.weaponType)
+            {
+                case WeaponType.Sword:
+                    staminaCost = 10f;
+                    break;
+                case WeaponType.Bow:
+                    staminaCost = 25f;
+                    break;
+                case WeaponType.Staff:
+                    staminaCost = 50f;
+                    break;
+                default:
+                    staminaCost = 5f;
+                    break;
+            }
+        }
 
         if (skillManager != null)
             staminaCost *= skillManager.GetStaminaCostMultiplier();
@@ -491,9 +507,9 @@ public class Player : MonoBehaviour
         if (!OnFloor())
             return;
 
-        float regeneration = IsCrouching() ? 15f : 10f;
+        float regeneration = IsCrouching() ? 0.15f : 0.1f;
 
-        stamina += regeneration * Time.deltaTime;
+        stamina += stats.stamina * regeneration * Time.deltaTime;
         stamina = Mathf.Clamp(stamina, 0f, stats.stamina);
     }
 
@@ -661,4 +677,5 @@ public class Player : MonoBehaviour
         else
             StopDefense();
     }
+
 }

@@ -17,6 +17,11 @@ public class ConsumableItemButton : MonoBehaviour
         if (itemNameText != null)
             itemNameText.text = item.itemName;
 
+        Image buttonImage = GetComponent<Image>();
+
+        if (buttonImage != null)
+            buttonImage.color = RarityColor.GetColor((ItemRarity)item.rarity);
+
         Button button = GetComponent<Button>();
 
         if (button != null)

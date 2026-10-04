@@ -7,6 +7,16 @@ public enum ConsumableType
     Food
 }
 
+public enum ConsumableRarity
+{
+    Common,
+    Uncommon,
+    Rare,
+    Epic,
+    Legendary,
+    Mythic
+}
+
 [System.Serializable]
 public class StatEffect
 {
@@ -23,6 +33,9 @@ public class ConsumableData : ScriptableObject
     [Header("Type")]
     public ConsumableType consumableType;
 
+    [Header("Rarity")]
+    public ConsumableRarity rarity;
+
     [Header("Potion")]
     public float healAmount;
     public float buffDuration;
@@ -35,4 +48,30 @@ public class ConsumableData : ScriptableObject
     [Header("Description")]
     [TextArea(3, 6)]
     public string description;
+
+    public float GetDebuffReduction()
+    {
+        switch (rarity)
+        {
+            case ConsumableRarity.Common:
+                return 0f;
+
+            case ConsumableRarity.Uncommon:
+                return 0.1f;
+
+            case ConsumableRarity.Rare:
+                return 0.2f;
+
+            case ConsumableRarity.Epic:
+                return 0.3f;
+
+            case ConsumableRarity.Legendary:
+                return 0.5f;
+
+            case ConsumableRarity.Mythic:
+                return 1f;
+        }
+
+        return 0f;
+    }
 }
