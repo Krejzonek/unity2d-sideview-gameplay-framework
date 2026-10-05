@@ -124,7 +124,7 @@ public class EnemyAI : MonoBehaviour
     private float smartTargetTimer;
     private float counterTimer;
     private float smartDodgeTimer;
-
+    private ElementType lastDamageElement = ElementType.None;
     private bool isKnockedBack;
     private bool isStunned;
 
@@ -1176,12 +1176,12 @@ public class EnemyAI : MonoBehaviour
         attackTimer = attackCooldown;
     }
 
-    public void TakeDamage(float damageAmount, Vector2 hitPoint, float knockback, Vector2 knockbackDirection, float stunChance, bool isCrit, StatusEffectType statusEffect = StatusEffectType.None, float statusChance = 0f, float statusDuration = 0f, float statusDamage = 0f, Player attacker = null)
+    public void TakeDamage(float damageAmount, Vector2 hitPoint, float knockback, Vector2 knockbackDirection, float stunChance, bool isCrit, StatusEffectType statusEffect = StatusEffectType.None, float statusChance = 0f, float statusDuration = 0f, float statusDamage = 0f, Player attacker = null, ElementType damageElement = ElementType.None)
     {
         if (attacker != null)
         {
             lastAttacker = attacker;
-
+            lastDamageElement = damageElement;
             if (enemyClass != EnemyClass.Boss)
             {
                 counterTarget = attacker;
@@ -1206,13 +1206,13 @@ public class EnemyAI : MonoBehaviour
         health -= damageAmount;
         health = Mathf.Clamp(health, 0f, maxHealth);
 
-        ShowDamageNumber(damageAmount, isCrit, headshot);
+        ShowDamageNumber(damageAmount, isCrit, headshot, damageElement);
 
         if (Random.Range(0f, 100f) <= stunChance)
             ApplyStun();
 
         if (statusEffect != StatusEffectType.None && Random.Range(0f, 100f) <= statusChance)
-            ApplyStatusEffect(statusEffect, statusDuration, statusDamage);
+            ApplyStatusEffect(statusEffect, statusDuration, statusDamage, damageElement);
 
         if (knockback > 0f)
             ApplyKnockback(knockbackDirection, knockback);
@@ -1471,7 +1471,7 @@ public class EnemyAI : MonoBehaviour
         attackingEnemy = enemy;
     }
 
-    private void ApplyStatusEffect(StatusEffectType type, float duration, float statusDamage)
+    private void ApplyStatusEffect(StatusEffectType type, float duration, float statusDamage, ElementType element)
     {
         if (type == StatusEffectType.None)
             return;
@@ -1490,7 +1490,7 @@ public class EnemyAI : MonoBehaviour
             return;
         }
 
-        StatusEffect newEffect = new StatusEffect(type, duration, statusDamage);
+        StatusEffect newEffect = new StatusEffect(type, duration, statusDamage, element);
         activeStatusEffects.Add(newEffect);
 
         switch (type)
@@ -1532,7 +1532,7 @@ public class EnemyAI : MonoBehaviour
                 if (effect.tickTimer <= 0f)
                 {
                     effect.tickTimer = effect.tickInterval;
-                    TakeStatusDamage(effect.damage);
+                    TakeStatusDamage(effect);
                 }
             }
 
@@ -1587,12 +1587,17 @@ public class EnemyAI : MonoBehaviour
             attackingEnemy = null;
     }
 
-    private void TakeStatusDamage(float damageAmount)
+    private void TakeStatusDamage(StatusEffect statusEffect)
     {
+        float damageAmount = statusEffect.damage;
+        float elementMultiplier = ElementSystem.GetDamageMultiplier(statusEffect.element, enemyElement);
+
+        damageAmount *= elementMultiplier;
+
         health -= damageAmount;
         health = Mathf.Clamp(health, 0f, maxHealth);
 
-        ShowDamageNumber(damageAmount, false, false);
+        ShowDamageNumber(damageAmount, false, false, statusEffect.element);
 
         if (health <= 0f)
             Die();
@@ -1634,14 +1639,14 @@ public class EnemyAI : MonoBehaviour
         closestEnemy.SetEnemyTarget(this);
     }
 
-    private void ShowDamageNumber(float damageAmount, bool isCrit, bool isHeadshot)
+    private void ShowDamageNumber(float damageAmount, bool isCrit, bool isHeadshot, ElementType element)
     {
         if (damageNumberPrefab == null)
             return;
 
         Collider2D collider = GetComponent<Collider2D>();
         Vector3 spawnPosition = transform.position;
-
+        Debug.Log(element);
         if (collider != null)
             spawnPosition = new Vector3(collider.bounds.center.x, collider.bounds.max.y + 0.2f, transform.position.z);
 
@@ -1649,7 +1654,7 @@ public class EnemyAI : MonoBehaviour
         DamageNumber damageNumber = damageNumberObject.GetComponent<DamageNumber>();
 
         if (damageNumber != null)
-            damageNumber.Setup(damageAmount, isCrit, isHeadshot);
+            damageNumber.Setup(damageAmount, isCrit, isHeadshot,element,false);
     }
 
     private void ApplyStun()
@@ -1792,6 +1797,6 @@ public class EnemyAI : MonoBehaviour
         DamageNumber damageNumber = damageNumberObject.GetComponent<DamageNumber>();
 
         if (damageNumber != null)
-            damageNumber.Setup(amount, false, false, true);
+            damageNumber.Setup(amount, false, false, ElementType.None, true);
     }
 }
