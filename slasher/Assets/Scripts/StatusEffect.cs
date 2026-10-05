@@ -15,15 +15,17 @@ public enum StatusEffectType
 public class StatusEffect
 {
     public StatusEffectType type;
+    public ElementType element;
     public float duration;
     public float remainingDuration;
     public float damage;
     public float tickTimer;
     public float tickInterval;
 
-    public StatusEffect(StatusEffectType type, float duration, float damage)
+    public StatusEffect(StatusEffectType type, float duration, float damage, ElementType element)
     {
         this.type = type;
+        this.element = element;
         this.duration = duration;
         remainingDuration = duration;
         this.damage = damage;

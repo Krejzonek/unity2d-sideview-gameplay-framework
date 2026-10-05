@@ -122,14 +122,12 @@ public class Projectile : MonoBehaviour
                     {
                         float skillMultiplier = skillManager.GetDamageMultiplier(distance);
                         finalDamage *= skillMultiplier;
-
-                        bool longShotActive = distance >= 4f && skillManager.HasLongShot();
                     }
                 }
 
                 Vector2 knockbackDirection = direction.normalized;
 
-                enemy.TakeDamage(finalDamage, hitPoint, knockback, knockbackDirection, stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage, owner);
+                enemy.TakeDamage(finalDamage, hitPoint, knockback, knockbackDirection, stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage, owner, element);
 
                 if (owner != null)
                 {
