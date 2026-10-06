@@ -32,7 +32,6 @@ public class Player : MonoBehaviour
     [SerializeField] private LayerMask floorLayer;
 
     [Header("Crouch")]
-    [SerializeField] private float crouchHeigth = 0.8f;
     [SerializeField] private CapsuleCollider2D playerCollider;
 
     private Vector2 normalColliderSize;

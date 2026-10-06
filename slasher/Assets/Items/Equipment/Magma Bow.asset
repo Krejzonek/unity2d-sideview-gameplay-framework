@@ -16,7 +16,7 @@ MonoBehaviour:
   icon: {fileID: 0}
   equipmentType: 0
   weaponType: 2
-  element: 0
+  element: 1
   rarity: 0
   healthBonus: 0
   defenceBonus: 0

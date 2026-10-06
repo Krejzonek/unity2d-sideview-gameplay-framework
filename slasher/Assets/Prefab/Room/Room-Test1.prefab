@@ -320,6 +320,8 @@ MonoBehaviour:
   enemyParent: {fileID: 521151944278911014}
   exit: {fileID: 155689255801798883}
   mapBounds: {fileID: 1992322926985824175}
+  minPhases: 1
+  maxPhases: 3
 --- !u!61 &1992322926985824175
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -427,7 +429,7 @@ Transform:
   m_GameObject: {fileID: 1223263121884095298}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -1.75, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

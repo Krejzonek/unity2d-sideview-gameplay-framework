@@ -285,7 +285,7 @@ Transform:
   m_GameObject: {fileID: 2781568790583200457}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -1.75, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -412,7 +412,7 @@ Transform:
   m_GameObject: {fileID: 3764944364824592511}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.96, y: -0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -443,6 +443,8 @@ MonoBehaviour:
   enemyParent: {fileID: 5891626146069045971}
   exit: {fileID: 1336379599896756048}
   mapBounds: {fileID: 4802795386261284567}
+  minPhases: 1
+  maxPhases: 3
 --- !u!61 &4802795386261284567
 BoxCollider2D:
   m_ObjectHideFlags: 0

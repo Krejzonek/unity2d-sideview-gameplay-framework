@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -99,17 +100,14 @@ public class UiEq : MonoBehaviour
         foreach (Transform child in itemListContent)
             Destroy(child.gameObject);
 
-        foreach (ItemData item in equipmentManager.GetInventory())
+        var items = equipmentManager.GetInventory()
+            .Where(item => item != null)
+            .Where(item => selectedSlot.CanEquip(item))
+            .Where(item => !equipmentManager.IsItemEquippedByOtherCharacter(item, character))
+            .OrderByDescending(item => equipmentManager.GetEquipmentPowerForCharacter(item, character));
+
+        foreach (ItemData item in items)
         {
-            if (item == null)
-                continue;
-
-            if (!selectedSlot.CanEquip(item))
-                continue;
-
-            if (equipmentManager.IsItemEquippedByOtherCharacter(item, character))
-                continue;
-
             GameObject button = Instantiate(itemButtonPrefab, itemListContent);
 
             ItemButton itemButton = button.GetComponent<ItemButton>();

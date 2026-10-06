@@ -15,55 +15,75 @@ public class Room : MonoBehaviour
     [Header("Camera")]
     [SerializeField] private Collider2D mapBounds;
 
+    [Header("Phases")]
+    [SerializeField] private int minPhases = 1;
+    [SerializeField] private int maxPhases = 3;
+
     private int enemiesAlive;
+    private int currentPhase;
+    private int totalPhases;
     private RoomPoints roomPoints;
+    private RoomEnemySpawner enemySpawner;
+    private bool phaseChanging;
+    private bool roomCleared;
 
     private void Start()
     {
         roomPoints = GetComponentInChildren<RoomPoints>();
-        enemiesAlive = CountEnemies();
+        enemySpawner = GetComponentInChildren<RoomEnemySpawner>();
+
+        minPhases = Mathf.Max(1, minPhases);
+        maxPhases = Mathf.Max(minPhases, maxPhases);
+
+        totalPhases = Random.Range(minPhases, maxPhases + 1);
+        currentPhase = 1;
 
         if (exit != null)
-            exit.SetActive(enemiesAlive > 0);
+            exit.SetActive(true);
+
+        if (enemySpawner != null)
+            enemiesAlive = enemySpawner.SpawnPhase();
 
         if (enemiesAlive == 0)
             RoomCleared();
     }
 
-    private int CountEnemies()
-    {
-        if (enemyParent == null)
-            return 0;
-
-        int count = 0;
-
-        for (int i = 0; i < enemyParent.childCount; i++)
-        {
-            Transform child = enemyParent.GetChild(i);
-
-            if (!child.gameObject.activeInHierarchy)
-                continue;
-
-            EnemyAI enemy = child.GetComponent<EnemyAI>();
-
-            if (enemy != null)
-                count++;
-        }
-
-        return count;
-    }
-
     public void EnemyKilled()
     {
+        if (roomCleared || phaseChanging)
+            return;
+
         enemiesAlive--;
 
-        if (enemiesAlive <= 0)
+        if (enemiesAlive > 0)
+            return;
+
+        if (currentPhase >= totalPhases)
+        {
+            RoomCleared();
+            return;
+        }
+
+        phaseChanging = true;
+        currentPhase++;
+
+        if (enemySpawner != null)
+            enemiesAlive = enemySpawner.SpawnPhase();
+
+        phaseChanging = false;
+
+        if (enemiesAlive == 0)
             RoomCleared();
     }
 
     private void RoomCleared()
     {
+        if (roomCleared)
+            return;
+
+        roomCleared = true;
         enemiesAlive = 0;
+        phaseChanging = false;
 
         if (exit != null)
             exit.SetActive(false);
@@ -77,7 +97,7 @@ public class Room : MonoBehaviour
 
     public bool IsCleared()
     {
-        return enemiesAlive <= 0;
+        return roomCleared;
     }
 
     public bool IsBossRoom()
@@ -94,5 +114,15 @@ public class Room : MonoBehaviour
     public Collider2D GetMapBounds()
     {
         return mapBounds;
+    }
+
+    public int GetCurrentPhase()
+    {
+        return currentPhase;
+    }
+
+    public int GetTotalPhases()
+    {
+        return totalPhases;
     }
 }
