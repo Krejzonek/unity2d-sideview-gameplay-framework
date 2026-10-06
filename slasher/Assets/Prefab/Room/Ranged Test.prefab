@@ -247,3 +247,6 @@ MonoBehaviour:
   player: {fileID: 0}
   playerScript: {fileID: 0}
   lootTable: {fileID: 11400000, guid: 0527eb1ecfdf23e4b80a680219ddb6f5, type: 2}
+  spawnType: 2
+  spawnDistance: 16
+  spawnTime: 1

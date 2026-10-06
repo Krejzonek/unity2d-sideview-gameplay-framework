@@ -18,6 +18,23 @@ public enum EnemyAIType
     Smart
 }
 
+public enum EnemyAffix
+{
+    None,
+    Armored,
+    Swift,
+    Vampiric,
+    Regenerating,
+    Brutal,
+    Resilient
+}
+public enum EnemySpawnType
+{
+    None,
+    FromGround,
+    FromAir
+}
+
 public class EnemyAI : MonoBehaviour
 {
     [Header("Enemy")]
@@ -32,6 +49,7 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float eliteDamageMultiplier = 1.5f;
     [SerializeField] private float eliteKnockbackResistance = 0.5f;
     private bool isElite;
+    private EnemyAffix eliteAffix = EnemyAffix.None;
 
     [Header("Stats")]
     [SerializeField] private float maxHealth = 50f;
@@ -116,6 +134,13 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private LootTable lootTable;
     private LootManager lootManager;
 
+    [Header("Spawn")]
+    [SerializeField] private EnemySpawnType spawnType = EnemySpawnType.None;
+    [SerializeField] private float spawnDistance = 3f;
+    [SerializeField] private float spawnTime = 0.8f;
+
+    private bool isSpawning;
+
     private Rigidbody2D rb;
     private float attackTimer;
     private float knockbackTimer;
@@ -155,10 +180,13 @@ public class EnemyAI : MonoBehaviour
 
     private Dictionary<Projectile, Vector3> projectilePreviousPositions = new();
 
-    private void Start()
+    private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+    }
 
+    private void Start()
+    {
         GameObject playerObject = GameObject.FindWithTag("Player");
 
         if (playerObject != null)
@@ -183,10 +211,13 @@ public class EnemyAI : MonoBehaviour
     private void MakeElite()
     {
         isElite = true;
+        eliteAffix = GetRandomAffix();
 
         transform.localScale *= eliteScale;
         maxHealth *= eliteHealthMultiplier;
         damage *= eliteDamageMultiplier;
+
+        ApplyEliteAffix();
 
         switch (enemyClass)
         {
@@ -219,10 +250,59 @@ public class EnemyAI : MonoBehaviour
         health = maxHealth;
     }
 
+    private EnemyAffix GetRandomAffix()
+    {
+        EnemyAffix[] affixes =
+        {
+            EnemyAffix.Armored,
+            EnemyAffix.Swift,
+            EnemyAffix.Vampiric,
+            EnemyAffix.Regenerating,
+            EnemyAffix.Brutal,
+            EnemyAffix.Resilient
+        };
+
+        return affixes[Random.Range(0, affixes.Length)];
+    }
+
+    private void ApplyEliteAffix()
+    {
+        switch (eliteAffix)
+        {
+            case EnemyAffix.Armored:
+                break;
+
+            case EnemyAffix.Swift:
+                moveSpeed *= 1.35f;
+                normalMoveSpeed *= 1.35f;
+                break;
+
+            case EnemyAffix.Vampiric:
+                break;
+
+            case EnemyAffix.Regenerating:
+                break;
+
+            case EnemyAffix.Brutal:
+                damage *= 1.3f;
+                break;
+
+            case EnemyAffix.Resilient:
+                eliteKnockbackResistance = 0.25f;
+                break;
+        }
+    }
+
     private void Update()
     {
         if (player == null)
             return;
+
+        if (isSpawning)
+        {
+            StopMoving();
+            return;
+        }
 
         attackTimer -= Time.deltaTime;
         smartDodgeTimer -= Time.deltaTime;
@@ -232,6 +312,7 @@ public class EnemyAI : MonoBehaviour
             counterTarget = null;
 
         UpdateStatusEffects();
+        UpdateEliteAffix();
 
         if (illusionTimer > 0f)
         {
@@ -307,6 +388,18 @@ public class EnemyAI : MonoBehaviour
     private void LateUpdate()
     {
         UpdateProjectilePositions();
+    }
+
+    private void UpdateEliteAffix()
+    {
+        if (!isElite)
+            return;
+
+        if (eliteAffix == EnemyAffix.Regenerating && health > 0f)
+        {
+            health += maxHealth * 0.02f * Time.deltaTime;
+            health = Mathf.Min(health, maxHealth);
+        }
     }
 
     private void UpdateNormalAI()
@@ -1116,6 +1209,8 @@ public class EnemyAI : MonoBehaviour
 
     private void StopMoving()
     {
+        if (rb == null)
+            return;
         rb.velocity = new Vector2(0f, rb.velocity.y);
     }
 
@@ -1131,6 +1226,10 @@ public class EnemyAI : MonoBehaviour
             return;
 
         playerScript.TakeDamage(damage);
+
+        if (isElite && eliteAffix == EnemyAffix.Vampiric)
+            Heal(damage * 0.1f);
+
         attackTimer = attackCooldown;
     }
 
@@ -1173,6 +1272,9 @@ public class EnemyAI : MonoBehaviour
 
         target.TakeDamage(attackDamage, target.transform.position, 0f, Vector2.zero, 0f, false);
 
+        if (isElite && eliteAffix == EnemyAffix.Vampiric)
+            Heal(attackDamage * 0.1f);
+
         attackTimer = attackCooldown;
     }
 
@@ -1182,6 +1284,7 @@ public class EnemyAI : MonoBehaviour
         {
             lastAttacker = attacker;
             lastDamageElement = damageElement;
+
             if (enemyClass != EnemyClass.Boss)
             {
                 counterTarget = attacker;
@@ -1202,6 +1305,9 @@ public class EnemyAI : MonoBehaviour
 
         if (enemyClass == EnemyClass.Tank && IsTankFrontHit(hitPoint))
             damageAmount *= 1f - tankDamageReduction;
+
+        if (isElite && eliteAffix == EnemyAffix.Armored)
+            damageAmount *= 0.75f;
 
         health -= damageAmount;
         health = Mathf.Clamp(health, 0f, maxHealth);
@@ -1646,7 +1752,7 @@ public class EnemyAI : MonoBehaviour
 
         Collider2D collider = GetComponent<Collider2D>();
         Vector3 spawnPosition = transform.position;
-        Debug.Log(element);
+
         if (collider != null)
             spawnPosition = new Vector3(collider.bounds.center.x, collider.bounds.max.y + 0.2f, transform.position.z);
 
@@ -1654,7 +1760,7 @@ public class EnemyAI : MonoBehaviour
         DamageNumber damageNumber = damageNumberObject.GetComponent<DamageNumber>();
 
         if (damageNumber != null)
-            damageNumber.Setup(damageAmount, isCrit, isHeadshot,element,false);
+            damageNumber.Setup(damageAmount, isCrit, isHeadshot, element, false);
     }
 
     private void ApplyStun()
@@ -1798,5 +1904,28 @@ public class EnemyAI : MonoBehaviour
 
         if (damageNumber != null)
             damageNumber.Setup(amount, false, false, ElementType.None, true);
+    }
+
+    public EnemySpawnType GetSpawnType()
+    {
+        return spawnType;
+    }
+
+    public float GetSpawnDistance()
+    {
+        return spawnDistance;
+    }
+
+    public float GetSpawnTime()
+    {
+        return spawnTime;
+    }
+
+    public void SetSpawning(bool value)
+    {
+        isSpawning = value;
+
+        if (value)
+            StopMoving();
     }
 }
