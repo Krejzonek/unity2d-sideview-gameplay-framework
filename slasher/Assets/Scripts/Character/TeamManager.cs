@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
+
 
 public class TeamManager : MonoBehaviour
 {
@@ -11,10 +13,17 @@ public class TeamManager : MonoBehaviour
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private float spacing = 2f;
 
+    [Header("Combo")]
+    [SerializeField] private TMP_Text comboText;
+    [SerializeField] private float comboResetTime = 3f;
+
     private List<Player> team = new List<Player>();
     private int currentPlayerIndex;
     private BotFormationMode formationMode = BotFormationMode.Idle;
     private float formationSpeed = 5f;
+
+    private int combo;
+    private float comboTimer;
 
     public Player CurrentPlayer => team.Count > 0 ? team[currentPlayerIndex] : null;
     public List<Player> Team => team;
@@ -27,6 +36,7 @@ public class TeamManager : MonoBehaviour
     private void Start()
     {
         CreateTeam();
+        UpdateComboText();
     }
 
     private void Update()
@@ -41,6 +51,52 @@ public class TeamManager : MonoBehaviour
         {
             ClearTeamFormationSpeed();
         }
+
+        UpdateCombo();
+    }
+
+    private void UpdateCombo()
+    {
+        if (combo <= 0)
+            return;
+
+        comboTimer -= Time.deltaTime;
+
+        if (comboTimer <= 0f)
+        {
+            combo = 0;
+            comboTimer = 0f;
+            UpdateComboText();
+        }
+    }
+
+    public void RegisterComboHit()
+    {
+        combo++;
+        comboTimer = comboResetTime;
+
+        UpdateComboText();
+    }
+
+    public float GetComboDamageMultiplier()
+    {
+        return 1f + combo * 0.01f;
+    }
+
+    public int GetCombo()
+    {
+        return combo;
+    }
+
+    private void UpdateComboText()
+    {
+        if (comboText == null)
+            return;
+
+        if (combo > 0)
+            comboText.text = "COMBO x" + combo;
+        else
+            comboText.text = "";
     }
 
     private void CreateTeam()
