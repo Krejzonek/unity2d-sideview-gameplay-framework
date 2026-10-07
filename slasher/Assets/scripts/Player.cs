@@ -359,7 +359,6 @@ public class Player : MonoBehaviour
 
                 float elementMultiplier = ElementSystem.GetDamageMultiplier(GetAttackElement(), enemyAI.GetElement());
                 damage *= elementMultiplier;
-
                 Vector2 knockbackDirection = (enemy.transform.position - transform.position).normalized;
 
                 enemyAI.TakeDamage(damage, hitPoint, stats.knockback * (skillManager != null ? skillManager.GetKnockbackMultiplier() : 1f), knockbackDirection, stats.stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage, this);

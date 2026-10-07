@@ -13,6 +13,9 @@ public class ItemDescriptionPanel : MonoBehaviour
     [SerializeField] private Button actionButton;
     [SerializeField] private Button closeButton;
 
+    [Header("Position")]
+    [SerializeField] private Vector2 panelOffset = new Vector2(20f, 0f);
+
     private ItemData equipmentItem;
     private ConsumableData consumableItem;
     private ConsumableHotbar consumableHotbar;
@@ -61,6 +64,22 @@ public class ItemDescriptionPanel : MonoBehaviour
         actionButton.onClick.AddListener(EquipItem);
 
         gameObject.SetActive(true);
+
+        SetPosition(sourceUiEq);
+    }
+
+    private void SetPosition(UiEq sourceUiEq)
+    {
+        if (sourceUiEq == null)
+            return;
+
+        RectTransform sourceRect = sourceUiEq.GetComponent<RectTransform>();
+        RectTransform panelRect = GetComponent<RectTransform>();
+
+        if (sourceRect == null || panelRect == null)
+            return;
+
+        panelRect.position = sourceRect.position + (Vector3)panelOffset;
     }
 
     private void ShowEquipmentStats(ItemData item)
@@ -243,8 +262,6 @@ public class ItemDescriptionPanel : MonoBehaviour
 
     public void Close()
     {
-        
-
         gameObject.SetActive(false);
 
         equipmentItem = null;

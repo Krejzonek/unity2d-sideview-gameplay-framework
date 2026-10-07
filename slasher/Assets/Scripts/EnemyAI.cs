@@ -1303,6 +1303,12 @@ public class EnemyAI : MonoBehaviour
         if (headshot)
             damageAmount *= headshotMultiplier;
 
+        if(attacker != null && TeamManager.Instance != null)
+        {
+            damageAmount *= TeamManager.Instance.GetComboDamageMultiplier();
+            TeamManager.Instance.RegisterComboHit();
+        }
+
         if (enemyClass == EnemyClass.Tank && IsTankFrontHit(hitPoint))
             damageAmount *= 1f - tankDamageReduction;
 
@@ -1311,6 +1317,9 @@ public class EnemyAI : MonoBehaviour
 
         health -= damageAmount;
         health = Mathf.Clamp(health, 0f, maxHealth);
+
+        
+            
 
         ShowDamageNumber(damageAmount, isCrit, headshot, damageElement);
 
