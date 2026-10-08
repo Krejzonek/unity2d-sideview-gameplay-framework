@@ -180,7 +180,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 1
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!70 &2399386596800981081
 CapsuleCollider2D:
@@ -247,7 +247,6 @@ MonoBehaviour:
   floorLayer:
     serializedVersion: 2
     m_Bits: 64
-  crouchHeigth: 0.8
   playerCollider: {fileID: 2399386596800981081}
 --- !u!114 &6493098498940162196
 MonoBehaviour:
@@ -321,15 +320,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   formationSpacing: 2
-  formationStopDistance: 0.2
-  maxFormationDistance: 5
-  combatSearchRange: 100
+  formationStopDistance: 1.6
   maxCombatDistance: 20
   meleeAttackRange: 1.5
   rangedAttackRange: 15
   rangedPreferredDistance: 7
   retreatDistance: 4
   attackMissChance: 20
-  targetChangeCooldown: 0.75
   lowHealthPercent: 0.3
   lowHealthRetreatDistance: 6

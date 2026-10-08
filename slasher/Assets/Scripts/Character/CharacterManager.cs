@@ -8,11 +8,32 @@ public class CharacterManager : MonoBehaviour
     [SerializeField] private int maxCharacters = 4;
 
     private List<CharacterData> characters = new();
+    private List<bool> deadCharacters = new();
+
     private int selectedCharacterIndex = -1;
+
+    private bool characterSwitchMode;
+    private bool pendingRespawn;
+
+    private Vector3 checkpointPosition;
+    private bool hasCheckpoint;
+
+    private bool characterSwitchPositionSaved;
+    private Vector3 characterSwitchPosition;
 
     public List<CharacterData> Characters => characters;
     public CharacterData SelectedCharacter => selectedCharacterIndex >= 0 && selectedCharacterIndex < characters.Count ? characters[selectedCharacterIndex] : null;
     public int SelectedCharacterIndex => selectedCharacterIndex;
+
+    public bool CharacterSwitchMode => characterSwitchMode;
+
+    public bool PendingRespawn => pendingRespawn;
+
+    public Vector3 CheckpointPosition => checkpointPosition;
+    public bool HasCheckpoint => hasCheckpoint;
+
+    public bool CharacterSwitchPositionSaved => characterSwitchPositionSaved;
+    public Vector3 CharacterSwitchPosition => characterSwitchPosition;
 
     private void Awake()
     {
@@ -38,6 +59,8 @@ public class CharacterManager : MonoBehaviour
         character.characterClass = null;
 
         characters.Add(character);
+        deadCharacters.Add(false);
+
         selectedCharacterIndex = characters.Count - 1;
 
         return true;
@@ -99,5 +122,92 @@ public class CharacterManager : MonoBehaviour
         stats.SetStatPoints(character.healthPoint, character.staminaPoint, character.speedPoint, character.attackPoint, character.luckPoint);
         stats.characterClass = character.characterClass;
         stats.UpdateStats();
+    }
+
+    public void SetCharacterDead(int index, bool dead)
+    {
+        if (index < 0 || index >= characters.Count)
+            return;
+
+        while (deadCharacters.Count < characters.Count)
+            deadCharacters.Add(false);
+
+        deadCharacters[index] = dead;
+    }
+
+    public bool IsCharacterDead(int index)
+    {
+        if (index < 0 || index >= deadCharacters.Count)
+            return false;
+
+        return deadCharacters[index];
+    }
+
+    public void StartCharacterSwitch()
+    {
+        characterSwitchMode = true;
+    }
+
+    public void EndCharacterSwitch()
+    {
+        characterSwitchMode = false;
+    }
+
+    public void SaveCharacterSwitchPosition(Vector3 position)
+    {
+        characterSwitchPosition = position;
+        characterSwitchPositionSaved = true;
+    }
+
+    public void ClearCharacterSwitchPosition()
+    {
+        characterSwitchPositionSaved = false;
+    }
+
+    public void SetCheckpoint(Vector3 position)
+    {
+        checkpointPosition = position;
+        hasCheckpoint = true;
+    }
+
+    public void StartRespawn(Vector3 position)
+    {
+        checkpointPosition = position;
+        hasCheckpoint = true;
+        pendingRespawn = true;
+        characterSwitchMode = false;
+        characterSwitchPositionSaved = false;
+
+        for (int i = 0; i < characters.Count; i++)
+            SetCharacterDead(i, false);
+    }
+
+    public void ClearRespawn()
+    {
+        pendingRespawn = false;
+    }
+
+    public void ResetDeathState()
+    {
+        characterSwitchMode = false;
+        pendingRespawn = false;
+        characterSwitchPositionSaved = false;
+
+        for (int i = 0; i < characters.Count; i++)
+            SetCharacterDead(i, false);
+    }
+
+    public bool AreAllCharactersDead()
+    {
+        if (characters.Count == 0)
+            return false;
+
+        for (int i = 0; i < characters.Count; i++)
+        {
+            if (!IsCharacterDead(i))
+                return false;
+        }
+
+        return true;
     }
 }

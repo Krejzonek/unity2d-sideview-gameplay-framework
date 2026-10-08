@@ -45,9 +45,17 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 1f;
         sceneLoader.LoadScene(mainMenuSceneName);
     }
+
     public void ChangeCharacter()
     {
         Time.timeScale = 1f;
+
+        if (CharacterManager.Instance != null && TeamManager.Instance != null && TeamManager.Instance.CurrentPlayer != null)
+        {
+            CharacterManager.Instance.StartCharacterSwitch();
+            CharacterManager.Instance.SaveCharacterSwitchPosition(TeamManager.Instance.CurrentPlayer.transform.position);
+        }
+
         sceneLoader.LoadScene(characterSelectSceneName);
     }
 }

@@ -45,7 +45,7 @@ public class ButtonScript : MonoBehaviour
             statsPanelVisible = false;
 
             CloseDescriptionPanel();
-            player.SetCanAttack(true);
+           
             return;
         }
 
@@ -55,7 +55,6 @@ public class ButtonScript : MonoBehaviour
         if (statsPanelManager != null)
             statsPanelManager.Refresh();
 
-        player.SetCanAttack(false);
         statsPanel.SetActive(true);
         statsPanelVisible = true;
     }
@@ -74,7 +73,7 @@ public class ButtonScript : MonoBehaviour
 
             CloseDescriptionPanel();
 
-            player.SetCanAttack(true);
+         
             return;
         }
 
@@ -84,7 +83,7 @@ public class ButtonScript : MonoBehaviour
         if (equipmentPanelManager != null)
             equipmentPanelManager.Refresh();
 
-        player.SetCanAttack(false);
+      
         eqPanel.SetActive(true);
         eqPanelVisible = true;
     }
@@ -103,14 +102,14 @@ public class ButtonScript : MonoBehaviour
 
             CloseDescriptionPanel();
 
-            player.SetCanAttack(true);
+        
             return;
         }
 
         if (statsPanelVisible || eqPanelVisible)
             return;
 
-        player.SetCanAttack(false);
+     
         consumablePanel.SetActive(true);
         consumablePanelVisible = true;
     }

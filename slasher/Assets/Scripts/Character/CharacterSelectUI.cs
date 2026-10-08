@@ -18,10 +18,21 @@ public class CharacterSelectUI : MonoBehaviour
     [SerializeField] private string gameSceneName = "Game";
 
     private int selectedSlot = -1;
+    private bool characterSwitchMode;
+
+    private void Awake()
+    {
+        if (createPanel != null)
+            createPanel.SetActive(false);
+    }
 
     private void Start()
     {
-        createPanel.SetActive(false);
+        characterSwitchMode = CharacterManager.Instance != null && CharacterManager.Instance.CharacterSwitchMode;
+
+        if (createPanel != null)
+            createPanel.SetActive(false);
+
         Refresh();
     }
 
@@ -38,24 +49,46 @@ public class CharacterSelectUI : MonoBehaviour
 
                 characterTexts[i].text = character.characterName + "\nLvl " + character.level;
 
+                bool dead = characterSwitchMode && CharacterManager.Instance.IsCharacterDead(i);
+
                 if (characterButtons != null && i < characterButtons.Length && characterButtons[i] != null)
                 {
-                    if (character.characterClass != null)
+                    characterButtons[i].gameObject.SetActive(true);
+
+                    if (characterSwitchMode)
                     {
-                        characterButtons[i].image.color = character.characterClass.classColor;
-                        characterTexts[i].color = Color.white;
+                        characterButtons[i].interactable = !dead;
+
+                        if (dead)
+                            characterButtons[i].image.color = Color.gray;
+                        else if (character.characterClass != null)
+                            characterButtons[i].image.color = character.characterClass.classColor;
+                        else
+                            characterButtons[i].image.color = Color.white;
                     }
                     else
                     {
-                        characterButtons[i].image.color = Color.gray;
-                        characterTexts[i].color = Color.white;
+                        characterButtons[i].interactable = true;
+
+                        if (character.characterClass != null)
+                            characterButtons[i].image.color = character.characterClass.classColor;
+                        else
+                            characterButtons[i].image.color = Color.gray;
                     }
-                        
+
+                    characterTexts[i].color = Color.white;
                 }
             }
             else
             {
                 characterTexts[i].text = "EMPTY";
+
+                if (characterButtons != null && i < characterButtons.Length && characterButtons[i] != null)
+                {
+                    characterButtons[i].gameObject.SetActive(true);
+                    characterButtons[i].interactable = true;
+                    characterButtons[i].image.color = Color.white;
+                }
             }
         }
     }
@@ -65,6 +98,12 @@ public class CharacterSelectUI : MonoBehaviour
         if (CharacterManager.Instance == null)
             return;
 
+        if (characterSwitchMode && index < CharacterManager.Instance.Characters.Count)
+        {
+            SelectAliveCharacter(index);
+            return;
+        }
+
         if (index < CharacterManager.Instance.Characters.Count)
         {
             CharacterManager.Instance.SelectCharacter(index);
@@ -73,10 +112,32 @@ public class CharacterSelectUI : MonoBehaviour
         }
 
         selectedSlot = index;
-        nameInput.text = "";
-        errorText.text = "";
-        createPanel.SetActive(true);
-        nameInput.Select();
+
+        if (nameInput != null)
+            nameInput.text = "";
+
+        if (errorText != null)
+            errorText.text = "";
+
+        if (createPanel != null)
+            createPanel.SetActive(true);
+
+        if (nameInput != null)
+            nameInput.Select();
+    }
+
+    private void SelectAliveCharacter(int index)
+    {
+        if (index < 0 || index >= CharacterManager.Instance.Characters.Count)
+            return;
+
+        if (CharacterManager.Instance.IsCharacterDead(index))
+            return;
+
+        CharacterManager.Instance.SelectCharacter(index);
+        CharacterManager.Instance.EndCharacterSwitch();
+
+        SceneManager.LoadScene(gameSceneName);
     }
 
     public void CreateCharacter()
@@ -108,6 +169,8 @@ public class CharacterSelectUI : MonoBehaviour
     public void CancelCreate()
     {
         selectedSlot = -1;
-        createPanel.SetActive(false);
+
+        if (createPanel != null)
+            createPanel.SetActive(false);
     }
 }
