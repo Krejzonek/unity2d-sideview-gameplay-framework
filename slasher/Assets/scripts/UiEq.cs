@@ -84,8 +84,7 @@ public class UiEq : MonoBehaviour
 
         selectedSlot = slot;
 
-        if (player != null)
-            player.SetCanAttack(false);
+        
 
         itemSelectionPanel.SetActive(true);
 
@@ -135,8 +134,7 @@ public class UiEq : MonoBehaviour
 
         selectedSlot = null;
 
-        if (player != null)
-            player.SetCanAttack(true);
+        
     }
 
     public void SelectItem(ItemData item)

@@ -68,13 +68,7 @@ public class ClassSelector : MonoBehaviour
 
             player = TeamManager.Instance != null ? TeamManager.Instance.CurrentPlayer : null;
 
-            if (player != null)
-            {
-                if (isOpen)
-                    StartCoroutine(EnableAttack());
-                else
-                    player.SetCanAttack(false);
-            }
+
 
             if (isOpen && skillPanel != null)
                 skillPanel.SetActive(false);
@@ -160,15 +154,6 @@ public class ClassSelector : MonoBehaviour
         if (uiClass != null)
             uiClass.SetActive(false);
 
-        if (player != null)
-            StartCoroutine(EnableAttack());
-    }
 
-    private IEnumerator EnableAttack()
-    {
-        yield return null;
-
-        if (player != null)
-            player.SetCanAttack(true);
     }
 }

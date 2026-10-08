@@ -45,7 +45,6 @@ public class Player : MonoBehaviour
     private float nextAttackTime;
     private float invulnerabilityTimer;
     private bool isDefending;
-    private bool canAttack = true;
     private float knockbackTimer;
 
     private bool isBot;
@@ -70,6 +69,9 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
+        if (IsDead())
+            return;
+
         if (invulnerabilityTimer > 0f)
             invulnerabilityTimer -= Time.deltaTime;
 
@@ -104,6 +106,12 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (IsDead())
+        {
+            rb.velocity = new Vector2(0f, rb.velocity.y);
+            return;
+        }
+
         if (knockbackTimer > 0f)
         {
             knockbackTimer -= Time.fixedDeltaTime;
@@ -265,9 +273,6 @@ public class Player : MonoBehaviour
 
     private void Attack()
     {
-        if (!canAttack)
-            return;
-
         if (isDefending)
             return;
 
@@ -279,21 +284,7 @@ public class Player : MonoBehaviour
 
         if (weapon != null)
         {
-            switch (weapon.weaponType)
-            {
-                case WeaponType.Sword:
-                    staminaCost = 10f;
-                    break;
-                case WeaponType.Bow:
-                    staminaCost = 25f;
-                    break;
-                case WeaponType.Staff:
-                    staminaCost = 50f;
-                    break;
-                default:
-                    staminaCost = 5f;
-                    break;
-            }
+            staminaCost = GetAttackStaminaCost();
         }
 
         if (skillManager != null)
@@ -440,14 +431,6 @@ public class Player : MonoBehaviour
         return weapon.element;
     }
 
-    public void SetCanAttack(bool value)
-    {
-        canAttack = value;
-
-        if (!value)
-            isDefending = false;
-    }
-
     public void TakeDamage(float damage)
     {
         if (invulnerabilityTimer > 0f || IsDead())
@@ -467,7 +450,16 @@ public class Player : MonoBehaviour
         health = Mathf.Clamp(health, 0f, stats.health);
 
         if (health <= 0f)
-            SetCanAttack(false);
+        {
+            health = 0f;
+            isDefending = false;
+            rb.velocity = Vector2.zero;
+
+            if (teamManager != null)
+                teamManager.PlayerDied(this);
+            else if (TeamManager.Instance != null)
+                TeamManager.Instance.PlayerDied(this);
+        }
     }
 
     public void Heal(float amount)
@@ -513,7 +505,7 @@ public class Player : MonoBehaviour
 
     public void ApplyKnockback(Vector2 direction, float force)
     {
-        if (rb == null)
+        if (rb == null || IsDead())
             return;
 
         knockbackTimer = 0.3f;
@@ -562,15 +554,47 @@ public class Player : MonoBehaviour
         return isDefending;
     }
 
+    public void SetDead()
+    {
+        health = 0f;
+        isDefending = false;
+        knockbackTimer = 0f;
+
+        if (rb != null)
+            rb.velocity = Vector2.zero;
+
+        BotController botController = GetComponent<BotController>();
+
+        if (botController != null)
+            botController.enabled = false;
+    }
+
+    public void Respawn(Vector3 position)
+    {
+        transform.position = position;
+
+        health = stats.health;
+        stamina = stats.stamina;
+
+        invulnerabilityTimer = 2f;
+        isDefending = false;
+        knockbackTimer = 0f;
+
+        if (rb != null)
+            rb.velocity = Vector2.zero;
+
+        BotController botController = GetComponent<BotController>();
+
+        if (botController != null)
+            botController.enabled = isBot;
+    }
+
     public void BotMeleeAttack()
     {
-        if (!canAttack || isDefending || IsDead() || Time.time < nextAttackTime)
+        if (isDefending || IsDead() || Time.time < nextAttackTime)
             return;
 
-        float staminaCost = 25f;
-
-        if (skillManager != null)
-            staminaCost *= skillManager.GetStaminaCostMultiplier();
+        float staminaCost = GetAttackStaminaCost();
 
         if (stamina < staminaCost)
             return;
@@ -586,7 +610,7 @@ public class Player : MonoBehaviour
 
     public void BotRangedAttack(EnemyAI enemy, bool shouldMiss = false)
     {
-        if (enemy == null || !canAttack || isDefending || IsDead() || Time.time < nextAttackTime)
+        if (enemy == null || isDefending || IsDead() || Time.time < nextAttackTime)
             return;
 
         if (attackPoint == null)
@@ -675,5 +699,33 @@ public class Player : MonoBehaviour
         else
             StopDefense();
     }
+    public float GetAttackStaminaCost()
+    {
+        ItemData weapon = stats.GetWeapon();
+        float staminaCost = 5f;
 
+        if (weapon != null)
+        {
+            switch (weapon.weaponType)
+            {
+                case WeaponType.Sword:
+                    staminaCost = 10f;
+                    break;
+                case WeaponType.Bow:
+                    staminaCost = 25f;
+                    break;
+                case WeaponType.Staff:
+                    staminaCost = 50f;
+                    break;
+                default:
+                    staminaCost = 5f;
+                    break;
+            }
+        }
+
+        if (skillManager != null)
+            staminaCost *= skillManager.GetStaminaCostMultiplier();
+
+        return staminaCost;
+    }
 }

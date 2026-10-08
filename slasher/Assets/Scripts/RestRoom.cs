@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class RestRoom : MonoBehaviour
 {
-    [SerializeField] private float healPerSecond = 5f;
+    [SerializeField] private float healPercentPerSecond = 5f;
 
     private List<Player> playersInside = new List<Player>();
 
@@ -14,8 +14,7 @@ public class RestRoom : MonoBehaviour
             if (player == null || player.IsDead())
                 continue;
 
-            player.SetCanAttack(false);
-            player.Heal(healPerSecond * Time.deltaTime);
+            player.Heal(player.GetMaxHealth() * (healPercentPerSecond / 100f) * Time.deltaTime);
         }
     }
 
@@ -27,7 +26,9 @@ public class RestRoom : MonoBehaviour
             return;
 
         playersInside.Add(player);
-        player.SetCanAttack(false);
+
+        if (TeamManager.Instance != null)
+            TeamManager.Instance.SetCheckpoint(transform);
     }
 
     private void OnTriggerExit2D(Collider2D collision)
@@ -38,6 +39,5 @@ public class RestRoom : MonoBehaviour
             return;
 
         playersInside.Remove(player);
-        player.SetCanAttack(true);
     }
 }

@@ -57,7 +57,20 @@ public class RoomTrigger : MonoBehaviour
             roomPoints.CloseTheDoor();
 
         if (!room.IsCleared())
+        {
+            foreach (Player player in team)
+            {
+                if (player == null || player.IsDead())
+                    continue;
+
+                BotController botController = player.GetComponent<BotController>();
+
+                if (botController != null)
+                    botController.SetCombatRoom(room);
+            }
+
             TeamManager.Instance.SetFormationMode(BotFormationMode.Combat);
+        }
 
         RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
 
