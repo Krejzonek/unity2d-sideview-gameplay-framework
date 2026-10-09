@@ -38,7 +38,7 @@ public class TeamManager : MonoBehaviour
     private Transform checkpoint;
     private bool respawning;
 
-    public Player CurrentPlayer => team.Count > 0 ? team[currentPlayerIndex] : null;
+    public Player CurrentPlayer => currentPlayerIndex >= 0 && currentPlayerIndex < team.Count ? team[currentPlayerIndex] : null;
     public List<Player> Team => team;
 
     private void Awake()
@@ -63,6 +63,9 @@ public class TeamManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (Instance == this)
+            Instance = null;
+
         if (returnToSpawnButton != null)
             returnToSpawnButton.onClick.RemoveListener(ReturnToSpawnPoint);
     }
@@ -120,10 +123,7 @@ public class TeamManager : MonoBehaviour
         if (comboText == null)
             return;
 
-        if (combo > 0)
-            comboText.text = "COMBO x" + combo;
-        else
-            comboText.text = "";
+        comboText.text = combo > 0 ? "COMBO x" + combo : "";
     }
 
     public void SetCheckpoint(Transform newCheckpoint)
@@ -144,7 +144,7 @@ public class TeamManager : MonoBehaviour
 
     public void PlayerDied(Player player)
     {
-        if (respawning || player == null)
+        if (respawning || player == null || player.IsDead() == false)
             return;
 
         int deadIndex = team.IndexOf(player);
@@ -250,7 +250,6 @@ public class TeamManager : MonoBehaviour
             playerPosition.x += (aliveIndex - (team.Count - 1) / 2f) * respawnSpacing;
 
             player.Respawn(playerPosition);
-
             aliveIndex++;
         }
 
@@ -268,6 +267,7 @@ public class TeamManager : MonoBehaviour
                 continue;
 
             player.SetBotMode(player != currentPlayer);
+            player.SaveCharacterData();
         }
 
         IgnoreTeamCollisions();
@@ -285,18 +285,13 @@ public class TeamManager : MonoBehaviour
 
         List<CharacterData> characters = characterManager.Characters;
 
-        if (characters == null || characters.Count == 0)
-            return;
-
-        if (playerPrefab == null)
+        if (characters == null || characters.Count == 0 || playerPrefab == null)
             return;
 
         int amount = Mathf.Min(characters.Count, 4);
-
         currentPlayerIndex = Mathf.Clamp(characterManager.SelectedCharacterIndex, 0, amount - 1);
 
         bool characterSwitch = characterManager.CharacterSwitchPositionSaved;
-
         Vector3 teamPosition = spawnPoint != null ? spawnPoint.position : transform.position;
 
         if (characterSwitch)
@@ -310,11 +305,13 @@ public class TeamManager : MonoBehaviour
             position.x += startX + i * spacing;
 
             GameObject characterObject = Instantiate(playerPrefab, position, Quaternion.identity);
-
             Player player = characterObject.GetComponent<Player>();
 
             if (player == null)
+            {
+                Destroy(characterObject);
                 continue;
+            }
 
             player.SetCharacterData(characters[i]);
             player.SetTeamManager(this);
@@ -324,14 +321,11 @@ public class TeamManager : MonoBehaviour
             if (stats != null)
                 CharacterManager.Instance.ApplyCharacterToPlayer(characters[i], player, stats);
 
-            bool dead = CharacterManager.Instance.IsCharacterDead(i);
-
-            if (dead)
-                player.SetDead();
-
+            team.Add(player);
             player.SetBotMode(i != currentPlayerIndex);
 
-            team.Add(player);
+            if (characterManager.IsCharacterDead(i))
+                player.SetDead();
         }
 
         if (characterSwitch)
@@ -350,6 +344,7 @@ public class TeamManager : MonoBehaviour
                 position.x += (i - (team.Count - 1) / 2f) * respawnSpacing;
 
                 team[i].Respawn(position);
+                characterManager.SetCharacterDead(i, false);
             }
 
             characterManager.ClearRespawn();
@@ -357,10 +352,12 @@ public class TeamManager : MonoBehaviour
 
         IgnoreTeamCollisions();
         UpdateFormationSpeed();
-
         SetFormationMode(BotFormationMode.Idle);
         UpdateFormation();
         SetTeamFormationSpeed();
+
+        if (characterManager.AreAllCharactersDead())
+            StartDeath();
     }
 
     private IEnumerator ForceCharacterSwitchPosition(Vector3 position)
@@ -410,7 +407,8 @@ public class TeamManager : MonoBehaviour
                 {
                     foreach (Collider2D colliderB in collidersB)
                     {
-                        Physics2D.IgnoreCollision(colliderA, colliderB);
+                        if (colliderA != null && colliderB != null)
+                            Physics2D.IgnoreCollision(colliderA, colliderB);
                     }
                 }
             }
@@ -428,10 +426,7 @@ public class TeamManager : MonoBehaviour
 
             Stats stats = player.GetStats();
 
-            if (stats == null)
-                continue;
-
-            if (stats.speed < slowestSpeed)
+            if (stats != null && stats.speed < slowestSpeed)
                 slowestSpeed = stats.speed;
         }
 
@@ -454,10 +449,8 @@ public class TeamManager : MonoBehaviour
     {
         foreach (Player player in team)
         {
-            if (player == null)
-                continue;
-
-            player.ClearFormationSpeed();
+            if (player != null)
+                player.ClearFormationSpeed();
         }
     }
 
@@ -475,13 +468,11 @@ public class TeamManager : MonoBehaviour
 
         foreach (Player player in team)
         {
-            if (player == null || player.IsDead())
-                continue;
-
-            formation.Add(player);
+            if (player != null && !player.IsDead())
+                formation.Add(player);
         }
 
-        formation = formation.OrderBy(player => GetFormationPosition(player)).ToList();
+        formation = formation.OrderBy(GetFormationPosition).ToList();
 
         int leaderIndex = formation.IndexOf(leader);
 
@@ -497,12 +488,8 @@ public class TeamManager : MonoBehaviour
 
             BotController botController = player.GetComponent<BotController>();
 
-            if (botController == null)
-                continue;
-
-            int relativePosition = i - leaderIndex;
-
-            botController.SetFormationPosition(relativePosition);
+            if (botController != null)
+                botController.SetFormationPosition(i - leaderIndex);
         }
     }
 
@@ -553,10 +540,7 @@ public class TeamManager : MonoBehaviour
 
     public void SwitchCharacter(int index)
     {
-        if (index < 0 || index >= team.Count)
-            return;
-
-        if (index == currentPlayerIndex)
+        if (index < 0 || index >= team.Count || index == currentPlayerIndex)
             return;
 
         Player newPlayer = team[index];
@@ -564,7 +548,7 @@ public class TeamManager : MonoBehaviour
         if (newPlayer == null || newPlayer.IsDead())
             return;
 
-        Player oldPlayer = team[currentPlayerIndex];
+        Player oldPlayer = CurrentPlayer;
 
         if (oldPlayer != null)
         {
@@ -599,10 +583,7 @@ public class TeamManager : MonoBehaviour
 
     public Player GetPlayer(int index)
     {
-        if (index < 0 || index >= team.Count)
-            return null;
-
-        return team[index];
+        return index >= 0 && index < team.Count ? team[index] : null;
     }
 
     public int GetCurrentPlayerIndex()
@@ -630,5 +611,50 @@ public class TeamManager : MonoBehaviour
         }
 
         return closest;
+    }
+
+    public bool CanPayResurrectionCost(Player player)
+    {
+        return player != null && player.lvl > 1 && team.Contains(player);
+    }
+
+    public bool ReviveAlly(Player fallenPlayer, Player payer, Vector3 spawnPosition)
+    {
+        if (fallenPlayer == null || payer == null)
+            return false;
+
+        if (!team.Contains(fallenPlayer) || !team.Contains(payer))
+            return false;
+
+        if (!fallenPlayer.IsDead() || payer.lvl <= 1)
+            return false;
+
+        if (payer != fallenPlayer && payer.IsDead())
+            return false;
+
+        if (!payer.LoseLevelForResurrection())
+            return false;
+
+        int fallenIndex = team.IndexOf(fallenPlayer);
+
+        fallenPlayer.Respawn(spawnPosition);
+        fallenPlayer.SetBotMode(fallenPlayer != CurrentPlayer);
+
+        if (CharacterManager.Instance != null && fallenIndex >= 0)
+            CharacterManager.Instance.SetCharacterDead(fallenIndex, false);
+
+        IgnoreTeamCollisions();
+
+        if (formationMode == BotFormationMode.Idle)
+        {
+            UpdateFormationSpeed();
+            UpdateFormation();
+            SetTeamFormationSpeed();
+        }
+
+        fallenPlayer.SaveCharacterData();
+        payer.SaveCharacterData();
+
+        return true;
     }
 }

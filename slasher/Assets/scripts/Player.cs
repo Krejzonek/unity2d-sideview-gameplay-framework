@@ -51,6 +51,7 @@ public class Player : MonoBehaviour
     private TeamManager teamManager;
     private CharacterData characterData;
 
+
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -65,6 +66,14 @@ public class Player : MonoBehaviour
         moveSpeed = stats.speed;
         health = stats.health;
         stamina = stats.stamina;
+
+        if (CharacterManager.Instance != null && characterData != null)
+        {
+            int index = CharacterManager.Instance.Characters.IndexOf(characterData);
+
+            if (index >= 0 && CharacterManager.Instance.IsCharacterDead(index))
+                SetDead();
+        }
     }
 
     private void Update()
@@ -569,6 +578,21 @@ public class Player : MonoBehaviour
             botController.enabled = false;
     }
 
+
+    public bool LoseLevelForResurrection()
+    {
+        if (IsDead() || lvl <= 1)
+            return false;
+
+        lvl--;
+        currentEXP = Mathf.Min(currentEXP, lvl * 100 - 1);
+
+        if (stats != null)
+            stats.UpdateStats();
+
+        SaveCharacterData();
+        return true;
+    }
     public void Respawn(Vector3 position)
     {
         transform.position = position;
