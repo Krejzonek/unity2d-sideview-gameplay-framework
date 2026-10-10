@@ -72,4 +72,9 @@ public class ConsumableInventory : MonoBehaviour
     {
         return consumables;
     }
+
+    public void ClearConsumables()
+    {
+        consumables.Clear();
+    }
 }

@@ -133,6 +133,7 @@ public class ClassSelector : MonoBehaviour
             skillPanel.SetActive(false);
     }
 
+
     private void ChooseClass()
     {
         if (selectedClass == null)
@@ -140,20 +141,38 @@ public class ClassSelector : MonoBehaviour
 
         player = TeamManager.Instance != null ? TeamManager.Instance.CurrentPlayer : null;
 
-        if (player != null)
+        if (player == null)
         {
-            Stats stats = player.GetComponent<Stats>();
-
-            if (stats != null)
-                stats.SetClass(selectedClass);
+            Debug.LogError("ChooseClass: CurrentPlayer is null!");
+            return;
         }
+
+        Stats stats = player.GetComponent<Stats>();
+        CharacterData character = player.GetCharacterData();
+
+        if (character == null)
+        {
+            Debug.LogError("ChooseClass: CharacterData is null!");
+            return;
+        }
+
+        character.characterClass = selectedClass;
+
+        if (stats != null)
+            stats.SetClass(selectedClass);
+
+        if (CharacterManager.Instance != null)
+            CharacterManager.Instance.SetCharacterClass(selectedClass);
+
+        if (MapSaveSystem.Instance != null)
+            MapSaveSystem.Instance.SaveCharactersNow();
+
+        Debug.Log("CLASS SELECTED: " + character.characterName + ", class: " + character.characterClass.className);
 
         if (skillPanel != null)
             skillPanel.SetActive(false);
 
         if (uiClass != null)
             uiClass.SetActive(false);
-
-
     }
 }

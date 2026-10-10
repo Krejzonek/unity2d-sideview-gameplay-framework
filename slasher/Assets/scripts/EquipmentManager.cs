@@ -29,6 +29,12 @@ public class EquipmentManager : MonoBehaviour
         currentPlayer = TeamManager.Instance != null ? TeamManager.Instance.CurrentPlayer : null;
     }
 
+    private void SaveEquipment()
+    {
+        if (MapSaveSystem.Instance != null)
+            MapSaveSystem.Instance.SaveCharactersNow();
+    }
+
     public List<ItemData> GetInventory()
     {
         return inventory;
@@ -65,10 +71,10 @@ public class EquipmentManager : MonoBehaviour
 
         foreach (CharacterData character in CharacterManager.Instance.Characters)
         {
-            if (character == null || character == ignoredCharacter)
+            if (character == null || character == ignoredCharacter || character.equippedItems == null)
                 continue;
 
-            if (character.equippedItems != null && character.equippedItems.Contains(item))
+            if (character.equippedItems.Contains(item))
                 return true;
         }
 
@@ -82,16 +88,16 @@ public class EquipmentManager : MonoBehaviour
 
         CharacterData character = slot.Character;
 
-        if (!slot.CanEquip(item))
-            return;
-
-        if (IsItemEquippedByOtherCharacter(item, character))
+        if (!slot.CanEquip(item) || IsItemEquippedByOtherCharacter(item, character))
             return;
 
         ItemData oldItem = GetEquippedItemForCharacter(character, slot.Type);
 
         if (oldItem != null)
             inventory.Add(oldItem);
+
+        if (character.equippedItems == null)
+            character.equippedItems = new List<ItemData>();
 
         character.equippedItems.RemoveAll(x => x != null && x.equipmentType == slot.Type);
         character.equippedItems.Add(item);
@@ -104,6 +110,7 @@ public class EquipmentManager : MonoBehaviour
             player.RefreshStats();
 
         RefreshEquipmentUI();
+        SaveEquipment();
     }
 
     public void EquipItemToCharacter(CharacterData character, ItemData item)
@@ -122,20 +129,14 @@ public class EquipmentManager : MonoBehaviour
             switch (item.weaponType)
             {
                 case WeaponType.Sword:
-                    if (character.characterClass.className != "Warrior")
-                        return;
+                    if (character.characterClass.className != "Warrior") return;
                     break;
-
                 case WeaponType.Bow:
-                    if (character.characterClass.className != "Archer")
-                        return;
+                    if (character.characterClass.className != "Archer") return;
                     break;
-
                 case WeaponType.Staff:
-                    if (character.characterClass.className != "Mage")
-                        return;
+                    if (character.characterClass.className != "Mage") return;
                     break;
-
                 default:
                     return;
             }
@@ -145,6 +146,9 @@ public class EquipmentManager : MonoBehaviour
 
         if (oldItem != null)
             inventory.Add(oldItem);
+
+        if (character.equippedItems == null)
+            character.equippedItems = new List<ItemData>();
 
         character.equippedItems.RemoveAll(x => x != null && x.equipmentType == item.equipmentType);
         character.equippedItems.Add(item);
@@ -157,6 +161,7 @@ public class EquipmentManager : MonoBehaviour
             player.RefreshStats();
 
         RefreshEquipmentUI();
+        SaveEquipment();
     }
 
     public void RefreshEquipmentUI()
@@ -262,5 +267,15 @@ public class EquipmentManager : MonoBehaviour
         }
 
         return null;
+    }
+
+    public void SetInventory(List<ItemData> items)
+    {
+        inventory.Clear();
+
+        if (items != null)
+            inventory.AddRange(items);
+
+        RefreshEquipmentUI();
     }
 }

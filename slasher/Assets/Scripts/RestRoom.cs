@@ -10,7 +10,8 @@ public class RestRoom : MonoBehaviour
     [SerializeField] private GameObject resurrectionStatuePrefab;
     [SerializeField] private Transform statueSpawnPoint;
 
-    private List<Player> playersInside = new List<Player>();
+    private readonly List<Player> playersInside = new List<Player>();
+    private bool mapSaved;
 
     private void Start()
     {
@@ -43,6 +44,17 @@ public class RestRoom : MonoBehaviour
 
         if (TeamManager.Instance != null)
             TeamManager.Instance.SetCheckpoint(transform);
+
+        if (!mapSaved && MapSaveSystem.Instance != null)
+        {
+            RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
+
+            if (generator != null)
+            {
+                MapSaveSystem.Instance.SaveMap(generator);
+                mapSaved = true;
+            }
+        }
     }
 
     private void OnTriggerExit2D(Collider2D collision)

@@ -26,11 +26,26 @@ public class Room : MonoBehaviour
     private RoomEnemySpawner enemySpawner;
     private bool phaseChanging;
     private bool roomCleared;
+    private bool restoreState;
 
     private void Start()
     {
         roomPoints = GetComponentInChildren<RoomPoints>();
         enemySpawner = GetComponentInChildren<RoomEnemySpawner>();
+
+        if (restoreState)
+        {
+            if (roomCleared)
+            {
+                if (exit != null)
+                    exit.SetActive(false);
+
+                if (roomPoints != null)
+                    roomPoints.OpenTheDoor();
+            }
+
+            return;
+        }
 
         minPhases = Mathf.Max(1, minPhases);
         maxPhases = Mathf.Max(minPhases, maxPhases);
@@ -105,6 +120,11 @@ public class Room : MonoBehaviour
         return isBossRoom;
     }
 
+    public int GetRoomNumber()
+    {
+        return roomNumber;
+    }
+
     public void SetRoomNumber(int number)
     {
         roomNumber = number;
@@ -124,5 +144,26 @@ public class Room : MonoBehaviour
     public int GetTotalPhases()
     {
         return totalPhases;
+    }
+
+    public void RestoreState(bool cleared, int phase, int phases)
+    {
+        restoreState = true;
+        roomCleared = cleared;
+        currentPhase = phase;
+        totalPhases = phases;
+    }
+
+    public MapSaveSystem.RoomData GetSaveData(string prefabName)
+    {
+        return new MapSaveSystem.RoomData
+        {
+            roomNumber = roomNumber,
+            prefabName = prefabName,
+            position = transform.position,
+            isCleared = roomCleared,
+            currentPhase = currentPhase,
+            totalPhases = totalPhases
+        };
     }
 }

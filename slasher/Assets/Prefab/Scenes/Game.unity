@@ -2067,7 +2067,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e6f059837bf32941a98fa269db5b9ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  healPerSecond: 5
+  healPercentPerSecond: 5
+  resurrectionStatuePrefab: {fileID: 0}
+  statueSpawnPoint: {fileID: 0}
 --- !u!1 &263703664
 GameObject:
   m_ObjectHideFlags: 0
@@ -6649,6 +6651,80 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 998778190}
   m_CullTransparentMesh: 1
+--- !u!1 &1000696093
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1000696095}
+  - component: {fileID: 1000696094}
+  - component: {fileID: 1000696096}
+  m_Layer: 0
+  m_Name: MapSaveSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1000696094
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000696093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4836f82aaaa87c048a6c1054a9e89b1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1000696095
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000696093}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 70.742096, y: 27.56057, z: -2.1898928}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1000696096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000696093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cea8e5795195a5e46bc68e38a12cb944, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  items:
+  - {fileID: 11400000, guid: c21f6aaf54474ac42bcc89e0597e5c15, type: 2}
+  - {fileID: 11400000, guid: cdf5243c77eeb054088427d540c7f2a3, type: 2}
+  - {fileID: 11400000, guid: b256e87db3a3c7440ba41ade87c85745, type: 2}
+  - {fileID: 11400000, guid: 3b52f7d54d4f61c46b8b7db0fcc30ac3, type: 2}
+  - {fileID: 11400000, guid: 87065221eadd9574d8dc8540503ccab8, type: 2}
+  - {fileID: 11400000, guid: 05955358e5068cd469d691fa365602f6, type: 2}
+  ingredients:
+  - {fileID: 11400000, guid: 0628a09573d8653498d82064e3171dc4, type: 2}
+  consumables:
+  - {fileID: 11400000, guid: 6e07d88f84f9bca4a94e24fd3a87238f, type: 2}
+  - {fileID: 11400000, guid: da74a94538eb13e419ca7aba37b3ee32, type: 2}
+  - {fileID: 11400000, guid: 1a913ab770ecd554fb599d4e67024b06, type: 2}
+  classes:
+  - {fileID: 11400000, guid: 8dce51738f288654a82ef373a5f686e6, type: 2}
+  - {fileID: 11400000, guid: a835688eec943b349ba6844de1c95d47, type: 2}
+  - {fileID: 11400000, guid: c258752ebf5aa714f84d86fa8235e342, type: 2}
 --- !u!1 &1029125007
 GameObject:
   m_ObjectHideFlags: 0
@@ -16140,3 +16216,4 @@ SceneRoots:
   - {fileID: 263703666}
   - {fileID: 459139187}
   - {fileID: 1154670116}
+  - {fileID: 1000696095}
