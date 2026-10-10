@@ -72,4 +72,9 @@ public class IngredientInventory : MonoBehaviour
     {
         return ingredients;
     }
+
+    public void ClearIngredients()
+    {
+        ingredients.Clear();
+    }
 }

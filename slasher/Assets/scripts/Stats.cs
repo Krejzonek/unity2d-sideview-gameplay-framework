@@ -91,7 +91,11 @@ public class Stats : MonoBehaviour
 
         if (character != null)
         {
-            characterClass = character.characterClass;
+            if (character.characterClass != null)
+                characterClass = character.characterClass;
+            else if (characterClass != null)
+                character.characterClass = characterClass;
+
             freePoint = character.freePoint;
         }
 
