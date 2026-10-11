@@ -82,6 +82,11 @@ public class Cauldron : MonoBehaviour
 
         consumableInventory.AddConsumable(consumable, recipe.resultAmount);
 
+        ConsumableHotbar hotbar = FindFirstObjectByType<ConsumableHotbar>();
+
+        if (hotbar != null)
+            hotbar.RefreshContent();
+
         return true;
     }
 

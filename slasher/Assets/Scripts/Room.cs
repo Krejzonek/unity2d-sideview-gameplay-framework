@@ -43,6 +43,11 @@ public class Room : MonoBehaviour
                 if (roomPoints != null)
                     roomPoints.OpenTheDoor();
             }
+            else
+            {
+                if (exit != null)
+                    exit.SetActive(true);
+            }
 
             return;
         }

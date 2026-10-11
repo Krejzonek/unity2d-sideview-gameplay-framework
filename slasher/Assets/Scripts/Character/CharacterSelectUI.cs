@@ -196,8 +196,9 @@ public class CharacterSelectUI : MonoBehaviour
 
         if (manager != null)
         {
-            manager.LoadCharactersFromSave();
-            characterSwitchMode = manager.CharacterSwitchMode;
+            manager.Characters.Clear();
+            manager.EndCharacterSwitch();
+            characterSwitchMode = false;
         }
 
         Refresh();

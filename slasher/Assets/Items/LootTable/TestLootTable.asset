@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: TestLootTable
   m_EditorClassIdentifier: 
   drops:
-  - lootType: 1
-    ingredient: {fileID: 0}
-    consumable: {fileID: 11400000, guid: 6e07d88f84f9bca4a94e24fd3a87238f, type: 2}
+  - lootType: 0
+    ingredient: {fileID: 11400000, guid: 0628a09573d8653498d82064e3171dc4, type: 2}
+    consumable: {fileID: 0}
     equipment: {fileID: 0}
     dropChance: 100
     minAmount: 1

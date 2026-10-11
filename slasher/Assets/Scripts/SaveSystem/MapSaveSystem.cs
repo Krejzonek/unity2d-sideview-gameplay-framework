@@ -1,3 +1,6 @@
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -63,6 +66,7 @@ public class MapSaveSystem : MonoBehaviour
     {
         public string itemName;
         public int amount;
+        public ConsumableRarity rarity;
     }
 
     private string SavePath => Path.Combine(Application.persistentDataPath, "mapSave.json");
@@ -214,7 +218,12 @@ public class MapSaveSystem : MonoBehaviour
             foreach (ConsumableInventory.ConsumableStack stack in consumableInventory.GetConsumables())
             {
                 if (stack != null && stack.item != null)
-                    data.consumables.Add(new ConsumableSaveData { itemName = stack.item.itemName, amount = stack.amount });
+                    data.consumables.Add(new ConsumableSaveData
+                    {
+                        itemName = stack.item.itemName,
+                        amount = stack.amount,
+                        rarity = stack.rarity
+                    });
             }
         }
     }
@@ -326,6 +335,7 @@ public class MapSaveSystem : MonoBehaviour
             }
         }
 
+
         ConsumableInventory consumableInventory = FindFirstObjectByType<ConsumableInventory>();
 
         if (consumableInventory != null)
@@ -337,7 +347,11 @@ public class MapSaveSystem : MonoBehaviour
                 ConsumableData item = registry.GetConsumable(saved.itemName);
 
                 if (item != null)
+                {
+                    item = Instantiate(item);
+                    item.rarity = saved.rarity;
                     consumableInventory.AddConsumable(item, saved.amount);
+                }
                 else
                     Debug.LogWarning("Missing consumable: " + saved.itemName);
             }
@@ -373,7 +387,6 @@ public class MapSaveSystem : MonoBehaviour
     public void SaveCharactersNow()
     {
         CharacterManager manager = CharacterManager.Instance;
-
         if (manager == null)
             return;
 
@@ -397,75 +410,22 @@ public class MapSaveSystem : MonoBehaviour
         data.characters ??= new List<CharacterSaveData>();
         data.deadCharacters ??= new List<bool>();
         data.inventory ??= new List<string>();
+        data.ingredients ??= new List<IngredientSaveData>();
+        data.consumables ??= new List<ConsumableSaveData>();
 
-        data.characters.Clear();
-        data.deadCharacters.Clear();
+        SaveCharacters(data);
+        SaveInventories(data);
 
-        Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
-
-        for (int i = 0; i < manager.Characters.Count; i++)
+        if (manager.HasCheckpoint)
         {
-            CharacterData character = manager.Characters[i];
-
-            if (character == null)
-                continue;
-
-            foreach (Player player in players)
-            {
-                if (player == null || player.GetCharacterData() != character)
-                    continue;
-
-                Stats stats = player.GetComponent<Stats>();
-
-                if (stats != null)
-                    manager.UpdateCharacterFromPlayer(character, player, stats);
-
-                break;
-            }
-
-            CharacterSaveData saved = new CharacterSaveData
-            {
-                characterName = character.characterName,
-                className = character.characterClass != null ? character.characterClass.className : "",
-                level = character.level,
-                currentEXP = character.currentEXP,
-                freePoint = character.freePoint,
-                healthPoint = character.healthPoint,
-                staminaPoint = character.staminaPoint,
-                speedPoint = character.speedPoint,
-                attackPoint = character.attackPoint,
-                luckPoint = character.luckPoint
-            };
-
-            if (character.equippedItems != null)
-            {
-                foreach (ItemData item in character.equippedItems)
-                {
-                    if (item != null)
-                        saved.equippedItems.Add(item.itemName);
-                }
-            }
-
-            data.characters.Add(saved);
-            data.deadCharacters.Add(manager.IsCharacterDead(i));
-        }
-
-        EquipmentManager equipment = FindFirstObjectByType<EquipmentManager>();
-
-        if (equipment != null)
-        {
-            data.inventory.Clear();
-
-            foreach (ItemData item in equipment.GetInventory())
-            {
-                if (item != null)
-                    data.inventory.Add(item.itemName);
-            }
+            data.checkpointPosition = manager.CheckpointPosition;
+            data.hasCheckpoint = true;
         }
 
         File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
-        Debug.Log("CHARACTERS AND INVENTORY SAVED: " + SavePath);
+        Debug.Log("CHARACTERS AND ALL INVENTORIES SAVED: " + SavePath);
     }
+
     public void DeleteSave()
     {
         if (File.Exists(SavePath))
@@ -480,6 +440,20 @@ public class MapSaveSystem : MonoBehaviour
 
         CharacterSelectUI characterSelect = FindFirstObjectByType<CharacterSelectUI>();
         if (characterSelect != null)
-            characterSelect.RefreshAfterDelete();
+            characterSelect.RefreshAfterDelete();       
     }
+#if UNITY_EDITOR
+    [InitializeOnLoadMethod]
+    private static void RegisterEditorPlayModeCallback()
+    {
+        EditorApplication.playModeStateChanged -= OnEditorPlayModeStateChanged;
+        EditorApplication.playModeStateChanged += OnEditorPlayModeStateChanged;
+    }
+
+    private static void OnEditorPlayModeStateChanged(PlayModeStateChange state)
+    {
+        if (state == PlayModeStateChange.ExitingPlayMode && Instance != null)
+            Instance.SaveCharactersNow();
+    }
+#endif
 }

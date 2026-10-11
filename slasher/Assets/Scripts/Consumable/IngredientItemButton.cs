@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class IngredientItemButton : MonoBehaviour
 {
     [SerializeField] private TMP_Text itemNameText;
+    [SerializeField] private TMP_Text itemAmountText;
 
     private IngredientData ingredient;
 
@@ -14,6 +15,9 @@ public class IngredientItemButton : MonoBehaviour
 
         if (itemNameText != null)
             itemNameText.text = ingredient.itemName;
+
+        if (itemAmountText != null)
+            itemAmountText.text = amount.ToString();
 
         Button button = GetComponent<Button>();
 

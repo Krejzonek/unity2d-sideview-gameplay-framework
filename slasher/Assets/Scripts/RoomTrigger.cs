@@ -21,20 +21,19 @@ public class RoomTrigger : MonoBehaviour
 
         CameraFollow cameraFollow = FindFirstObjectByType<CameraFollow>();
 
-        if (cameraFollow != null)
+        if (cameraFollow != null && room != null)
             cameraFollow.SetBounds(room.GetMapBounds());
 
         if (activated)
             return;
 
         playersInside.Add(player);
-
         CheckTeamInside();
     }
 
     private void CheckTeamInside()
     {
-        if (TeamManager.Instance == null)
+        if (TeamManager.Instance == null || room == null)
             return;
 
         List<Player> team = TeamManager.Instance.Team;
@@ -53,11 +52,11 @@ public class RoomTrigger : MonoBehaviour
         if (roomPoints == null)
             roomPoints = GetComponentInParent<RoomPoints>();
 
-        if (roomPoints != null)
-            roomPoints.CloseTheDoor();
-
         if (!room.IsCleared())
         {
+            if (roomPoints != null)
+                roomPoints.CloseTheDoor();
+
             foreach (Player player in team)
             {
                 if (player == null || player.IsDead())
@@ -70,6 +69,10 @@ public class RoomTrigger : MonoBehaviour
             }
 
             TeamManager.Instance.SetFormationMode(BotFormationMode.Combat);
+        }
+        else if (roomPoints != null)
+        {
+            roomPoints.OpenTheDoor();
         }
 
         RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();

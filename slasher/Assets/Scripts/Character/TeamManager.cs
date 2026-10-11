@@ -214,26 +214,19 @@ public class TeamManager : MonoBehaviour
 
     public void ReturnToSpawnPoint()
     {
-        if (!respawning)
-            return;
+        if (!respawning) return;
 
-        Vector3 respawnPosition;
+        Vector3 respawnPosition = spawnPoint != null ? spawnPoint.position : transform.position;
 
         if (CharacterManager.Instance != null && CharacterManager.Instance.HasCheckpoint)
             respawnPosition = CharacterManager.Instance.CheckpointPosition;
-        else if (spawnPoint != null)
-            respawnPosition = spawnPoint.position;
-        else
-            respawnPosition = transform.position;
 
         if (CharacterManager.Instance != null)
             CharacterManager.Instance.StartRespawn(respawnPosition);
 
         RespawnTeam(respawnPosition);
 
-        if (deathPanel != null)
-            deathPanel.SetActive(false);
-
+        if (deathPanel != null) deathPanel.SetActive(false);
         respawning = false;
     }
 
@@ -296,6 +289,8 @@ public class TeamManager : MonoBehaviour
 
         if (characterSwitch)
             teamPosition = characterManager.CharacterSwitchPosition;
+        else if (characterManager.HasCheckpoint)
+            teamPosition = characterManager.CheckpointPosition;
 
         float startX = -((amount - 1) * spacing) / 2f;
 

@@ -16,14 +16,10 @@ public class EquipmentPanelManager : MonoBehaviour
         if (CharacterManager.Instance == null)
             return;
 
-        Debug.Log("Characters count: " + CharacterManager.Instance.Characters.Count);
-
         foreach (CharacterData character in CharacterManager.Instance.Characters)
         {
             if (character == null)
                 continue;
-
-            Debug.Log("Creating panel for: " + character.characterName);
 
             GameObject panel = Instantiate(eqPanelPrefab, transform);
 

@@ -278,4 +278,8 @@ public class EquipmentManager : MonoBehaviour
 
         RefreshEquipmentUI();
     }
+    public void SaveAllEquipment()
+    {
+        SaveEquipment();
+    }
 }

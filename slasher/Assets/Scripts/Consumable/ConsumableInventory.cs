@@ -7,6 +7,7 @@ public class ConsumableInventory : MonoBehaviour
     public class ConsumableStack
     {
         public ConsumableData item;
+        public ConsumableRarity rarity;
         public int amount;
     }
 
@@ -17,7 +18,7 @@ public class ConsumableInventory : MonoBehaviour
         if (item == null || amount <= 0)
             return;
 
-        ConsumableStack stack = consumables.Find(x => x.item == item);
+        ConsumableStack stack = consumables.Find(x => x.item.itemName == item.itemName && x.rarity == item.rarity);
 
         if (stack != null)
         {
@@ -25,22 +26,21 @@ public class ConsumableInventory : MonoBehaviour
         }
         else
         {
-            consumables.Add(new ConsumableStack
+            ConsumableStack newStack = new ConsumableStack
             {
                 item = item,
+                rarity = item.rarity,
                 amount = amount
-            });
+            };
+
+            consumables.Add(newStack);
         }
     }
-
     public bool HasConsumable(ConsumableData item, int amount)
     {
         ConsumableStack stack = consumables.Find(x => x.item == item);
 
-        if (stack == null)
-            return false;
-
-        return stack.amount >= amount;
+        return stack != null && stack.amount >= amount;
     }
 
     public bool RemoveConsumable(ConsumableData item, int amount)
@@ -49,7 +49,6 @@ public class ConsumableInventory : MonoBehaviour
             return false;
 
         ConsumableStack stack = consumables.Find(x => x.item == item);
-
         stack.amount -= amount;
 
         if (stack.amount <= 0)
@@ -62,10 +61,7 @@ public class ConsumableInventory : MonoBehaviour
     {
         ConsumableStack stack = consumables.Find(x => x.item == item);
 
-        if (stack == null)
-            return 0;
-
-        return stack.amount;
+        return stack != null ? stack.amount : 0;
     }
 
     public List<ConsumableStack> GetConsumables()

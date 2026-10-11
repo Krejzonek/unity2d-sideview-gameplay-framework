@@ -238,7 +238,6 @@ public class CharacterManager : MonoBehaviour
             if (data.hasCheckpoint)
                 SetCheckpoint(data.checkpointPosition);
 
-            Debug.Log("Loaded character slots: " + characters.Count);
         }
         catch (System.Exception exception)
         {
@@ -286,8 +285,6 @@ public class CharacterManager : MonoBehaviour
             character.attackPoint = saved.attackPoint;
             character.luckPoint = saved.luckPoint;
 
-            Debug.Log("SAVE DATA: " + saved.characterName + ", className: " + saved.className);
-
             while (deadCharacters.Count <= i)
                 deadCharacters.Add(false);
 
@@ -332,7 +329,5 @@ public class CharacterManager : MonoBehaviour
             deadCharacters.RemoveAt(deadCharacters.Count - 1);
 
         selectedCharacterIndex = characters.Count > 0 ? Mathf.Clamp(selectedCharacterIndex, 0, characters.Count - 1) : -1;
-
-        Debug.Log("Character restore finished. Characters in memory: " + characters.Count);
     }
 }
