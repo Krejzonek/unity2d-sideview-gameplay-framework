@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,9 +29,9 @@ public class ConsumableHotbar : MonoBehaviour
 
     private ConsumableInventory consumableInventory;
     private IngredientInventory ingredientInventory;
-
     private int selectedSlot = -1;
-
+    private int activeFilter;
+    private int lastUseFrame = -1;
     private ButtonScript buttonScript;
 
     private void Start()
@@ -88,51 +89,57 @@ public class ConsumableHotbar : MonoBehaviour
         ShowAllItems();
     }
 
-    private void ShowAllItems()
+    public void ShowAllItems()
     {
-        ClearList();
-
-        if (ingredientInventory == null)
-            return;
-
-        List<IngredientInventory.IngredientStack> items = ingredientInventory.GetIngredients();
-
-        foreach (IngredientInventory.IngredientStack stack in items)
-        {
-            if (stack == null)
-                continue;
-
-            if (stack.ingredient == null)
-                continue;
-
-            if (stack.amount <= 0)
-                continue;
-
-            CreateIngredientButton(stack.ingredient, stack.amount);
-        }
+        activeFilter = 0;
+        RefreshContent();
     }
 
     private void ShowItems(ConsumableType type)
     {
+        activeFilter = type == ConsumableType.Food ? 1 : 2;
+        RefreshContent();
+    }
+
+    public void RefreshContent()
+    {
         ClearList();
+
+        if (selectionPanel == null || !selectionPanel.activeSelf)
+            return;
+
+        if (activeFilter == 0)
+        {
+            if (ingredientInventory == null)
+                return;
+
+            List<IngredientInventory.IngredientStack> items = ingredientInventory.GetIngredients();
+
+            foreach (IngredientInventory.IngredientStack stack in items)
+            {
+                if (stack == null || stack.ingredient == null || stack.amount <= 0)
+                    continue;
+
+                CreateIngredientButton(stack.ingredient, stack.amount);
+            }
+
+            return;
+        }
 
         if (consumableInventory == null)
             return;
 
-        List<ConsumableInventory.ConsumableStack> items = consumableInventory.GetConsumables();
+        List<ConsumableInventory.ConsumableStack> consumables = consumableInventory.GetConsumables();
 
-        foreach (ConsumableInventory.ConsumableStack stack in items)
+        foreach (ConsumableInventory.ConsumableStack stack in consumables)
         {
-            if (stack == null)
+            if (stack == null || stack.item == null || stack.amount <= 0)
                 continue;
 
-            if (stack.item == null)
+            if (activeFilter == 1 && stack.item.consumableType != ConsumableType.Food)
                 continue;
 
-            if (stack.amount <= 0)
-                continue;
-
-            if (stack.item.consumableType != type)
+            if (activeFilter == 2 && stack.item.consumableType != ConsumableType.Potion)
                 continue;
 
             if (selectedSlot == 0 && stack.item.consumableType != ConsumableType.Food)
@@ -141,46 +148,44 @@ public class ConsumableHotbar : MonoBehaviour
             if (selectedSlot == 1 && stack.item.consumableType != ConsumableType.Potion)
                 continue;
 
-            CreateItemButton(stack.item);
+            CreateItemButton(stack.item, stack.amount);
         }
     }
 
-    private void CreateItemButton(ConsumableData item)
+    private void CreateItemButton(ConsumableData item, int amount)
     {
         GameObject buttonObject = Instantiate(itemButtonPrefab, itemListContent);
-
         ConsumableItemButton itemButton = buttonObject.GetComponent<ConsumableItemButton>();
 
-        if (itemButton == null)
-            return;
-
-        itemButton.Setup(item, this);
+        if (itemButton != null)
+            itemButton.Setup(item, this, amount);
+        else
+            Destroy(buttonObject);
     }
 
     private void CreateIngredientButton(IngredientData ingredient, int amount)
     {
         GameObject buttonObject = Instantiate(ingredientButtonPrefab, itemListContent);
-
         IngredientItemButton itemButton = buttonObject.GetComponent<IngredientItemButton>();
 
-        if (itemButton == null)
-            return;
-
-        itemButton.Setup(ingredient, amount);
+        if (itemButton != null)
+            itemButton.Setup(ingredient, amount);
+        else
+            Destroy(buttonObject);
     }
 
     private void ClearList()
     {
+        if (itemListContent == null)
+            return;
+
         foreach (Transform child in itemListContent)
             Destroy(child.gameObject);
     }
 
     public void SelectItem(ConsumableData item)
     {
-        if (item == null)
-            return;
-
-        if (consumableInventory == null)
+        if (item == null || consumableInventory == null)
             return;
 
         if (!consumableInventory.HasConsumable(item, 1))
@@ -200,19 +205,18 @@ public class ConsumableHotbar : MonoBehaviour
 
             potionItem = item;
         }
+        else
+            return;
 
         CloseSelection();
     }
 
     public void UseFood()
     {
-        if (foodItem == null)
+        if (foodItem == null || lastUseFrame == Time.frameCount)
             return;
 
-        if (consumableManager == null || consumableInventory == null)
-            return;
-
-        if (TeamManager.Instance == null)
+        if (consumableManager == null || consumableInventory == null || TeamManager.Instance == null)
             return;
 
         Player player = TeamManager.Instance.CurrentPlayer;
@@ -223,26 +227,28 @@ public class ConsumableHotbar : MonoBehaviour
         if (!consumableInventory.HasConsumable(foodItem, 1))
         {
             foodItem = null;
+            RefreshContent();
             return;
         }
 
-        consumableInventory.RemoveConsumable(foodItem, 1);
+        if (!consumableInventory.RemoveConsumable(foodItem, 1))
+            return;
 
+        lastUseFrame = Time.frameCount;
         consumableManager.UseConsumable(foodItem, player);
 
         if (consumableInventory.GetAmount(foodItem) <= 0)
             foodItem = null;
+
+        RefreshContent();
     }
 
     public void UsePotion()
     {
-        if (potionItem == null)
+        if (potionItem == null || lastUseFrame == Time.frameCount)
             return;
 
-        if (consumableManager == null || consumableInventory == null)
-            return;
-
-        if (TeamManager.Instance == null)
+        if (consumableManager == null || consumableInventory == null || TeamManager.Instance == null)
             return;
 
         Player player = TeamManager.Instance.CurrentPlayer;
@@ -253,15 +259,20 @@ public class ConsumableHotbar : MonoBehaviour
         if (!consumableInventory.HasConsumable(potionItem, 1))
         {
             potionItem = null;
+            RefreshContent();
             return;
         }
 
-        consumableInventory.RemoveConsumable(potionItem, 1);
+        if (!consumableInventory.RemoveConsumable(potionItem, 1))
+            return;
 
+        lastUseFrame = Time.frameCount;
         consumableManager.UseConsumable(potionItem, player);
 
         if (consumableInventory.GetAmount(potionItem) <= 0)
             potionItem = null;
+
+        RefreshContent();
     }
 
     private void CloseSelection()
@@ -292,9 +303,7 @@ public class ConsumableHotbar : MonoBehaviour
 
     public void ShowConsumableDescription(ConsumableData item)
     {
-        if (ItemDescriptionPanel.Instance == null)
-            return;
-
-        ItemDescriptionPanel.Instance.ShowConsumable(item, this);
+        if (ItemDescriptionPanel.Instance != null)
+            ItemDescriptionPanel.Instance.ShowConsumable(item, this);
     }
 }

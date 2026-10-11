@@ -109,8 +109,9 @@ public class ButtonScript : MonoBehaviour
         if (statsPanelVisible || eqPanelVisible)
             return;
 
-     
+        
         consumablePanel.SetActive(true);
+        consumablePanel.GetComponentInParent<ConsumableHotbar>().ShowAllItems();
         consumablePanelVisible = true;
     }
 

@@ -42,9 +42,6 @@ public class RestRoom : MonoBehaviour
 
         playersInside.Add(player);
 
-        if (TeamManager.Instance != null)
-            TeamManager.Instance.SetCheckpoint(transform);
-
         if (!mapSaved && MapSaveSystem.Instance != null)
         {
             RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
