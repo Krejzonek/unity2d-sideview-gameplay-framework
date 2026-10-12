@@ -53,7 +53,6 @@ public class RoomGenerator : MonoBehaviour
 
         GameObject prefab;
         int roomPosition = nextRoomNumber % 10;
-        int selectedIndex = -1;
 
         if (roomPosition == 0 && bossRoomPrefab != null)
         {
@@ -77,7 +76,6 @@ public class RoomGenerator : MonoBehaviour
             while (roomPrefabs.Length > 1 && randomIndex == lastRoomIndex);
 
             lastRoomIndex = randomIndex;
-            selectedIndex = randomIndex;
             prefab = roomPrefabs[randomIndex];
         }
 
@@ -108,7 +106,7 @@ public class RoomGenerator : MonoBehaviour
         if (savedData != null)
         {
             roomObject.transform.position = savedData.position;
-            room.RestoreState(savedData.isCleared, savedData.currentPhase, savedData.totalPhases);
+            room.RestoreState(savedData.isCleared, savedData.currentPhase, savedData.totalPhases, savedData.enemies);
         }
         else
         {
@@ -122,6 +120,24 @@ public class RoomGenerator : MonoBehaviour
         generatedPrefabNames.Add(prefab.name);
 
         return true;
+    }
+
+    public void OpenNextRoomEntry(int roomNumber)
+    {
+        for (int i = 0; i < generatedRooms.Count; i++)
+        {
+            Room room = generatedRooms[i];
+
+            if (room == null || room.GetRoomNumber() != roomNumber + 1)
+                continue;
+
+            RoomPoints points = room.GetComponentInChildren<RoomPoints>();
+
+            if (points != null)
+                points.OpenTheDoor();
+
+            return;
+        }
     }
 
     public MapSaveSystem.MapData GetSaveData()
@@ -170,10 +186,7 @@ public class RoomGenerator : MonoBehaviour
             GameObject prefab = FindPrefab(roomData.prefabName);
 
             if (prefab == null)
-            {
-                Debug.LogError("Missing room prefab: " + roomData.prefabName);
                 continue;
-            }
 
             if (!CreateRoom(prefab, roomData.roomNumber, roomData))
                 continue;

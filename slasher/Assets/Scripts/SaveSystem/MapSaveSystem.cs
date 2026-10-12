@@ -1,3 +1,4 @@
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -23,8 +24,33 @@ public class MapSaveSystem : MonoBehaviour
         public List<string> inventory = new();
         public List<IngredientSaveData> ingredients = new();
         public List<ConsumableSaveData> consumables = new();
+        public List<Vector3> teamPositions = new();
+        public bool hasTeamPositions;
         public Vector3 checkpointPosition;
         public bool hasCheckpoint;
+    }
+
+    [Serializable]
+    public class EnemySaveData
+    {
+        public string prefabName;
+        public Vector3 position;
+        public Vector3 localScale;
+        public float health;
+        public float maxHealth;
+        public float damage;
+        public float moveSpeed;
+        public float detectionRange;
+        public float attackRange;
+        public float attackCooldown;
+        public float eliteKnockbackResistance;
+        public float assassinSpeedMultiplier;
+        public float supportHealAmount;
+        public float supportHealCooldown;
+        public float normalDetectionRange;
+        public float normalMoveSpeed;
+        public bool isElite;
+        public EnemyAffix eliteAffix;
     }
 
     [Serializable]
@@ -36,6 +62,7 @@ public class MapSaveSystem : MonoBehaviour
         public bool isCleared;
         public int currentPhase;
         public int totalPhases;
+        public List<EnemySaveData> enemies = new();
     }
 
     [Serializable]
@@ -52,6 +79,8 @@ public class MapSaveSystem : MonoBehaviour
         public float attackPoint;
         public float luckPoint;
         public List<string> equippedItems = new();
+        public Vector3 position;
+        public bool hasPosition;
     }
 
     [Serializable]
@@ -92,14 +121,10 @@ public class MapSaveSystem : MonoBehaviour
         if (data == null)
             return;
 
-        data.characters ??= new List<CharacterSaveData>();
-        data.deadCharacters ??= new List<bool>();
-        data.inventory ??= new List<string>();
-        data.ingredients ??= new List<IngredientSaveData>();
-        data.consumables ??= new List<ConsumableSaveData>();
-
+        InitializeLists(data);
         SaveCharacters(data);
         SaveInventories(data);
+        SaveTeamPositions(data);
 
         if (CharacterManager.Instance != null)
         {
@@ -109,6 +134,23 @@ public class MapSaveSystem : MonoBehaviour
 
         File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
         Debug.Log("Game saved: " + SavePath);
+    }
+
+    private void InitializeLists(MapData data)
+    {
+        data.rooms ??= new List<RoomData>();
+        data.characters ??= new List<CharacterSaveData>();
+        data.deadCharacters ??= new List<bool>();
+        data.inventory ??= new List<string>();
+        data.ingredients ??= new List<IngredientSaveData>();
+        data.consumables ??= new List<ConsumableSaveData>();
+        data.teamPositions ??= new List<Vector3>();
+
+        foreach (RoomData room in data.rooms)
+        {
+            if (room != null)
+                room.enemies ??= new List<EnemySaveData>();
+        }
     }
 
     private void SaveCharacters(MapData data)
@@ -138,19 +180,23 @@ public class MapSaveSystem : MonoBehaviour
                 continue;
             }
 
-            Debug.Log("SAVE: Processing index " + i + ", name = " + character.characterName);
+            Player matchedPlayer = null;
 
             foreach (Player player in players)
             {
-                if (player == null || player.GetCharacterData() != character)
-                    continue;
+                if (player != null && player.GetCharacterData() == character)
+                {
+                    matchedPlayer = player;
+                    break;
+                }
+            }
 
-                Stats stats = player.GetComponent<Stats>();
+            if (matchedPlayer != null)
+            {
+                Stats stats = matchedPlayer.GetComponent<Stats>();
 
                 if (stats != null)
-                    manager.UpdateCharacterFromPlayer(character, player, stats);
-
-                break;
+                    manager.UpdateCharacterFromPlayer(character, matchedPlayer, stats);
             }
 
             CharacterSaveData saved = new CharacterSaveData
@@ -164,7 +210,9 @@ public class MapSaveSystem : MonoBehaviour
                 staminaPoint = character.staminaPoint,
                 speedPoint = character.speedPoint,
                 attackPoint = character.attackPoint,
-                luckPoint = character.luckPoint
+                luckPoint = character.luckPoint,
+                position = matchedPlayer != null ? matchedPlayer.transform.position : Vector3.zero,
+                hasPosition = matchedPlayer != null
             };
 
             if (character.equippedItems != null)
@@ -181,6 +229,45 @@ public class MapSaveSystem : MonoBehaviour
         }
 
         Debug.Log("SAVE: Characters actually serialized = " + data.characters.Count);
+    }
+
+    private void SaveTeamPositions(MapData data)
+    {
+        TeamManager teamManager = TeamManager.Instance;
+
+        if (teamManager == null || teamManager.Team == null || teamManager.Team.Count == 0)
+            return;
+
+        data.teamPositions = new List<Vector3>();
+
+        foreach (Player player in teamManager.Team)
+            data.teamPositions.Add(player != null ? player.transform.position : Vector3.zero);
+
+        data.hasTeamPositions = data.teamPositions.Count > 0;
+    }
+
+    public bool TryGetSavedTeamPositions(out List<Vector3> positions)
+    {
+        positions = null;
+
+        if (!File.Exists(SavePath))
+            return false;
+
+        try
+        {
+            MapData data = JsonUtility.FromJson<MapData>(File.ReadAllText(SavePath));
+
+            if (data == null || !data.hasTeamPositions || data.teamPositions == null || data.teamPositions.Count == 0)
+                return false;
+
+            positions = data.teamPositions;
+            return true;
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError("Failed to load team positions: " + exception.Message);
+            return false;
+        }
     }
 
     private void SaveInventories(MapData data)
@@ -242,12 +329,7 @@ public class MapSaveSystem : MonoBehaviour
             if (data == null || data.rooms == null || data.rooms.Count == 0)
                 return false;
 
-            data.characters ??= new List<CharacterSaveData>();
-            data.deadCharacters ??= new List<bool>();
-            data.inventory ??= new List<string>();
-            data.ingredients ??= new List<IngredientSaveData>();
-            data.consumables ??= new List<ConsumableSaveData>();
-
+            InitializeLists(data);
             StartCoroutine(RestoreGameDataWhenReady(data));
 
             return true;
@@ -288,12 +370,7 @@ public class MapSaveSystem : MonoBehaviour
         if (manager != null)
         {
             if (data.characters != null && data.characters.Count > 0)
-            {
-                foreach (CharacterSaveData saved in data.characters)
-                    Debug.Log("LOADING CHARACTER: " + saved.characterName + ", saved class: " + (string.IsNullOrEmpty(saved.className) ? "NULL" : saved.className));
-
                 manager.RestoreCharacters(data.characters, data.deadCharacters, registry);
-            }
 
             if (data.hasCheckpoint)
                 manager.SetCheckpoint(data.checkpointPosition);
@@ -334,7 +411,6 @@ public class MapSaveSystem : MonoBehaviour
                     Debug.LogWarning("Missing ingredient: " + saved.itemName);
             }
         }
-
 
         ConsumableInventory consumableInventory = FindFirstObjectByType<ConsumableInventory>();
 
@@ -387,6 +463,7 @@ public class MapSaveSystem : MonoBehaviour
     public void SaveCharactersNow()
     {
         CharacterManager manager = CharacterManager.Instance;
+
         if (manager == null)
             return;
 
@@ -407,14 +484,10 @@ public class MapSaveSystem : MonoBehaviour
         if (data == null)
             data = new MapData();
 
-        data.characters ??= new List<CharacterSaveData>();
-        data.deadCharacters ??= new List<bool>();
-        data.inventory ??= new List<string>();
-        data.ingredients ??= new List<IngredientSaveData>();
-        data.consumables ??= new List<ConsumableSaveData>();
-
+        InitializeLists(data);
         SaveCharacters(data);
         SaveInventories(data);
+        SaveTeamPositions(data);
 
         if (manager.HasCheckpoint)
         {
@@ -435,24 +508,64 @@ public class MapSaveSystem : MonoBehaviour
         }
 
         CharacterManager manager = CharacterManager.Instance;
+
         if (manager != null)
-            manager.LoadCharactersFromSave();
+        {
+            manager.ClearCheckpoint();
+            manager.ResetDeathState();
+        }
+
+        EquipmentManager equipment = FindFirstObjectByType<EquipmentManager>();
+
+        if (equipment != null)
+            equipment.SetInventory(new List<ItemData>());
+
+        IngredientInventory ingredientInventory = FindFirstObjectByType<IngredientInventory>();
+
+        if (ingredientInventory != null)
+            ingredientInventory.ClearIngredients();
+
+        ConsumableInventory consumableInventory = FindFirstObjectByType<ConsumableInventory>();
+
+        if (consumableInventory != null)
+            consumableInventory.ClearConsumables();
 
         CharacterSelectUI characterSelect = FindFirstObjectByType<CharacterSelectUI>();
+
         if (characterSelect != null)
-            characterSelect.RefreshAfterDelete();       
-    }
-#if UNITY_EDITOR
-    [InitializeOnLoadMethod]
-    private static void RegisterEditorPlayModeCallback()
-    {
-        EditorApplication.playModeStateChanged -= OnEditorPlayModeStateChanged;
-        EditorApplication.playModeStateChanged += OnEditorPlayModeStateChanged;
+            characterSelect.RefreshAfterDelete();
+
+        Debug.Log("All saved game data cleared.");
     }
 
-    private static void OnEditorPlayModeStateChanged(PlayModeStateChange state)
+    private void OnApplicationQuit()
     {
-        if (state == PlayModeStateChange.ExitingPlayMode && Instance != null)
+        RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
+
+        if (generator != null)
+            SaveMap(generator);
+        else
+            SaveCharactersNow();
+    }
+
+#if UNITY_EDITOR
+    [InitializeOnLoadMethod]
+    private static void OnEditorPlayModeStateChanged()
+    {
+        EditorApplication.playModeStateChanged -= HandlePlayModeStateChanged;
+        EditorApplication.playModeStateChanged += HandlePlayModeStateChanged;
+    }
+
+    private static void HandlePlayModeStateChanged(PlayModeStateChange state)
+    {
+        if (state != PlayModeStateChange.ExitingPlayMode || Instance == null)
+            return;
+
+        RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
+
+        if (generator != null)
+            Instance.SaveMap(generator);
+        else
             Instance.SaveCharactersNow();
     }
 #endif

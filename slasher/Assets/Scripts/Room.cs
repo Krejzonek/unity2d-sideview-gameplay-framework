@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Room : MonoBehaviour
@@ -24,19 +25,32 @@ public class Room : MonoBehaviour
     private int totalPhases;
     private RoomPoints roomPoints;
     private RoomEnemySpawner enemySpawner;
+    private RoomGenerator roomGenerator;
     private bool phaseChanging;
     private bool roomCleared;
     private bool restoreState;
+    private bool entryClosed;
+    private List<MapSaveSystem.EnemySaveData> savedEnemies = new();
 
     private void Start()
     {
         roomPoints = GetComponentInChildren<RoomPoints>();
         enemySpawner = GetComponentInChildren<RoomEnemySpawner>();
 
+        if (enemySpawner == null)
+            enemySpawner = GetComponent<RoomEnemySpawner>();
+
+        roomGenerator = FindFirstObjectByType<RoomGenerator>();
+
+        if (roomPoints != null)
+            roomPoints.OpenTheDoor();
+
         if (restoreState)
         {
             if (roomCleared)
             {
+                enemiesAlive = 0;
+
                 if (exit != null)
                     exit.SetActive(false);
 
@@ -47,6 +61,23 @@ public class Room : MonoBehaviour
             {
                 if (exit != null)
                     exit.SetActive(true);
+
+                if (roomPoints != null)
+                    roomPoints.OpenTheDoor();
+
+                if (enemySpawner != null)
+                    enemiesAlive = enemySpawner.RestoreEnemies(savedEnemies);
+
+                if (enemiesAlive == 0)
+                {
+                    roomCleared = false;
+
+                    if (exit != null)
+                        exit.SetActive(true);
+
+                    if (roomPoints != null)
+                        roomPoints.OpenTheDoor();
+                }
             }
 
             return;
@@ -68,12 +99,33 @@ public class Room : MonoBehaviour
             RoomCleared();
     }
 
+    private void Update()
+    {
+        if (roomCleared || entryClosed || mapBounds == null || roomPoints == null)
+            return;
+
+        Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
+
+        foreach (Player player in players)
+        {
+            if (player == null || !player.gameObject.activeInHierarchy)
+                continue;
+
+            if (mapBounds.bounds.Contains(player.transform.position))
+            {
+                roomPoints.CloseTheDoor();
+                entryClosed = true;
+                return;
+            }
+        }
+    }
+
     public void EnemyKilled()
     {
         if (roomCleared || phaseChanging)
             return;
 
-        enemiesAlive--;
+        enemiesAlive = Mathf.Max(0, enemiesAlive - 1);
 
         if (enemiesAlive > 0)
             return;
@@ -98,9 +150,6 @@ public class Room : MonoBehaviour
 
     private void RoomCleared()
     {
-        if (roomCleared)
-            return;
-
         roomCleared = true;
         enemiesAlive = 0;
         phaseChanging = false;
@@ -110,6 +159,11 @@ public class Room : MonoBehaviour
 
         if (roomPoints != null)
             roomPoints.OpenTheDoor();
+
+        entryClosed = false;
+
+        if (roomGenerator != null)
+            roomGenerator.OpenNextRoomEntry(roomNumber);
 
         if (TeamManager.Instance != null)
             TeamManager.Instance.SetFormationMode(BotFormationMode.Idle);
@@ -151,12 +205,13 @@ public class Room : MonoBehaviour
         return totalPhases;
     }
 
-    public void RestoreState(bool cleared, int phase, int phases)
+    public void RestoreState(bool cleared, int phase, int phases, List<MapSaveSystem.EnemySaveData> enemies)
     {
         restoreState = true;
         roomCleared = cleared;
         currentPhase = phase;
         totalPhases = phases;
+        savedEnemies = enemies ?? new List<MapSaveSystem.EnemySaveData>();
     }
 
     public MapSaveSystem.RoomData GetSaveData(string prefabName)
@@ -168,7 +223,8 @@ public class Room : MonoBehaviour
             position = transform.position,
             isCleared = roomCleared,
             currentPhase = currentPhase,
-            totalPhases = totalPhases
+            totalPhases = totalPhases,
+            enemies = enemySpawner != null ? enemySpawner.GetEnemySaveData() : new List<MapSaveSystem.EnemySaveData>()
         };
     }
 }

@@ -1,3 +1,4 @@
+
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -214,7 +215,8 @@ public class TeamManager : MonoBehaviour
 
     public void ReturnToSpawnPoint()
     {
-        if (!respawning) return;
+        if (!respawning)
+            return;
 
         Vector3 respawnPosition = spawnPoint != null ? spawnPoint.position : transform.position;
 
@@ -226,7 +228,9 @@ public class TeamManager : MonoBehaviour
 
         RespawnTeam(respawnPosition);
 
-        if (deathPanel != null) deathPanel.SetActive(false);
+        if (deathPanel != null)
+            deathPanel.SetActive(false);
+
         respawning = false;
     }
 
@@ -285,10 +289,19 @@ public class TeamManager : MonoBehaviour
         currentPlayerIndex = Mathf.Clamp(characterManager.SelectedCharacterIndex, 0, amount - 1);
 
         bool characterSwitch = characterManager.CharacterSwitchPositionSaved;
+
+        List<Vector3> savedPositions = null;
+        bool restorePositions = false;
+
+        if (!characterSwitch && MapSaveSystem.Instance != null)
+            restorePositions = MapSaveSystem.Instance.TryGetSavedTeamPositions(out savedPositions);
+
         Vector3 teamPosition = spawnPoint != null ? spawnPoint.position : transform.position;
 
         if (characterSwitch)
             teamPosition = characterManager.CharacterSwitchPosition;
+        else if (restorePositions && savedPositions != null && savedPositions.Count > 0)
+            teamPosition = savedPositions[0];
         else if (characterManager.HasCheckpoint)
             teamPosition = characterManager.CheckpointPosition;
 
@@ -297,7 +310,11 @@ public class TeamManager : MonoBehaviour
         for (int i = 0; i < amount; i++)
         {
             Vector3 position = teamPosition;
-            position.x += startX + i * spacing;
+
+            if (restorePositions && savedPositions != null && i < savedPositions.Count)
+                position = savedPositions[i];
+            else
+                position.x += startX + i * spacing;
 
             GameObject characterObject = Instantiate(playerPrefab, position, Quaternion.identity);
             Player player = characterObject.GetComponent<Player>();
@@ -314,7 +331,7 @@ public class TeamManager : MonoBehaviour
             Stats stats = characterObject.GetComponent<Stats>();
 
             if (stats != null)
-                CharacterManager.Instance.ApplyCharacterToPlayer(characters[i], player, stats);
+                characterManager.ApplyCharacterToPlayer(characters[i], player, stats);
 
             team.Add(player);
             player.SetBotMode(i != currentPlayerIndex);

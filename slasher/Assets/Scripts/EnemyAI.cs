@@ -152,7 +152,7 @@ public class EnemyAI : MonoBehaviour
     private ElementType lastDamageElement = ElementType.None;
     private bool isKnockedBack;
     private bool isStunned;
-
+    private bool isDead;
     private Room room;
 
     private List<StatusEffect> activeStatusEffects = new();
@@ -170,7 +170,8 @@ public class EnemyAI : MonoBehaviour
 
     private float normalDetectionRange;
     private float normalMoveSpeed;
-
+    private bool restorePending;
+    private MapSaveSystem.EnemySaveData pendingSaveData;
     private Player lastAttacker;
     private Player smartTarget;
     private Player counterTarget;
@@ -204,8 +205,32 @@ public class EnemyAI : MonoBehaviour
         normalDetectionRange = detectionRange;
         normalMoveSpeed = moveSpeed;
 
-        if (enemyClass != EnemyClass.Boss && Random.value <= eliteChance)
+
+        if (restorePending)
+        {
+            maxHealth = pendingSaveData.maxHealth;
+            health = pendingSaveData.health;
+            damage = pendingSaveData.damage;
+            moveSpeed = pendingSaveData.moveSpeed;
+            detectionRange = pendingSaveData.detectionRange;
+            attackRange = pendingSaveData.attackRange;
+            attackCooldown = pendingSaveData.attackCooldown;
+            eliteKnockbackResistance = pendingSaveData.eliteKnockbackResistance;
+            assassinSpeedMultiplier = pendingSaveData.assassinSpeedMultiplier;
+            supportHealAmount = pendingSaveData.supportHealAmount;
+            supportHealCooldown = pendingSaveData.supportHealCooldown;
+            normalDetectionRange = pendingSaveData.normalDetectionRange;
+            normalMoveSpeed = pendingSaveData.normalMoveSpeed;
+            isElite = pendingSaveData.isElite;
+            eliteAffix = pendingSaveData.eliteAffix;
+            transform.localScale = pendingSaveData.localScale;
+            restorePending = false;
+            pendingSaveData = null;
+        }
+        else if (enemyClass != EnemyClass.Boss && Random.value <= eliteChance)
+        {
             MakeElite();
+        }
     }
 
     private void MakeElite()
@@ -1843,6 +1868,11 @@ public class EnemyAI : MonoBehaviour
 
     private void Die()
     {
+        if (isDead)
+            return;
+
+        isDead = true;
+
         int exp = Mathf.RoundToInt(baseExp * (isElite ? eliteExpMultiplier : 1f));
 
         if (lastAttacker != null)
@@ -1936,5 +1966,39 @@ public class EnemyAI : MonoBehaviour
 
         if (value)
             StopMoving();
+    }
+
+    public MapSaveSystem.EnemySaveData GetSaveData(string prefabName)
+    {
+        return new MapSaveSystem.EnemySaveData
+        {
+            prefabName = prefabName,
+            position = transform.position,
+            localScale = transform.localScale,
+            health = health,
+            maxHealth = maxHealth,
+            damage = damage,
+            moveSpeed = moveSpeed,
+            detectionRange = detectionRange,
+            attackRange = attackRange,
+            attackCooldown = attackCooldown,
+            eliteKnockbackResistance = eliteKnockbackResistance,
+            assassinSpeedMultiplier = assassinSpeedMultiplier,
+            supportHealAmount = supportHealAmount,
+            supportHealCooldown = supportHealCooldown,
+            normalDetectionRange = normalDetectionRange,
+            normalMoveSpeed = normalMoveSpeed,
+            isElite = isElite,
+            eliteAffix = eliteAffix
+        };
+    }
+
+    public void RestoreFromSave(MapSaveSystem.EnemySaveData data)
+    {
+        if (data == null)
+            return;
+
+        pendingSaveData = data;
+        restorePending = true;
     }
 }

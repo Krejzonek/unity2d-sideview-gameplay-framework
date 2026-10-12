@@ -330,4 +330,9 @@ public class CharacterManager : MonoBehaviour
 
         selectedCharacterIndex = characters.Count > 0 ? Mathf.Clamp(selectedCharacterIndex, 0, characters.Count - 1) : -1;
     }
+    public void ClearCheckpoint()
+    {
+        checkpointPosition = Vector3.zero;
+        hasCheckpoint = false;
+    }
 }
