@@ -18,6 +18,7 @@ public class CharacterManager : MonoBehaviour
 
     private Vector3 checkpointPosition;
     private bool hasCheckpoint;
+    private Vector3 respawnPosition;
 
     private bool characterSwitchPositionSaved;
     private Vector3 characterSwitchPosition;
@@ -29,6 +30,7 @@ public class CharacterManager : MonoBehaviour
     public bool PendingRespawn => pendingRespawn;
     public Vector3 CheckpointPosition => checkpointPosition;
     public bool HasCheckpoint => hasCheckpoint;
+    public Vector3 RespawnPosition => respawnPosition;
     public bool CharacterSwitchPositionSaved => characterSwitchPositionSaved;
     public Vector3 CharacterSwitchPosition => characterSwitchPosition;
 
@@ -170,8 +172,7 @@ public class CharacterManager : MonoBehaviour
 
     public void StartRespawn(Vector3 position)
     {
-        checkpointPosition = position;
-        hasCheckpoint = true;
+        respawnPosition = position;
         pendingRespawn = true;
         characterSwitchMode = false;
         characterSwitchPositionSaved = false;
@@ -237,7 +238,6 @@ public class CharacterManager : MonoBehaviour
 
             if (data.hasCheckpoint)
                 SetCheckpoint(data.checkpointPosition);
-
         }
         catch (System.Exception exception)
         {
@@ -330,6 +330,7 @@ public class CharacterManager : MonoBehaviour
 
         selectedCharacterIndex = characters.Count > 0 ? Mathf.Clamp(selectedCharacterIndex, 0, characters.Count - 1) : -1;
     }
+
     public void ClearCheckpoint()
     {
         checkpointPosition = Vector3.zero;

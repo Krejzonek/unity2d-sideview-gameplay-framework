@@ -1,4 +1,3 @@
-
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -218,10 +217,18 @@ public class TeamManager : MonoBehaviour
         if (!respawning)
             return;
 
-        Vector3 respawnPosition = spawnPoint != null ? spawnPoint.position : transform.position;
+        bool hasCheckpoint = CharacterManager.Instance != null && CharacterManager.Instance.HasCheckpoint;
+        Vector3 respawnPosition = hasCheckpoint ? CharacterManager.Instance.CheckpointPosition : spawnPoint != null ? spawnPoint.position : transform.position;
 
-        if (CharacterManager.Instance != null && CharacterManager.Instance.HasCheckpoint)
-            respawnPosition = CharacterManager.Instance.CheckpointPosition;
+        RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
+
+        if (generator != null)
+        {
+            if (hasCheckpoint)
+                generator.ResetAfterCheckpoint(respawnPosition);
+            else
+                generator.ResetToStartRoom();
+        }
 
         if (CharacterManager.Instance != null)
             CharacterManager.Instance.StartRespawn(respawnPosition);
@@ -232,6 +239,12 @@ public class TeamManager : MonoBehaviour
             deathPanel.SetActive(false);
 
         respawning = false;
+
+        if (generator != null && MapSaveSystem.Instance != null)
+            MapSaveSystem.Instance.SaveMap(generator);
+
+        if (CharacterManager.Instance != null)
+            CharacterManager.Instance.ClearRespawn();
     }
 
     private void RespawnTeam(Vector3 position)
@@ -345,7 +358,7 @@ public class TeamManager : MonoBehaviour
 
         if (characterManager.PendingRespawn)
         {
-            Vector3 respawnPosition = characterManager.CheckpointPosition;
+            Vector3 respawnPosition = characterManager.RespawnPosition;
 
             for (int i = 0; i < team.Count; i++)
             {

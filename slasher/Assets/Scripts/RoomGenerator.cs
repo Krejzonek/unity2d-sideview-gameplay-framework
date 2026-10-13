@@ -27,6 +27,7 @@ public class RoomGenerator : MonoBehaviour
             return;
 
         currentRoom = startRoom;
+        startRoom.SetRoomNumber(0);
 
         RoomPoints points = startRoom.GetComponentInChildren<RoomPoints>();
 
@@ -111,13 +112,130 @@ public class RoomGenerator : MonoBehaviour
         else
         {
             Transform entry = points.GetEntry();
+
+            if (entry == null)
+            {
+                Destroy(roomObject);
+                return false;
+            }
+
             roomObject.transform.position += previousExit.position - entry.position;
         }
 
         previousExit = points.GetExit();
+
+        if (previousExit == null)
+        {
+            Destroy(roomObject);
+            return false;
+        }
+
         currentRoom = room;
         generatedRooms.Add(room);
         generatedPrefabNames.Add(prefab.name);
+
+        return true;
+    }
+
+    public bool ResetToStartRoom()
+    {
+        if (startRoom == null)
+        {
+            Debug.LogError("Cannot reset rooms: start room is missing.");
+            return false;
+        }
+
+        startRoom.SetRoomNumber(0);
+        return ResetToRoom(startRoom);
+    }
+
+    public bool ResetAfterCheckpoint(Vector3 checkpointPosition)
+    {
+        Room checkpointRoom = null;
+
+        foreach (Room room in generatedRooms)
+        {
+            if (room == null)
+                continue;
+
+            Collider2D bounds = room.GetMapBounds();
+
+            if (bounds != null && bounds.bounds.Contains(checkpointPosition))
+            {
+                checkpointRoom = room;
+                break;
+            }
+        }
+
+        if (checkpointRoom == null)
+        {
+            Debug.LogError("Cannot reset rooms: checkpoint room was not found in map bounds.");
+            return false;
+        }
+
+        return ResetToRoom(checkpointRoom);
+    }
+
+    private bool ResetToRoom(Room checkpointRoom)
+    {
+        if (checkpointRoom == null)
+            return false;
+
+        RoomPoints checkpointPoints = checkpointRoom.GetComponentInChildren<RoomPoints>();
+
+        if (checkpointPoints == null || checkpointPoints.GetExit() == null)
+        {
+            Debug.LogError("Cannot reset rooms: room has no exit.");
+            return false;
+        }
+
+        int checkpointNumber = checkpointRoom.GetRoomNumber();
+
+        for (int i = generatedRooms.Count - 1; i >= 0; i--)
+        {
+            Room room = generatedRooms[i];
+
+            if (room != null && room.GetRoomNumber() <= checkpointNumber)
+                continue;
+
+            if (room != null)
+                Destroy(room.gameObject);
+
+            generatedRooms.RemoveAt(i);
+            generatedPrefabNames.RemoveAt(i);
+        }
+
+        currentRoom = checkpointRoom;
+        previousExit = checkpointPoints.GetExit();
+        nextRoomNumber = checkpointNumber + 1;
+        lastRoomIndex = -1;
+
+        for (int i = generatedRooms.Count - 1; i >= 0; i--)
+        {
+            if (generatedRooms[i] == null)
+                continue;
+
+            string prefabName = generatedPrefabNames[i];
+
+            for (int j = 0; roomPrefabs != null && j < roomPrefabs.Length; j++)
+            {
+                if (roomPrefabs[j] != null && roomPrefabs[j].name == prefabName)
+                {
+                    lastRoomIndex = j;
+                    break;
+                }
+            }
+
+            if (lastRoomIndex >= 0)
+                break;
+        }
+
+        if (MapSaveSystem.Instance != null)
+            MapSaveSystem.Instance.RemoveOpenedChestsAfterRoom(checkpointNumber);
+
+        GenerateNextRoom();
+
+        Debug.Log("Rooms reset to room " + checkpointNumber + ". Generated room " + (nextRoomNumber - 1));
 
         return true;
     }
