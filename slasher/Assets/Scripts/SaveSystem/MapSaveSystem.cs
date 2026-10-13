@@ -1,4 +1,3 @@
-
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -28,6 +27,7 @@ public class MapSaveSystem : MonoBehaviour
         public bool hasTeamPositions;
         public Vector3 checkpointPosition;
         public bool hasCheckpoint;
+        public List<string> openedChests = new();
     }
 
     [Serializable]
@@ -99,6 +99,7 @@ public class MapSaveSystem : MonoBehaviour
     }
 
     private string SavePath => Path.Combine(Application.persistentDataPath, "mapSave.json");
+    private readonly HashSet<string> openedChests = new();
 
     private void Awake()
     {
@@ -109,6 +110,86 @@ public class MapSaveSystem : MonoBehaviour
         }
 
         Instance = this;
+        LoadOpenedChests();
+    }
+
+    private void LoadOpenedChests()
+    {
+        openedChests.Clear();
+
+        if (!File.Exists(SavePath))
+            return;
+
+        try
+        {
+            MapData data = JsonUtility.FromJson<MapData>(File.ReadAllText(SavePath));
+
+            if (data?.openedChests == null)
+                return;
+
+            foreach (string chestId in data.openedChests)
+            {
+                if (!string.IsNullOrEmpty(chestId))
+                    openedChests.Add(chestId);
+            }
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError("Failed to load opened chests: " + exception.Message);
+        }
+    }
+
+    public bool IsChestOpened(string chestId)
+    {
+        return !string.IsNullOrEmpty(chestId) && openedChests.Contains(chestId);
+    }
+
+    public void RegisterOpenedChest(string chestId)
+    {
+        if (string.IsNullOrEmpty(chestId) || !openedChests.Add(chestId))
+            return;
+
+        MapData data = null;
+
+        if (File.Exists(SavePath))
+        {
+            try
+            {
+                data = JsonUtility.FromJson<MapData>(File.ReadAllText(SavePath));
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError("Failed to read save: " + exception.Message);
+            }
+        }
+
+        if (data == null)
+            data = new MapData();
+
+        InitializeLists(data);
+        data.openedChests = new List<string>(openedChests);
+
+        try
+        {
+            File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError("Failed to save opened chest: " + exception.Message);
+        }
+    }
+
+    public void RemoveOpenedChestsAfterRoom(int checkpointRoomNumber)
+    {
+        openedChests.RemoveWhere(chestId =>
+        {
+            int separator = chestId.IndexOf('_');
+
+            if (separator <= 0)
+                return false;
+
+            return int.TryParse(chestId.Substring(0, separator), out int roomNumber) && roomNumber > checkpointRoomNumber;
+        });
     }
 
     public void SaveMap(RoomGenerator generator)
@@ -125,6 +206,7 @@ public class MapSaveSystem : MonoBehaviour
         SaveCharacters(data);
         SaveInventories(data);
         SaveTeamPositions(data);
+        data.openedChests = new List<string>(openedChests);
 
         if (CharacterManager.Instance != null)
         {
@@ -132,8 +214,15 @@ public class MapSaveSystem : MonoBehaviour
             data.hasCheckpoint = CharacterManager.Instance.HasCheckpoint;
         }
 
-        File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
-        Debug.Log("Game saved: " + SavePath);
+        try
+        {
+            File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
+            Debug.Log("Game saved: " + SavePath);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError("Failed to save game: " + exception.Message);
+        }
     }
 
     private void InitializeLists(MapData data)
@@ -145,6 +234,7 @@ public class MapSaveSystem : MonoBehaviour
         data.ingredients ??= new List<IngredientSaveData>();
         data.consumables ??= new List<ConsumableSaveData>();
         data.teamPositions ??= new List<Vector3>();
+        data.openedChests ??= new List<string>();
 
         foreach (RoomData room in data.rooms)
         {
@@ -330,6 +420,15 @@ public class MapSaveSystem : MonoBehaviour
                 return false;
 
             InitializeLists(data);
+
+            openedChests.Clear();
+
+            foreach (string chestId in data.openedChests)
+            {
+                if (!string.IsNullOrEmpty(chestId))
+                    openedChests.Add(chestId);
+            }
+
             StartCoroutine(RestoreGameDataWhenReady(data));
 
             return true;
@@ -488,6 +587,7 @@ public class MapSaveSystem : MonoBehaviour
         SaveCharacters(data);
         SaveInventories(data);
         SaveTeamPositions(data);
+        data.openedChests = new List<string>(openedChests);
 
         if (manager.HasCheckpoint)
         {
@@ -495,8 +595,15 @@ public class MapSaveSystem : MonoBehaviour
             data.hasCheckpoint = true;
         }
 
-        File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
-        Debug.Log("CHARACTERS AND ALL INVENTORIES SAVED: " + SavePath);
+        try
+        {
+            File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
+            Debug.Log("CHARACTERS AND ALL INVENTORIES SAVED: " + SavePath);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError("Failed to save characters: " + exception.Message);
+        }
     }
 
     public void DeleteSave()
@@ -506,6 +613,8 @@ public class MapSaveSystem : MonoBehaviour
             File.Delete(SavePath);
             Debug.Log("Save deleted: " + SavePath);
         }
+
+        openedChests.Clear();
 
         CharacterManager manager = CharacterManager.Instance;
 
