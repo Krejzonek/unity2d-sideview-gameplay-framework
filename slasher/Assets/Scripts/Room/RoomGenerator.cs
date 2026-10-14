@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -37,6 +38,7 @@ public class RoomGenerator : MonoBehaviour
         if (MapSaveSystem.Instance != null && MapSaveSystem.Instance.TryLoadMap(out MapSaveSystem.MapData data))
         {
             LoadMap(data);
+            StartCoroutine(RestoreDoorsAfterLoad());
             return;
         }
 
@@ -45,6 +47,14 @@ public class RoomGenerator : MonoBehaviour
         generatedPrefabNames.Add(startRoom.gameObject.name);
 
         GenerateNextRoom();
+    }
+
+    public void SetCurrentRoom(Room room)
+    {
+        if (room == null || currentRoom == room)
+            return;
+
+        currentRoom = room;
     }
 
     public void GenerateNextRoom()
@@ -130,7 +140,6 @@ public class RoomGenerator : MonoBehaviour
             return false;
         }
 
-        currentRoom = room;
         generatedRooms.Add(room);
         generatedPrefabNames.Add(prefab.name);
 
@@ -140,10 +149,7 @@ public class RoomGenerator : MonoBehaviour
     public bool ResetToStartRoom()
     {
         if (startRoom == null)
-        {
-            Debug.LogError("Cannot reset rooms: start room is missing.");
             return false;
-        }
 
         startRoom.SetRoomNumber(0);
         return ResetToRoom(startRoom);
@@ -168,10 +174,7 @@ public class RoomGenerator : MonoBehaviour
         }
 
         if (checkpointRoom == null)
-        {
-            Debug.LogError("Cannot reset rooms: checkpoint room was not found in map bounds.");
             return false;
-        }
 
         return ResetToRoom(checkpointRoom);
     }
@@ -184,10 +187,7 @@ public class RoomGenerator : MonoBehaviour
         RoomPoints checkpointPoints = checkpointRoom.GetComponentInChildren<RoomPoints>();
 
         if (checkpointPoints == null || checkpointPoints.GetExit() == null)
-        {
-            Debug.LogError("Cannot reset rooms: room has no exit.");
             return false;
-        }
 
         int checkpointNumber = checkpointRoom.GetRoomNumber();
 
@@ -235,8 +235,6 @@ public class RoomGenerator : MonoBehaviour
 
         GenerateNextRoom();
 
-        Debug.Log("Rooms reset to room " + checkpointNumber + ". Generated room " + (nextRoomNumber - 1));
-
         return true;
     }
 
@@ -280,7 +278,7 @@ public class RoomGenerator : MonoBehaviour
 
     private void LoadMap(MapSaveSystem.MapData data)
     {
-        if (startRoom == null || data == null || data.rooms.Count == 0)
+        if (startRoom == null || data == null || data.rooms == null || data.rooms.Count == 0)
             return;
 
         RoomPoints startPoints = startRoom.GetComponentInChildren<RoomPoints>();
@@ -298,9 +296,15 @@ public class RoomGenerator : MonoBehaviour
         generatedRooms.Add(startRoom);
         generatedPrefabNames.Add(startRoom.gameObject.name);
 
+        bool savedCurrentRoomFound = data.currentRoomNumber == 0;
+
         for (int i = 1; i < data.rooms.Count; i++)
         {
             MapSaveSystem.RoomData roomData = data.rooms[i];
+
+            if (roomData == null)
+                continue;
+
             GameObject prefab = FindPrefab(roomData.prefabName);
 
             if (prefab == null)
@@ -312,11 +316,28 @@ public class RoomGenerator : MonoBehaviour
             Room loadedRoom = generatedRooms[generatedRooms.Count - 1];
 
             if (roomData.roomNumber == data.currentRoomNumber)
+            {
                 currentRoom = loadedRoom;
+                savedCurrentRoomFound = true;
+            }
         }
 
-        if (currentRoom == null)
+        if (!savedCurrentRoomFound)
             currentRoom = startRoom;
+    }
+
+    private IEnumerator RestoreDoorsAfterLoad()
+    {
+        yield return null;
+
+        foreach (Room room in generatedRooms)
+        {
+            if (room == null)
+                continue;
+
+            bool shouldClose = room == currentRoom;
+            room.RestoreEntryDoorState(shouldClose);
+        }
     }
 
     private GameObject FindPrefab(string prefabName)

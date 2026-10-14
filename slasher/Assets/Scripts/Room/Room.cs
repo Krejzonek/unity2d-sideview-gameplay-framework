@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -42,8 +43,7 @@ public class Room : MonoBehaviour
 
         roomGenerator = FindFirstObjectByType<RoomGenerator>();
 
-        if (roomPoints != null)
-            roomPoints.OpenTheDoor();
+        Debug.Log("[Room] Start. Room: " + roomNumber + ", RestoreState: " + restoreState + ", Cleared: " + roomCleared + ", RoomPoints: " + (roomPoints != null));
 
         if (restoreState)
         {
@@ -54,6 +54,8 @@ public class Room : MonoBehaviour
                 if (exit != null)
                     exit.SetActive(false);
 
+                Debug.Log("[Room] Restored cleared room " + roomNumber + ". Opening entry door.");
+
                 if (roomPoints != null)
                     roomPoints.OpenTheDoor();
             }
@@ -62,8 +64,7 @@ public class Room : MonoBehaviour
                 if (exit != null)
                     exit.SetActive(true);
 
-                if (roomPoints != null)
-                    roomPoints.OpenTheDoor();
+                Debug.Log("[Room] Restoring uncleared room " + roomNumber + ". Entry door will be set by RoomGenerator.");
 
                 if (enemySpawner != null)
                     enemiesAlive = enemySpawner.RestoreEnemies(savedEnemies);
@@ -75,12 +76,17 @@ public class Room : MonoBehaviour
                     if (exit != null)
                         exit.SetActive(true);
 
-                    if (roomPoints != null)
-                        roomPoints.OpenTheDoor();
+                    Debug.LogWarning("[Room] Room " + roomNumber + " restored with 0 enemies but remains uncleared.");
                 }
             }
 
             return;
+        }
+
+        if (roomPoints != null)
+        {
+            Debug.Log("[Room] New room " + roomNumber + ". Opening entry door.");
+            roomPoints.OpenTheDoor();
         }
 
         minPhases = Mathf.Max(1, minPhases);
@@ -95,28 +101,38 @@ public class Room : MonoBehaviour
         if (enemySpawner != null)
             enemiesAlive = enemySpawner.SpawnPhase();
 
+        Debug.Log("[Room] Room " + roomNumber + " spawned enemies: " + enemiesAlive);
+
         if (enemiesAlive == 0)
             RoomCleared();
     }
 
-    private void Update()
+    public void RestoreEntryDoorState(bool close)
     {
-        if (roomCleared || entryClosed || mapBounds == null || roomPoints == null)
-            return;
+        if (roomPoints == null)
+            roomPoints = GetComponentInChildren<RoomPoints>();
 
-        Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
-
-        foreach (Player player in players)
+        if (roomPoints == null)
         {
-            if (player == null || !player.gameObject.activeInHierarchy)
-                continue;
+            Debug.LogError("[Room] Cannot restore entry door for room " + roomNumber + ": RoomPoints is NULL.");
+            return;
+        }
 
-            if (mapBounds.bounds.Contains(player.transform.position))
-            {
-                roomPoints.CloseTheDoor();
-                entryClosed = true;
-                return;
-            }
+        bool shouldClose = close && !roomCleared;
+
+        Debug.Log("[Room] RestoreEntryDoorState. Room: " + roomNumber + ", RequestedClose: " + close + ", Cleared: " + roomCleared + ", ShouldClose: " + shouldClose);
+
+        if (shouldClose)
+        {
+            roomPoints.CloseTheDoor();
+            entryClosed = true;
+            Debug.Log("[Room] Entry door CLOSED for room " + roomNumber);
+        }
+        else
+        {
+            roomPoints.OpenTheDoor();
+            entryClosed = false;
+            Debug.Log("[Room] Entry door OPEN for room " + roomNumber);
         }
     }
 
@@ -126,6 +142,8 @@ public class Room : MonoBehaviour
             return;
 
         enemiesAlive = Mathf.Max(0, enemiesAlive - 1);
+
+        Debug.Log("[Room] Enemy killed in room " + roomNumber + ". Remaining: " + enemiesAlive);
 
         if (enemiesAlive > 0)
             return;
@@ -138,6 +156,8 @@ public class Room : MonoBehaviour
 
         phaseChanging = true;
         currentPhase++;
+
+        Debug.Log("[Room] Starting phase " + currentPhase + "/" + totalPhases + " in room " + roomNumber);
 
         if (enemySpawner != null)
             enemiesAlive = enemySpawner.SpawnPhase();
@@ -154,11 +174,16 @@ public class Room : MonoBehaviour
         enemiesAlive = 0;
         phaseChanging = false;
 
+        Debug.Log("[Room] RoomCleared called for room " + roomNumber);
+
         if (exit != null)
             exit.SetActive(false);
 
         if (roomPoints != null)
+        {
             roomPoints.OpenTheDoor();
+            Debug.Log("[Room] Entry door opened because room " + roomNumber + " was cleared.");
+        }
 
         entryClosed = false;
 
@@ -212,6 +237,8 @@ public class Room : MonoBehaviour
         currentPhase = phase;
         totalPhases = phases;
         savedEnemies = enemies ?? new List<MapSaveSystem.EnemySaveData>();
+
+        Debug.Log("[Room] RestoreState called. Room: " + roomNumber + ", Cleared: " + cleared + ", Phase: " + phase + "/" + phases + ", Saved enemies: " + savedEnemies.Count);
     }
 
     public MapSaveSystem.RoomData GetSaveData(string prefabName)

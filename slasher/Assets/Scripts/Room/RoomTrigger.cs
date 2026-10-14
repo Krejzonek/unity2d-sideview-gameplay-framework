@@ -49,6 +49,11 @@ public class RoomTrigger : MonoBehaviour
 
         activated = true;
 
+        RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
+
+        if (generator != null)
+            generator.SetCurrentRoom(room);
+
         if (roomPoints == null)
             roomPoints = GetComponentInParent<RoomPoints>();
 
@@ -74,8 +79,6 @@ public class RoomTrigger : MonoBehaviour
         {
             roomPoints.OpenTheDoor();
         }
-
-        RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
 
         if (generator != null)
             generator.GenerateNextRoom();
