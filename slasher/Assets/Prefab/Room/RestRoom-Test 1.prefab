@@ -421,6 +421,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lootTable: {fileID: 11400000, guid: 22c6d7ba3ed6e834698bfc7c3d6efdc7, type: 2}
+  chestId: Chest1
 --- !u!1 &3010150661657957619
 GameObject:
   m_ObjectHideFlags: 0
@@ -2126,5 +2127,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   healPercentPerSecond: 5
-  resurrectionStatuePrefab: {fileID: 0}
+  resurrectionStatuePrefab: {fileID: 5882835137473268139}
   statueSpawnPoint: {fileID: 0}

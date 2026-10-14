@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,21 +7,8 @@ public class RestRoom : MonoBehaviour
     [Header("Healing")]
     [SerializeField] private float healPercentPerSecond = 5f;
 
-    [Header("Resurrection")]
-    [SerializeField] private GameObject resurrectionStatuePrefab;
-    [SerializeField] private Transform statueSpawnPoint;
-
     private readonly List<Player> playersInside = new List<Player>();
     private bool mapSaved;
-
-    private void Start()
-    {
-        if (resurrectionStatuePrefab == null)
-            return;
-
-        Vector3 position = statueSpawnPoint != null ? statueSpawnPoint.position : transform.position;
-        Instantiate(resurrectionStatuePrefab, position, Quaternion.identity, transform);
-    }
 
     private void Update()
     {

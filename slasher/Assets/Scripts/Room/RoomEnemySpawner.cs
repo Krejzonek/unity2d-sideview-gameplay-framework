@@ -114,8 +114,6 @@ public class RoomEnemySpawner : MonoBehaviour
                 Destroy(enemyObject);
             }
         }
-
-        Debug.Log($"[EnemySpawner] SpawnPhase | requested={amount} | spawned={spawnedEnemies}", this);
         return spawnedEnemies;
     }
 
@@ -139,15 +137,11 @@ public class RoomEnemySpawner : MonoBehaviour
             string prefabName = enemy.gameObject.name.Replace("(Clone)", "").Trim();
             savedEnemies.Add(enemy.GetSaveData(prefabName));
         }
-
-        Debug.Log($"[EnemySpawner] GetEnemySaveData | found={enemies.Length} | saved={savedEnemies.Count}", this);
         return savedEnemies;
     }
 
     public int RestoreEnemies(List<MapSaveSystem.EnemySaveData> savedEnemies)
     {
-        Debug.Log($"[EnemySpawner] RestoreEnemies START | savedCount={(savedEnemies == null ? -1 : savedEnemies.Count)} | enemyParent={enemyParent != null}", this);
-
         if (savedEnemies == null || savedEnemies.Count == 0 || enemyParent == null)
         {
             Debug.LogWarning($"[EnemySpawner] RestoreEnemies returned 0 | savedListNull={savedEnemies == null} | savedCount={savedEnemies?.Count ?? -1} | enemyParent={enemyParent != null}", this);
@@ -163,8 +157,6 @@ public class RoomEnemySpawner : MonoBehaviour
                 Debug.LogWarning("[EnemySpawner] Skipped NULL EnemySaveData", this);
                 continue;
             }
-
-            Debug.Log($"[EnemySpawner] Restoring prefab='{saved.prefabName}' | position={saved.position}", this);
 
             GameObject prefab = FindEnemyPrefab(saved.prefabName);
 
@@ -188,11 +180,7 @@ public class RoomEnemySpawner : MonoBehaviour
 
             enemy.RestoreFromSave(saved);
             restoredCount++;
-
-            Debug.Log($"[EnemySpawner] Restored '{saved.prefabName}' | count={restoredCount}", enemyObject);
         }
-
-        Debug.Log($"[EnemySpawner] RestoreEnemies END | saved={savedEnemies.Count} | restored={restoredCount}", this);
         return restoredCount;
     }
 

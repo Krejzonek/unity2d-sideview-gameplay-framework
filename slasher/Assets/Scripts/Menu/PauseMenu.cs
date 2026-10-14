@@ -5,6 +5,7 @@ public class PauseMenu : MonoBehaviour
 {
     [SerializeField] private GameObject pauseMenu;
     [SerializeField] private SceneLoader sceneLoader;
+    [SerializeField] private FightPreparationTimer preparationTimer;
     [SerializeField] private string mainMenuSceneName = "MainMenu";
     [SerializeField] private string characterSelectSceneName = "CharacterSelect";
 
@@ -13,7 +14,12 @@ public class PauseMenu : MonoBehaviour
 
     private void Start()
     {
-        pauseMenu.SetActive(false);
+        if (pauseMenu != null)
+            pauseMenu.SetActive(false);
+
+        if (preparationTimer == null)
+            preparationTimer = FindFirstObjectByType<FightPreparationTimer>();
+
         Time.timeScale = 1f;
     }
 
@@ -30,16 +36,35 @@ public class PauseMenu : MonoBehaviour
 
     public void Pause()
     {
+        if (isPaused || isChangingScene)
+            return;
+
         isPaused = true;
-        pauseMenu.SetActive(true);
+
+        if (preparationTimer != null)
+            preparationTimer.CancelPreparation();
+
+        if (pauseMenu != null)
+            pauseMenu.SetActive(true);
+
         Time.timeScale = 0f;
     }
 
     public void Resume()
     {
+
+        if (!isPaused || isChangingScene)
+            return;
+
         isPaused = false;
-        pauseMenu.SetActive(false);
+
+        if (pauseMenu != null)
+            pauseMenu.SetActive(false);
+
         Time.timeScale = 1f;
+
+        if (preparationTimer != null)
+            preparationTimer.CheckAndStart();
     }
 
     private void SaveBeforeSceneChange()
@@ -48,41 +73,28 @@ public class PauseMenu : MonoBehaviour
             TeamManager.Instance.SaveTeam();
 
         if (MapSaveSystem.Instance == null)
-        {
-            Debug.LogError("SAVE TEST: MapSaveSystem.Instance is NULL!");
             return;
-        }
+       
 
         RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
 
         if (generator != null)
             MapSaveSystem.Instance.SaveMap(generator);
         else
-        {
-            Debug.LogWarning("SAVE TEST: RoomGenerator not found. Saving character data only.");
             MapSaveSystem.Instance.SaveCharactersNow();
-        }
+        
 
         string path = Path.Combine(Application.persistentDataPath, "mapSave.json");
 
         if (!File.Exists(path))
-        {
-            Debug.LogError("SAVE TEST: mapSave.json DOES NOT EXIST!");
             return;
-        }
+        
 
         try
         {
             MapSaveSystem.MapData data = JsonUtility.FromJson<MapSaveSystem.MapData>(File.ReadAllText(path));
 
             int count = data != null && data.characters != null ? data.characters.Count : -1;
-            Debug.Log("SAVE TEST: file=" + path + ", characters=" + count);
-
-            if (data != null && data.characters != null)
-            {
-                foreach (MapSaveSystem.CharacterSaveData character in data.characters)
-                    Debug.Log("SAVE TEST: " + (character != null ? character.characterName : "NULL"));
-            }
         }
         catch (System.Exception exception)
         {
@@ -109,6 +121,9 @@ public class PauseMenu : MonoBehaviour
 
         isChangingScene = true;
         Time.timeScale = 1f;
+
+        if (preparationTimer != null)
+            preparationTimer.CancelPreparation();
 
         if (CharacterManager.Instance != null && TeamManager.Instance != null && TeamManager.Instance.CurrentPlayer != null)
         {
