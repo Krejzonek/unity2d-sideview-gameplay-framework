@@ -135,20 +135,17 @@ public class ItemDescriptionPanel : MonoBehaviour
         if (comparisonImage == null)
             return;
 
-        if (TeamManager.Instance == null)
-            return;
-
-        Player player = TeamManager.Instance.CurrentPlayer;
-
-        if (player == null)
-            return;
-
         EquipmentManager equipmentManager = FindFirstObjectByType<EquipmentManager>();
 
         if (equipmentManager == null)
             return;
 
-        ItemData equippedItem = equipmentManager.GetEquippedItem(item.equipmentType);
+        CharacterData targetCharacter = uiEq != null ? uiEq.Character : TeamManager.Instance != null && TeamManager.Instance.CurrentPlayer != null ? TeamManager.Instance.CurrentPlayer.GetCharacterData() : null;
+
+        if (targetCharacter == null)
+            return;
+
+        ItemData equippedItem = equipmentManager.GetEquippedItemForCharacter(targetCharacter, item.equipmentType);
 
         if (equippedItem == null)
         {
@@ -157,16 +154,10 @@ public class ItemDescriptionPanel : MonoBehaviour
             return;
         }
 
-        float newValue = equipmentManager.GetEquipmentPower(item);
-        float oldValue = equipmentManager.GetEquipmentPower(equippedItem);
+        float newValue = equipmentManager.GetEquipmentPowerForCharacter(item, targetCharacter);
+        float oldValue = equipmentManager.GetEquipmentPowerForCharacter(equippedItem, targetCharacter);
 
-        if (newValue > oldValue)
-            comparisonImage.color = Color.green;
-        else if (newValue < oldValue)
-            comparisonImage.color = Color.red;
-        else
-            comparisonImage.color = Color.gray;
-
+        comparisonImage.color = newValue > oldValue ? Color.green : newValue < oldValue ? Color.red : Color.gray;
         comparisonImage.gameObject.SetActive(true);
     }
 

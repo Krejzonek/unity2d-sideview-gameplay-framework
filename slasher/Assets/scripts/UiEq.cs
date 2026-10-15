@@ -23,6 +23,7 @@ public class UiEq : MonoBehaviour
     private EquipmentManager equipmentManager;
     private EquipmentSlot selectedSlot;
 
+    public CharacterData Character => character;
     public void Setup(CharacterData characterData)
     {
         character = characterData;
