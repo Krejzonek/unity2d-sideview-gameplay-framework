@@ -21,6 +21,7 @@ public class MapSaveSystem : MonoBehaviour
         public List<CharacterSaveData> characters = new();
         public List<bool> deadCharacters = new();
         public List<string> inventory = new();
+        public List<ItemSaveData> inventoryItems = new();
         public List<IngredientSaveData> ingredients = new();
         public List<ConsumableSaveData> consumables = new();
         public List<Vector3> teamPositions = new();
@@ -79,8 +80,16 @@ public class MapSaveSystem : MonoBehaviour
         public float attackPoint;
         public float luckPoint;
         public List<string> equippedItems = new();
+        public List<ItemSaveData> equippedItemData = new();
         public Vector3 position;
         public bool hasPosition;
+    }
+
+    [Serializable]
+    public class ItemSaveData
+    {
+        public string itemName;
+        public ItemRarity rarity;
     }
 
     [Serializable]
@@ -231,10 +240,20 @@ public class MapSaveSystem : MonoBehaviour
         data.characters ??= new List<CharacterSaveData>();
         data.deadCharacters ??= new List<bool>();
         data.inventory ??= new List<string>();
+        data.inventoryItems ??= new List<ItemSaveData>();
         data.ingredients ??= new List<IngredientSaveData>();
         data.consumables ??= new List<ConsumableSaveData>();
         data.teamPositions ??= new List<Vector3>();
         data.openedChests ??= new List<string>();
+
+        foreach (CharacterSaveData character in data.characters)
+        {
+            if (character != null)
+            {
+                character.equippedItems ??= new List<string>();
+                character.equippedItemData ??= new List<ItemSaveData>();
+            }
+        }
 
         foreach (RoomData room in data.rooms)
         {
@@ -310,7 +329,14 @@ public class MapSaveSystem : MonoBehaviour
                 foreach (ItemData item in character.equippedItems)
                 {
                     if (item != null)
+                    {
                         saved.equippedItems.Add(item.itemName);
+                        saved.equippedItemData.Add(new ItemSaveData
+                        {
+                            itemName = item.itemName,
+                            rarity = item.GetRarity()
+                        });
+                    }
                 }
             }
 
@@ -363,6 +389,7 @@ public class MapSaveSystem : MonoBehaviour
     private void SaveInventories(MapData data)
     {
         data.inventory.Clear();
+        data.inventoryItems.Clear();
         data.ingredients.Clear();
         data.consumables.Clear();
 
@@ -373,7 +400,14 @@ public class MapSaveSystem : MonoBehaviour
             foreach (ItemData item in equipment.GetInventory())
             {
                 if (item != null)
+                {
                     data.inventory.Add(item.itemName);
+                    data.inventoryItems.Add(new ItemSaveData
+                    {
+                        itemName = item.itemName,
+                        rarity = item.GetRarity()
+                    });
+                }
             }
         }
 
@@ -473,6 +507,35 @@ public class MapSaveSystem : MonoBehaviour
 
             if (data.hasCheckpoint)
                 manager.SetCheckpoint(data.checkpointPosition);
+
+            for (int i = 0; i < manager.Characters.Count && i < data.characters.Count; i++)
+            {
+                CharacterData character = manager.Characters[i];
+                CharacterSaveData saved = data.characters[i];
+
+                if (character == null || saved == null || character.equippedItems == null || saved.equippedItemData == null)
+                    continue;
+
+                List<ItemSaveData> remaining = new(saved.equippedItemData);
+
+                for (int j = 0; j < character.equippedItems.Count; j++)
+                {
+                    ItemData item = character.equippedItems[j];
+
+                    if (item == null)
+                        continue;
+
+                    int index = remaining.FindIndex(x => x != null && x.itemName == item.itemName);
+
+                    if (index < 0)
+                        continue;
+
+                    ItemData restoredItem = Instantiate(item);
+                    restoredItem.SetRarity(remaining[index].rarity);
+                    character.equippedItems[j] = restoredItem;
+                    remaining.RemoveAt(index);
+                }
+            }
         }
 
         EquipmentManager equipment = FindFirstObjectByType<EquipmentManager>();
@@ -481,14 +544,36 @@ public class MapSaveSystem : MonoBehaviour
         {
             List<ItemData> inventory = new();
 
-            foreach (string itemName in data.inventory)
+            if (data.inventoryItems != null && data.inventoryItems.Count > 0)
             {
-                ItemData item = registry.GetItem(itemName);
+                foreach (ItemSaveData saved in data.inventoryItems)
+                {
+                    if (saved == null)
+                        continue;
 
-                if (item != null)
-                    inventory.Add(item);
-                else
-                    Debug.LogWarning("Missing inventory item: " + itemName);
+                    ItemData item = registry.GetItem(saved.itemName);
+
+                    if (item != null)
+                    {
+                        item = Instantiate(item);
+                        item.SetRarity(saved.rarity);
+                        inventory.Add(item);
+                    }
+                    else
+                        Debug.LogWarning("Missing inventory item: " + saved.itemName);
+                }
+            }
+            else
+            {
+                foreach (string itemName in data.inventory)
+                {
+                    ItemData item = registry.GetItem(itemName);
+
+                    if (item != null)
+                        inventory.Add(Instantiate(item));
+                    else
+                        Debug.LogWarning("Missing inventory item: " + itemName);
+                }
             }
 
             equipment.SetInventory(inventory);

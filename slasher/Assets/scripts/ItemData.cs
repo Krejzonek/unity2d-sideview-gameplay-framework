@@ -51,6 +51,15 @@ public class ItemData : ScriptableObject
     [Header("Misc Bonus")]
     public MiscType miscType;
 
+    [SerializeField, HideInInspector] private float baseHealthBonus;
+    [SerializeField, HideInInspector] private float baseDefenceBonus;
+    [SerializeField, HideInInspector] private float baseStaminaBonus;
+    [SerializeField, HideInInspector] private float baseSpeedBonus;
+    [SerializeField, HideInInspector] private float baseAttackBonus;
+    [SerializeField, HideInInspector] private float baseExpBonus;
+    [SerializeField, HideInInspector] private ItemRarity appliedRarity;
+    [SerializeField, HideInInspector] private bool bonusesInitialized;
+
     public ItemRarity GetRarity()
     {
         return rarity;
@@ -58,7 +67,99 @@ public class ItemData : ScriptableObject
 
     public void SetRarity(ItemRarity value)
     {
+        InitializeBaseBonuses();
         rarity = value;
+        ApplyRarityToBonuses();
+    }
+
+    public float GetRarityBonus()
+    {
+        switch (rarity)
+        {
+            case ItemRarity.Common:
+                return 0f;
+            case ItemRarity.Uncommon:
+                return 0.02f;
+            case ItemRarity.Rare:
+                return 0.04f;
+            case ItemRarity.Epic:
+                return 0.06f;
+            case ItemRarity.Legendary:
+                return 0.08f;
+            case ItemRarity.Mythic:
+                return 0.10f;
+            case ItemRarity.Godest:
+                return 0.12f;
+            default:
+                return 0f;
+        }
+    }
+
+    private float ApplyRarityBonus(float value)
+    {
+        return value == 0f ? 0f : Mathf.Ceil(value * (1f + GetRarityBonus()));
+    }
+
+    private void InitializeBaseBonuses()
+    {
+        if (bonusesInitialized)
+            return;
+
+        baseHealthBonus = healthBonus;
+        baseDefenceBonus = defenceBonus;
+        baseStaminaBonus = staminaBonus;
+        baseSpeedBonus = speedBonus;
+        baseAttackBonus = attackBonus;
+        baseExpBonus = expBonus;
+        appliedRarity = rarity;
+        bonusesInitialized = true;
+    }
+
+    private void ApplyRarityToBonuses()
+    {
+        healthBonus = ApplyRarityBonus(baseHealthBonus);
+        defenceBonus = ApplyRarityBonus(baseDefenceBonus);
+        staminaBonus = ApplyRarityBonus(baseStaminaBonus);
+        speedBonus = ApplyRarityBonus(baseSpeedBonus);
+        attackBonus = ApplyRarityBonus(baseAttackBonus);
+        expBonus = ApplyRarityBonus(baseExpBonus);
+        appliedRarity = rarity;
+    }
+
+    private void OnValidate()
+    {
+        if (!bonusesInitialized)
+        {
+            InitializeBaseBonuses();
+            ApplyRarityToBonuses();
+            return;
+        }
+
+        if (appliedRarity != rarity)
+        {
+            ApplyRarityToBonuses();
+            return;
+        }
+
+        if (healthBonus != ApplyRarityBonus(baseHealthBonus))
+            baseHealthBonus = healthBonus / (1f + GetRarityBonus());
+
+        if (defenceBonus != ApplyRarityBonus(baseDefenceBonus))
+            baseDefenceBonus = defenceBonus / (1f + GetRarityBonus());
+
+        if (staminaBonus != ApplyRarityBonus(baseStaminaBonus))
+            baseStaminaBonus = staminaBonus / (1f + GetRarityBonus());
+
+        if (speedBonus != ApplyRarityBonus(baseSpeedBonus))
+            baseSpeedBonus = speedBonus / (1f + GetRarityBonus());
+
+        if (attackBonus != ApplyRarityBonus(baseAttackBonus))
+            baseAttackBonus = attackBonus / (1f + GetRarityBonus());
+
+        if (expBonus != ApplyRarityBonus(baseExpBonus))
+            baseExpBonus = expBonus / (1f + GetRarityBonus());
+
+        ApplyRarityToBonuses();
     }
 
     public StatusEffectType GetStatusEffect()
@@ -105,25 +206,18 @@ public class ItemData : ScriptableObject
         {
             case ItemRarity.Common:
                 return common;
-
             case ItemRarity.Uncommon:
                 return uncommon;
-
             case ItemRarity.Rare:
                 return rare;
-
             case ItemRarity.Epic:
                 return epic;
-
             case ItemRarity.Legendary:
                 return legendary;
-
             case ItemRarity.Mythic:
                 return mythic;
-
             case ItemRarity.Godest:
                 return godest;
-
             default:
                 return 0f;
         }

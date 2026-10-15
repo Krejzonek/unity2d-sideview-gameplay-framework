@@ -111,7 +111,7 @@ public class Cauldron : MonoBehaviour
     }
 
     private void OnMouseDown()
-    {
+    { 
         OpenCraftingPanel();
     }
 
