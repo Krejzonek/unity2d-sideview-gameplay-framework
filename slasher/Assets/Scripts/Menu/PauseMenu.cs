@@ -1,9 +1,11 @@
+
 using System.IO;
 using UnityEngine;
 
 public class PauseMenu : MonoBehaviour
 {
     [SerializeField] private GameObject pauseMenu;
+    [SerializeField] private GameObject settingsMenu;
     [SerializeField] private SceneLoader sceneLoader;
     [SerializeField] private FightPreparationTimer preparationTimer;
     [SerializeField] private string mainMenuSceneName = "MainMenu";
@@ -17,9 +19,13 @@ public class PauseMenu : MonoBehaviour
         if (pauseMenu != null)
             pauseMenu.SetActive(false);
 
+        if (settingsMenu != null)
+            settingsMenu.SetActive(false);
+
         if (preparationTimer == null)
             preparationTimer = FindFirstObjectByType<FightPreparationTimer>();
 
+        GameSettings.Load();
         Time.timeScale = 1f;
     }
 
@@ -27,7 +33,9 @@ public class PauseMenu : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (isPaused)
+            if (settingsMenu != null && settingsMenu.activeSelf)
+                CloseSettings();
+            else if (isPaused)
                 Resume();
             else
                 Pause();
@@ -44,6 +52,9 @@ public class PauseMenu : MonoBehaviour
         if (preparationTimer != null)
             preparationTimer.CancelPreparation();
 
+        if (settingsMenu != null)
+            settingsMenu.SetActive(false);
+
         if (pauseMenu != null)
             pauseMenu.SetActive(true);
 
@@ -52,11 +63,13 @@ public class PauseMenu : MonoBehaviour
 
     public void Resume()
     {
-
         if (!isPaused || isChangingScene)
             return;
 
         isPaused = false;
+
+        if (settingsMenu != null)
+            settingsMenu.SetActive(false);
 
         if (pauseMenu != null)
             pauseMenu.SetActive(false);
@@ -67,6 +80,30 @@ public class PauseMenu : MonoBehaviour
             preparationTimer.CheckAndStart();
     }
 
+    public void OpenSettings()
+    {
+        if (!isPaused || isChangingScene)
+            return;
+
+        if (pauseMenu != null)
+            pauseMenu.SetActive(false);
+
+        if (settingsMenu != null)
+            settingsMenu.SetActive(true);
+    }
+
+    public void CloseSettings()
+    {
+        if (!isPaused || isChangingScene)
+            return;
+
+        if (settingsMenu != null)
+            settingsMenu.SetActive(false);
+
+        if (pauseMenu != null)
+            pauseMenu.SetActive(true);
+    }
+
     private void SaveBeforeSceneChange()
     {
         if (TeamManager.Instance != null && TeamManager.Instance.CurrentPlayer != null)
@@ -74,7 +111,6 @@ public class PauseMenu : MonoBehaviour
 
         if (MapSaveSystem.Instance == null)
             return;
-       
 
         RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
 
@@ -82,18 +118,15 @@ public class PauseMenu : MonoBehaviour
             MapSaveSystem.Instance.SaveMap(generator);
         else
             MapSaveSystem.Instance.SaveCharactersNow();
-        
 
         string path = Path.Combine(Application.persistentDataPath, "mapSave.json");
 
         if (!File.Exists(path))
             return;
-        
 
         try
         {
             MapSaveSystem.MapData data = JsonUtility.FromJson<MapSaveSystem.MapData>(File.ReadAllText(path));
-
             int count = data != null && data.characters != null ? data.characters.Count : -1;
         }
         catch (System.Exception exception)

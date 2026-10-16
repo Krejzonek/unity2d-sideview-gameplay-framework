@@ -388,15 +388,13 @@ public class MapSaveSystem : MonoBehaviour
 
     private void SaveInventories(MapData data)
     {
-        data.inventory.Clear();
-        data.inventoryItems.Clear();
-        data.ingredients.Clear();
-        data.consumables.Clear();
-
         EquipmentManager equipment = FindFirstObjectByType<EquipmentManager>();
 
         if (equipment != null)
         {
+            data.inventory.Clear();
+            data.inventoryItems.Clear();
+
             foreach (ItemData item in equipment.GetInventory())
             {
                 if (item != null)
@@ -415,6 +413,8 @@ public class MapSaveSystem : MonoBehaviour
 
         if (ingredientInventory != null)
         {
+            data.ingredients.Clear();
+
             foreach (IngredientInventory.IngredientStack stack in ingredientInventory.GetIngredients())
             {
                 if (stack != null && stack.ingredient != null)
@@ -426,6 +426,8 @@ public class MapSaveSystem : MonoBehaviour
 
         if (consumableInventory != null)
         {
+            data.consumables.Clear();
+
             foreach (ConsumableInventory.ConsumableStack stack in consumableInventory.GetConsumables())
             {
                 if (stack != null && stack.item != null)
@@ -738,8 +740,6 @@ public class MapSaveSystem : MonoBehaviour
 
         if (generator != null)
             SaveMap(generator);
-        else
-            SaveCharactersNow();
     }
 
 #if UNITY_EDITOR
@@ -759,8 +759,6 @@ public class MapSaveSystem : MonoBehaviour
 
         if (generator != null)
             Instance.SaveMap(generator);
-        else
-            Instance.SaveCharactersNow();
     }
 #endif
 }

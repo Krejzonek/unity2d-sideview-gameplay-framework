@@ -28,6 +28,7 @@ public enum EnemyAffix
     Brutal,
     Resilient
 }
+
 public enum EnemySpawnType
 {
     None,
@@ -204,7 +205,6 @@ public class EnemyAI : MonoBehaviour
 
         normalDetectionRange = detectionRange;
         normalMoveSpeed = moveSpeed;
-
 
         if (restorePending)
         {
@@ -754,7 +754,6 @@ public class EnemyAI : MonoBehaviour
         switch (enemyClass)
         {
             case EnemyClass.Melee:
-
                 if (className == "Warrior")
                     score += 20f;
 
@@ -764,7 +763,6 @@ public class EnemyAI : MonoBehaviour
                 break;
 
             case EnemyClass.Ranged:
-
                 if (className == "Archer")
                     score += 25f;
 
@@ -777,7 +775,6 @@ public class EnemyAI : MonoBehaviour
                 break;
 
             case EnemyClass.Mage:
-
                 if (className == "Mage")
                     score += 35f;
 
@@ -790,7 +787,6 @@ public class EnemyAI : MonoBehaviour
                 break;
 
             case EnemyClass.Tank:
-
                 if (targetPlayer == lastAttacker)
                     score += 50f;
 
@@ -800,7 +796,6 @@ public class EnemyAI : MonoBehaviour
                 break;
 
             case EnemyClass.Assassin:
-
                 if (className == "Archer")
                     score += 50f;
 
@@ -1185,6 +1180,24 @@ public class EnemyAI : MonoBehaviour
         health = Mathf.Clamp(health, 0f, maxHealth);
     }
 
+    private void UpdateFacingDirection(float direction)
+    {
+        if (Mathf.Abs(direction) < 0.01f)
+            return;
+
+        Vector3 scale = transform.localScale;
+        scale.x = Mathf.Abs(scale.x) * Mathf.Sign(direction);
+        transform.localScale = scale;
+    }
+
+    private void FaceTarget(Transform target)
+    {
+        if (target == null)
+            return;
+
+        UpdateFacingDirection(target.position.x - transform.position.x);
+    }
+
     private void MoveTowardsPlayer()
     {
         MoveTowardsTarget(player);
@@ -1198,13 +1211,7 @@ public class EnemyAI : MonoBehaviour
         float direction = Mathf.Sign(target.position.x - transform.position.x);
 
         rb.velocity = new Vector2(direction * moveSpeed, rb.velocity.y);
-
-        if (direction != 0)
-        {
-            Vector3 scale = transform.localScale;
-            scale.x = Mathf.Abs(scale.x) * direction;
-            transform.localScale = scale;
-        }
+        UpdateFacingDirection(direction);
     }
 
     private void MoveAwayFromPlayer()
@@ -1223,28 +1230,25 @@ public class EnemyAI : MonoBehaviour
         float direction = Mathf.Sign(transform.position.x - target.position.x);
 
         rb.velocity = new Vector2(direction * moveSpeed, rb.velocity.y);
-
-        if (direction != 0)
-        {
-            Vector3 scale = transform.localScale;
-            scale.x = Mathf.Abs(scale.x) * direction;
-            transform.localScale = scale;
-        }
+        UpdateFacingDirection(direction);
     }
 
     private void StopMoving()
     {
         if (rb == null)
             return;
+
         rb.velocity = new Vector2(0f, rb.velocity.y);
     }
 
     private void Attack()
     {
-        if (attackTimer > 0f)
+        if (playerScript == null || player == null)
             return;
 
-        if (playerScript == null || player == null)
+        FaceTarget(player);
+
+        if (attackTimer > 0f)
             return;
 
         if (Vector2.Distance(transform.position, player.position) > attackRange)
@@ -1260,10 +1264,12 @@ public class EnemyAI : MonoBehaviour
 
     private void Shoot()
     {
-        if (attackTimer > 0f)
+        if (projectilePrefab == null || projectilePoint == null || player == null)
             return;
 
-        if (projectilePrefab == null || projectilePoint == null || player == null)
+        FaceTarget(player);
+
+        if (attackTimer > 0f)
             return;
 
         Vector2 direction = (player.position - projectilePoint.position).normalized;
@@ -1284,10 +1290,12 @@ public class EnemyAI : MonoBehaviour
 
     private void AttackEnemy(EnemyAI target)
     {
-        if (attackTimer > 0f)
+        if (target == null)
             return;
 
-        if (target == null)
+        FaceTarget(target.transform);
+
+        if (attackTimer > 0f)
             return;
 
         float attackDamage = damage;
@@ -1328,7 +1336,7 @@ public class EnemyAI : MonoBehaviour
         if (headshot)
             damageAmount *= headshotMultiplier;
 
-        if(attacker != null && TeamManager.Instance != null)
+        if (attacker != null && TeamManager.Instance != null)
         {
             damageAmount *= TeamManager.Instance.GetComboDamageMultiplier();
             TeamManager.Instance.RegisterComboHit();
@@ -1342,9 +1350,6 @@ public class EnemyAI : MonoBehaviour
 
         health -= damageAmount;
         health = Mathf.Clamp(health, 0f, maxHealth);
-
-        
-            
 
         ShowDamageNumber(damageAmount, isCrit, headshot, damageElement);
 
@@ -1410,6 +1415,7 @@ public class EnemyAI : MonoBehaviour
         {
             dodgeTimer -= Time.deltaTime;
             rb.velocity = new Vector2(dodgeDirection.x * moveSpeed * 1.5f, rb.velocity.y);
+            UpdateFacingDirection(dodgeDirection.x);
             return true;
         }
 
@@ -1441,6 +1447,7 @@ public class EnemyAI : MonoBehaviour
         }
 
         rb.velocity = new Vector2(dodgeDirection.x * moveSpeed * 1.5f, rb.velocity.y);
+        UpdateFacingDirection(dodgeDirection.x);
 
         return true;
     }

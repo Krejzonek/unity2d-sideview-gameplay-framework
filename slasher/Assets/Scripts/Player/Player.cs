@@ -18,6 +18,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float attackRange = 1.5f;
     [SerializeField] private float defenseDamageReduction = 0.5f;
 
+
     [Header("I-Frames")]
     [SerializeField] private float invulnerabilityTime = 0.3f;
 
@@ -46,11 +47,12 @@ public class Player : MonoBehaviour
     private float invulnerabilityTimer;
     private bool isDefending;
     private float knockbackTimer;
+    private bool isTurningToShoot;
+    private int facingDirection = 1;
 
     private bool isBot;
     private TeamManager teamManager;
     private CharacterData characterData;
-
 
     private void Start()
     {
@@ -66,6 +68,8 @@ public class Player : MonoBehaviour
         moveSpeed = stats.speed;
         health = stats.health;
         stamina = stats.stamina;
+
+        facingDirection = transform.localScale.x < 0f ? -1 : 1;
 
         if (CharacterManager.Instance != null && characterData != null)
         {
@@ -91,6 +95,9 @@ public class Player : MonoBehaviour
 
         moveInput = Input.GetAxisRaw("Horizontal");
 
+        if (!isTurningToShoot)
+            UpdateFacingDirection();
+
         if (Input.GetKeyDown(KeyCode.Space) && OnFloor() && !IsCrouching() && stamina > 25f)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
@@ -113,6 +120,20 @@ public class Player : MonoBehaviour
         LvlUp();
     }
 
+    private void UpdateFacingDirection()
+    {
+        if (moveInput > 0f)
+            SetFacingDirection(1);
+        else if (moveInput < 0f)
+            SetFacingDirection(-1);
+    }
+
+    private void SetFacingDirection(int direction)
+    {
+        facingDirection = direction;
+        transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x) * facingDirection, transform.localScale.y, transform.localScale.z);
+    }
+
     private void FixedUpdate()
     {
         if (IsDead())
@@ -125,13 +146,12 @@ public class Player : MonoBehaviour
         {
             knockbackTimer -= Time.fixedDeltaTime;
             return;
-        }
+        }   
 
         if (isBot)
             return;
 
         float currentMoveSpeed = formationSpeed > 0f ? formationSpeed : moveSpeed;
-
         rb.velocity = new Vector2(moveInput * currentMoveSpeed, rb.velocity.y);
     }
 
@@ -282,25 +302,20 @@ public class Player : MonoBehaviour
 
     private void Attack()
     {
-        if (isDefending)
+        if (isDefending || isTurningToShoot)
             return;
 
         if (Time.time < nextAttackTime)
             return;
 
         ItemData weapon = stats.GetWeapon();
-        float staminaCost = 5f;
-
-        if (weapon != null)
-        {
-            staminaCost = GetAttackStaminaCost();
-        }
-
-        if (skillManager != null)
-            staminaCost *= skillManager.GetStaminaCostMultiplier();
+        float staminaCost = weapon != null ? GetAttackStaminaCost() : 5f;
 
         if (stamina < staminaCost)
             return;
+
+        if (weapon != null && weapon.weaponType == WeaponType.Bow && attackPoint != null)
+            SetFacingDirection(GetMouseDirection());
 
         UseStamina(staminaCost);
 
@@ -313,14 +328,33 @@ public class Player : MonoBehaviour
         {
             switch (weapon.weaponType)
             {
-                case WeaponType.Sword: MeleeAttack(); break;
-                case WeaponType.Bow: ShootProjectile(arrowPrefab); break;
-                case WeaponType.Staff: ShootProjectile(magicPrefab); break;
-                default: MeleeAttack(); break;
+                case WeaponType.Sword:
+                    MeleeAttack();
+                    break;
+                case WeaponType.Bow:
+                    ShootProjectile(arrowPrefab);
+                    break;
+                case WeaponType.Staff:
+                    ShootProjectile(magicPrefab);
+                    break;
+                default:
+                    MeleeAttack();
+                    break;
             }
         }
 
         SetAttackCooldown();
+    }
+
+    private int GetMouseDirection()
+    {
+        Camera cam = Camera.main;
+
+        if (cam == null)
+            return facingDirection;
+
+        Vector3 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
+        return mousePosition.x >= attackPoint.position.x ? 1 : -1;
     }
 
     private void SetAttackCooldown()
@@ -343,6 +377,9 @@ public class Player : MonoBehaviour
 
             if (enemyAI != null)
             {
+                if ((enemy.transform.position.x - transform.position.x) * facingDirection < 0f)
+                    continue;
+
                 Vector2 hitPoint = enemy.ClosestPoint(transform.position);
                 bool isCrit = Random.Range(0f, 100f) <= stats.critRate;
                 float damage = stats.attack;
@@ -374,18 +411,31 @@ public class Player : MonoBehaviour
         if (projectilePrefab == null || attackPoint == null)
             return;
 
-        Camera cam = Camera.main;
-
-        if (cam == null)
-            return;
-
         ItemData weapon = stats.GetWeapon();
 
         if (weapon == null)
             return;
 
+        Camera cam = Camera.main;
+
+        if (cam == null)
+            return;
+
         Vector3 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
+        mousePosition.z = attackPoint.position.z;
+
         Vector2 direction = (mousePosition - attackPoint.position).normalized;
+
+        if (weapon.weaponType == WeaponType.Bow)
+        {
+            int desiredDirection = mousePosition.x >= attackPoint.position.x ? 1 : -1;
+
+            if (desiredDirection != facingDirection)
+            {
+                SetFacingDirection(desiredDirection);
+                direction = (mousePosition - attackPoint.position).normalized;
+            }
+        }
 
         bool doubleShot = false;
 
@@ -568,6 +618,7 @@ public class Player : MonoBehaviour
         health = 0f;
         isDefending = false;
         knockbackTimer = 0f;
+        isTurningToShoot = false;
 
         if (rb != null)
             rb.velocity = Vector2.zero;
@@ -577,7 +628,6 @@ public class Player : MonoBehaviour
         if (botController != null)
             botController.enabled = false;
     }
-
 
     public bool LoseLevelForResurrection()
     {
@@ -593,6 +643,7 @@ public class Player : MonoBehaviour
         SaveCharacterData();
         return true;
     }
+
     public void Respawn(Vector3 position)
     {
         transform.position = position;
@@ -603,6 +654,7 @@ public class Player : MonoBehaviour
         invulnerabilityTimer = 2f;
         isDefending = false;
         knockbackTimer = 0f;
+        isTurningToShoot = false;
 
         if (rb != null)
             rb.velocity = Vector2.zero;
@@ -679,6 +731,13 @@ public class Player : MonoBehaviour
 
         Vector2 direction = (enemy.transform.position - attackPoint.position).normalized;
 
+        if (weapon.weaponType == WeaponType.Bow)
+        {
+            int desiredDirection = enemy.transform.position.x >= attackPoint.position.x ? 1 : -1;
+            SetFacingDirection(desiredDirection);
+            direction = new Vector2(desiredDirection, 0f);
+        }
+
         if (shouldMiss)
         {
             float missAngle = Random.Range(20f, 45f);
@@ -723,6 +782,7 @@ public class Player : MonoBehaviour
         else
             StopDefense();
     }
+
     public float GetAttackStaminaCost()
     {
         ItemData weapon = stats.GetWeapon();
