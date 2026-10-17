@@ -27,7 +27,7 @@ public enum ItemRarity
     Godest
 }
 
-[CreateAssetMenu(fileName = "New Item", menuName = "Items/Item")]
+[CreateAssetMenu(fileName = "New Equipment", menuName = "Equipment/Equipment")]
 public class ItemData : ScriptableObject
 {
     public string itemName;
@@ -36,6 +36,9 @@ public class ItemData : ScriptableObject
     public EquipmentType equipmentType;
     public WeaponType weaponType;
     public ElementType element;
+
+    [Header("Weapon Visual")]
+    public WeaponVisualProfile weaponVisualProfile;
 
     [Header("Rarity")]
     [SerializeField] private ItemRarity rarity;
@@ -76,22 +79,14 @@ public class ItemData : ScriptableObject
     {
         switch (rarity)
         {
-            case ItemRarity.Common:
-                return 0f;
-            case ItemRarity.Uncommon:
-                return 0.02f;
-            case ItemRarity.Rare:
-                return 0.04f;
-            case ItemRarity.Epic:
-                return 0.06f;
-            case ItemRarity.Legendary:
-                return 0.08f;
-            case ItemRarity.Mythic:
-                return 0.10f;
-            case ItemRarity.Godest:
-                return 0.12f;
-            default:
-                return 0f;
+            case ItemRarity.Common: return 0f;
+            case ItemRarity.Uncommon: return 0.02f;
+            case ItemRarity.Rare: return 0.04f;
+            case ItemRarity.Epic: return 0.06f;
+            case ItemRarity.Legendary: return 0.08f;
+            case ItemRarity.Mythic: return 0.10f;
+            case ItemRarity.Godest: return 0.12f;
+            default: return 0f;
         }
     }
 
@@ -204,22 +199,14 @@ public class ItemData : ScriptableObject
     {
         switch (rarity)
         {
-            case ItemRarity.Common:
-                return common;
-            case ItemRarity.Uncommon:
-                return uncommon;
-            case ItemRarity.Rare:
-                return rare;
-            case ItemRarity.Epic:
-                return epic;
-            case ItemRarity.Legendary:
-                return legendary;
-            case ItemRarity.Mythic:
-                return mythic;
-            case ItemRarity.Godest:
-                return godest;
-            default:
-                return 0f;
+            case ItemRarity.Common: return common;
+            case ItemRarity.Uncommon: return uncommon;
+            case ItemRarity.Rare: return rare;
+            case ItemRarity.Epic: return epic;
+            case ItemRarity.Legendary: return legendary;
+            case ItemRarity.Mythic: return mythic;
+            case ItemRarity.Godest: return godest;
+            default: return 0f;
         }
     }
 

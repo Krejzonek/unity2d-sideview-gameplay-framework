@@ -12,13 +12,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c53f63f110b72f94c85f817f16a8eacb, type: 3}
   m_Name: CopperSword
   m_EditorClassIdentifier: 
-  itemName: CopperSword
+  itemName: Copper Sword
   icon: {fileID: 0}
   equipmentType: 0
   weaponType: 1
+  element: 0
+  weaponVisualProfile: {fileID: 11400000, guid: 7d18783cd1f028c4da9e38aafaa41954, type: 2}
+  rarity: 0
   healthBonus: 0
   defenceBonus: 0
   staminaBonus: 0
   speedBonus: 1
   attackBonus: 20
   expBonus: 0
+  miscType: 0
+  baseHealthBonus: 0
+  baseDefenceBonus: 0
+  baseStaminaBonus: 0
+  baseSpeedBonus: 1
+  baseAttackBonus: 20
+  baseExpBonus: 0
+  appliedRarity: 0
+  bonusesInitialized: 1

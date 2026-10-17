@@ -636,7 +636,10 @@ public class MapSaveSystem : MonoBehaviour
         }
 
         if (equipment != null)
+        {
+            equipment.RefreshAllWeaponVisuals();
             equipment.RefreshEquipmentUI();
+        }
 
         Debug.Log("Character and inventory data restored.");
     }

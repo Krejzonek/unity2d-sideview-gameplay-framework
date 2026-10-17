@@ -10,6 +10,7 @@ public class EquipmentManager : MonoBehaviour
     private void Start()
     {
         UpdateCurrentPlayer();
+        RefreshAllWeaponVisuals();
         RefreshEquipmentUI();
     }
 
@@ -109,6 +110,7 @@ public class EquipmentManager : MonoBehaviour
         if (player != null)
             player.RefreshStats();
 
+        RefreshWeaponVisual(player, character);
         RefreshEquipmentUI();
         SaveEquipment();
     }
@@ -160,8 +162,36 @@ public class EquipmentManager : MonoBehaviour
         if (player != null)
             player.RefreshStats();
 
+        RefreshWeaponVisual(player, character);
         RefreshEquipmentUI();
         SaveEquipment();
+    }
+
+    public void RefreshWeaponVisual(Player player, CharacterData character)
+    {
+        if (player == null || character == null)
+            return;
+
+        WeaponVisualEquipment visual = player.GetComponent<WeaponVisualEquipment>();
+
+        if (visual != null)
+            visual.RefreshFromCharacter(character);
+    }
+
+    public void RefreshAllWeaponVisuals()
+    {
+        Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
+
+        foreach (Player player in players)
+        {
+            if (player == null)
+                continue;
+
+            CharacterData character = player.GetCharacterData();
+
+            if (character != null)
+                RefreshWeaponVisual(player, character);
+        }
     }
 
     public void RefreshEquipmentUI()
@@ -278,6 +308,7 @@ public class EquipmentManager : MonoBehaviour
 
         RefreshEquipmentUI();
     }
+
     public void SaveAllEquipment()
     {
         SaveEquipment();
