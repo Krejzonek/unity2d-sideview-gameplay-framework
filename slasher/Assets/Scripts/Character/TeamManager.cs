@@ -338,6 +338,7 @@ public class TeamManager : MonoBehaviour
                 continue;
             }
 
+
             player.SetCharacterData(characters[i]);
             player.SetTeamManager(this);
 
@@ -346,7 +347,13 @@ public class TeamManager : MonoBehaviour
             if (stats != null)
                 characterManager.ApplyCharacterToPlayer(characters[i], player, stats);
 
+            WeaponVisualEquipment weaponVisual = characterObject.GetComponent<WeaponVisualEquipment>();
+
+            if (weaponVisual != null)
+                weaponVisual.RefreshFromCharacter(characters[i]);
+
             team.Add(player);
+
             player.SetBotMode(i != currentPlayerIndex);
 
             if (characterManager.IsCharacterDead(i))
