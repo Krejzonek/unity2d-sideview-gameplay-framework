@@ -4,7 +4,6 @@ using UnityEngine;
 public class WeaponVisualEquipment : MonoBehaviour
 {
     [SerializeField] private Transform weaponHolder;
-    [SerializeField] private int sortingOrder = 10;
 
     private GameObject currentWeaponObject;
     private ItemData currentItem;
@@ -70,7 +69,6 @@ public class WeaponVisualEquipment : MonoBehaviour
 
         currentItem = item;
         controller.ApplyProfile(profile);
-        controller.SetSortingOrder(sortingOrder);
     }
 
     public void ClearWeapon()
