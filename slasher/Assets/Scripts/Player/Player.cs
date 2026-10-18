@@ -18,7 +18,6 @@ public class Player : MonoBehaviour
     [SerializeField] private float attackRange = 1.5f;
     [SerializeField] private float defenseDamageReduction = 0.5f;
 
-
     [Header("I-Frames")]
     [SerializeField] private float invulnerabilityTime = 0.3f;
 
@@ -34,6 +33,15 @@ public class Player : MonoBehaviour
 
     [Header("Crouch")]
     [SerializeField] private CapsuleCollider2D playerCollider;
+
+    [Header("Hand Sorting")]
+    [SerializeField] private Transform frontHand;
+    [SerializeField] private Transform backHand;
+    [SerializeField] private int frontHandSortingOrder = 2;
+    [SerializeField] private int backHandSortingOrder = -1;
+
+    private readonly Dictionary<SpriteRenderer, int> weaponBaseSortingOrders = new Dictionary<SpriteRenderer, int>();
+    private readonly Dictionary<SpriteRenderer, int> handBaseSortingOrders = new Dictionary<SpriteRenderer, int>();
 
     private Vector2 normalColliderSize;
     private Vector2 normalColliderOffset;
@@ -70,6 +78,8 @@ public class Player : MonoBehaviour
         stamina = stats.stamina;
 
         facingDirection = transform.localScale.x < 0f ? -1 : 1;
+        CacheHandSorting();
+        UpdateHandSorting();
 
         if (CharacterManager.Instance != null && characterData != null)
         {
@@ -77,6 +87,36 @@ public class Player : MonoBehaviour
 
             if (index >= 0 && CharacterManager.Instance.IsCharacterDead(index))
                 SetDead();
+        }
+    }
+
+    private void CacheHandSorting()
+    {
+        weaponBaseSortingOrders.Clear();
+        handBaseSortingOrders.Clear();
+
+        CacheHandSorting(frontHand);
+        CacheHandSorting(backHand);
+    }
+
+    private void CacheHandSorting(Transform hand)
+    {
+        if (hand == null)
+            return;
+
+        Transform weaponHolder = hand.Find("WeaponHolder");
+
+        foreach (SpriteRenderer renderer in hand.GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            if (weaponHolder != null && (renderer.transform == weaponHolder || renderer.transform.IsChildOf(weaponHolder)))
+            {
+                if (!weaponBaseSortingOrders.ContainsKey(renderer))
+                    weaponBaseSortingOrders.Add(renderer, renderer.sortingOrder);
+            }
+            else if (!handBaseSortingOrders.ContainsKey(renderer))
+            {
+                handBaseSortingOrders.Add(renderer, renderer.sortingOrder);
+            }
         }
     }
 
@@ -130,8 +170,63 @@ public class Player : MonoBehaviour
 
     private void SetFacingDirection(int direction)
     {
+        if (facingDirection == direction && Mathf.Sign(transform.localScale.x) == direction)
+            return;
+
         facingDirection = direction;
         transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x) * facingDirection, transform.localScale.y, transform.localScale.z);
+
+        UpdateHandSorting();
+    }
+
+    private void UpdateHandSorting()
+    {
+        if (frontHand == null || backHand == null)
+            return;
+
+        int frontOrder = facingDirection == 1 ? frontHandSortingOrder : backHandSortingOrder;
+        int backOrder = facingDirection == 1 ? backHandSortingOrder : frontHandSortingOrder;
+
+        SetSortingOrder(frontHand, frontOrder);
+        SetSortingOrder(backHand, backOrder);
+    }
+
+    private void SetSortingOrder(Transform hand, int order)
+    {
+        if (hand == null)
+            return;
+
+        foreach (SpriteRenderer renderer in hand.GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            string objectName = renderer.transform.name;
+
+            if (objectName == "Handle" || objectName == "Blade")
+            {
+                renderer.sortingOrder = 1;
+                continue;
+            }
+
+            if (objectName == "Guard")
+            {
+                renderer.sortingOrder = 2;
+                continue;
+            }
+
+            renderer.sortingOrder = order;
+        }
+    }
+
+    private string GetHierarchyPath(Transform target)
+    {
+        string path = target.name;
+
+        while (target.parent != null)
+        {
+            target = target.parent;
+            path = target.name + "/" + path;
+        }
+
+        return path;
     }
 
     private void FixedUpdate()
@@ -146,7 +241,7 @@ public class Player : MonoBehaviour
         {
             knockbackTimer -= Time.fixedDeltaTime;
             return;
-        }   
+        }
 
         if (isBot)
             return;
