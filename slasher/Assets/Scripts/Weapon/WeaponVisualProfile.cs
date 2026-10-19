@@ -17,6 +17,9 @@ public class WeaponVisualProfile : ScriptableObject
 {
     public GameObject weaponPrefab;
 
+    [Header("Weapon Type")]
+    public WeaponType weaponType = WeaponType.Sword;
+
     [Header("Handle")]
     public WeaponPartSettings handle = new WeaponPartSettings();
 

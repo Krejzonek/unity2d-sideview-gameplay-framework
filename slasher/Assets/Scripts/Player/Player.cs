@@ -1,3 +1,4 @@
+
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
@@ -37,7 +38,7 @@ public class Player : MonoBehaviour
     [Header("Hand Sorting")]
     [SerializeField] private Transform frontHand;
     [SerializeField] private Transform backHand;
-    [SerializeField] private int frontHandSortingOrder = 2;
+    [SerializeField] private int frontHandSortingOrder = 3;
     [SerializeField] private int backHandSortingOrder = -1;
 
     private readonly Dictionary<SpriteRenderer, int> weaponBaseSortingOrders = new Dictionary<SpriteRenderer, int>();
@@ -135,7 +136,7 @@ public class Player : MonoBehaviour
 
         moveInput = Input.GetAxisRaw("Horizontal");
 
-        if (!isTurningToShoot)
+        if (!isTurningToShoot && !Input.GetMouseButton(0))
             UpdateFacingDirection();
 
         if (Input.GetKeyDown(KeyCode.Space) && OnFloor() && !IsCrouching() && stamina > 25f)
@@ -170,6 +171,8 @@ public class Player : MonoBehaviour
 
     private void SetFacingDirection(int direction)
     {
+        direction = direction >= 0 ? 1 : -1;
+
         if (facingDirection == direction && Mathf.Sign(transform.localScale.x) == direction)
             return;
 
@@ -198,35 +201,67 @@ public class Player : MonoBehaviour
 
         foreach (SpriteRenderer renderer in hand.GetComponentsInChildren<SpriteRenderer>(true))
         {
-            string objectName = renderer.transform.name;
+            bool isWeapon = false;
+            Transform current = renderer.transform;
 
-            if (objectName == "Handle" || objectName == "Blade")
+            while (current != null && current != hand)
             {
-                renderer.sortingOrder = 1;
-                continue;
+                if (current.name == "WeaponHolder")
+                {
+                    isWeapon = true;
+                    break;
+                }
+
+                current = current.parent;
             }
 
-            if (objectName == "Guard")
-            {
-                renderer.sortingOrder = 2;
-                continue;
-            }
-
-            renderer.sortingOrder = order;
+            renderer.sortingOrder = isWeapon ? 2 : order;
         }
     }
 
-    private string GetHierarchyPath(Transform target)
+    private Transform GetWeaponAttackPoint(ItemData weapon)
     {
-        string path = target.name;
+        if (weapon == null)
+            return attackPoint;
 
-        while (target.parent != null)
+        Transform[] hands = { frontHand, backHand };
+
+        foreach (Transform hand in hands)
         {
-            target = target.parent;
-            path = target.name + "/" + path;
+            if (hand == null)
+                continue;
+
+            Transform[] children = hand.GetComponentsInChildren<Transform>(true);
+
+            foreach (Transform child in children)
+            {
+                if (child.name != "WeaponHolder" || !child.gameObject.activeInHierarchy)
+                    continue;
+
+                Transform point = FindChildRecursive(child, "AttackPoint");
+
+                if (point != null && point.gameObject.activeInHierarchy)
+                    return point;
+            }
         }
 
-        return path;
+        return attackPoint;
+    }
+
+    private Transform FindChildRecursive(Transform parent, string childName)
+    {
+        if (parent.name == childName)
+            return parent;
+
+        foreach (Transform child in parent)
+        {
+            Transform result = FindChildRecursive(child, childName);
+
+            if (result != null)
+                return result;
+        }
+
+        return null;
     }
 
     private void FixedUpdate()
@@ -409,8 +444,7 @@ public class Player : MonoBehaviour
         if (stamina < staminaCost)
             return;
 
-        if (weapon != null && weapon.weaponType == WeaponType.Bow && attackPoint != null)
-            SetFacingDirection(GetMouseDirection());
+        SetFacingDirection(GetMouseDirection());
 
         UseStamina(staminaCost);
 
@@ -449,7 +483,7 @@ public class Player : MonoBehaviour
             return facingDirection;
 
         Vector3 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
-        return mousePosition.x >= attackPoint.position.x ? 1 : -1;
+        return mousePosition.x >= transform.position.x ? 1 : -1;
     }
 
     private void SetAttackCooldown()
@@ -503,7 +537,7 @@ public class Player : MonoBehaviour
 
     private void ShootProjectile(GameObject projectilePrefab)
     {
-        if (projectilePrefab == null || attackPoint == null)
+        if (projectilePrefab == null)
             return;
 
         ItemData weapon = stats.GetWeapon();
@@ -511,24 +545,32 @@ public class Player : MonoBehaviour
         if (weapon == null)
             return;
 
+        Transform currentAttackPoint = GetWeaponAttackPoint(weapon);
+
+        if (currentAttackPoint == null)
+        {
+            Debug.LogWarning("[Player] No AttackPoint found on the equipped weapon. Assign the fallback Attack Point or add an AttackPoint child to the weapon prefab.", this);
+            return;
+        }
+
         Camera cam = Camera.main;
 
         if (cam == null)
             return;
 
         Vector3 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
-        mousePosition.z = attackPoint.position.z;
+        mousePosition.z = currentAttackPoint.position.z;
 
-        Vector2 direction = (mousePosition - attackPoint.position).normalized;
+        Vector2 direction = (mousePosition - currentAttackPoint.position).normalized;
 
         if (weapon.weaponType == WeaponType.Bow)
         {
-            int desiredDirection = mousePosition.x >= attackPoint.position.x ? 1 : -1;
+            int desiredDirection = mousePosition.x >= transform.position.x ? 1 : -1;
 
             if (desiredDirection != facingDirection)
             {
                 SetFacingDirection(desiredDirection);
-                direction = (mousePosition - attackPoint.position).normalized;
+                direction = (mousePosition - currentAttackPoint.position).normalized;
             }
         }
 
@@ -539,21 +581,27 @@ public class Player : MonoBehaviour
 
         if (doubleShot)
         {
-            ShootSingleProjectile(projectilePrefab, direction);
-            ShootSingleProjectile(projectilePrefab, Quaternion.Euler(0f, 0f, 10f) * direction);
+            ShootSingleProjectile(projectilePrefab, direction, currentAttackPoint);
+            ShootSingleProjectile(projectilePrefab, Quaternion.Euler(0f, 0f, 10f) * direction, currentAttackPoint);
         }
         else
         {
-            ShootSingleProjectile(projectilePrefab, direction);
+            ShootSingleProjectile(projectilePrefab, direction, currentAttackPoint);
         }
 
         if (skillManager != null)
             skillManager.ConsumeAttackSkill();
     }
 
-    private void ShootSingleProjectile(GameObject projectilePrefab, Vector2 direction)
+    private void ShootSingleProjectile(GameObject projectilePrefab, Vector2 direction, Transform currentAttackPoint = null)
     {
-        GameObject projectileObject = Instantiate(projectilePrefab, attackPoint.position, Quaternion.identity);
+        if (currentAttackPoint == null)
+            currentAttackPoint = GetWeaponAttackPoint(stats.GetWeapon());
+
+        if (currentAttackPoint == null)
+            return;
+
+        GameObject projectileObject = Instantiate(projectilePrefab, currentAttackPoint.position, Quaternion.identity);
         Projectile projectile = projectileObject.GetComponent<Projectile>();
 
         if (projectile != null)
@@ -568,7 +616,7 @@ public class Player : MonoBehaviour
             float statusDuration = weapon.GetStatusDuration();
             float statusDamage = weapon.GetStatusDamage(stats.attack);
 
-            float damageMultiplier = skillManager != null ? skillManager.GetDamageMultiplier(Vector2.Distance(transform.position, attackPoint.position)) : 1f;
+            float damageMultiplier = skillManager != null ? skillManager.GetDamageMultiplier(Vector2.Distance(transform.position, currentAttackPoint.position)) : 1f;
             float damage = stats.attack * damageMultiplier;
 
             projectile.Setup(direction, damage, stats.critRate, stats.critDamage, stats.knockback * (skillManager != null ? skillManager.GetKnockbackMultiplier() : 1f), stats.stunChance, GetAttackElement(), statusEffect, statusChance, statusDuration, statusDamage, false, this);
@@ -784,9 +832,6 @@ public class Player : MonoBehaviour
         if (enemy == null || isDefending || IsDead() || Time.time < nextAttackTime)
             return;
 
-        if (attackPoint == null)
-            return;
-
         ItemData weapon = stats.GetWeapon();
 
         if (weapon == null)
@@ -799,16 +844,19 @@ public class Player : MonoBehaviour
             case WeaponType.Bow:
                 projectilePrefab = arrowPrefab;
                 break;
-
             case WeaponType.Staff:
                 projectilePrefab = magicPrefab;
                 break;
-
             default:
                 return;
         }
 
         if (projectilePrefab == null)
+            return;
+
+        Transform currentAttackPoint = GetWeaponAttackPoint(weapon);
+
+        if (currentAttackPoint == null)
             return;
 
         float staminaCost = weapon.weaponType == WeaponType.Staff ? 50f : 25f;
@@ -824,14 +872,13 @@ public class Player : MonoBehaviour
         if (skillManager != null)
             skillManager.RegisterAttack();
 
-        Vector2 direction = (enemy.transform.position - attackPoint.position).normalized;
+        int desiredDirection = enemy.transform.position.x >= transform.position.x ? 1 : -1;
+        SetFacingDirection(desiredDirection);
+
+        Vector2 direction = (enemy.transform.position - currentAttackPoint.position).normalized;
 
         if (weapon.weaponType == WeaponType.Bow)
-        {
-            int desiredDirection = enemy.transform.position.x >= attackPoint.position.x ? 1 : -1;
-            SetFacingDirection(desiredDirection);
             direction = new Vector2(desiredDirection, 0f);
-        }
 
         if (shouldMiss)
         {
@@ -850,12 +897,12 @@ public class Player : MonoBehaviour
 
         if (doubleShot)
         {
-            ShootSingleProjectile(projectilePrefab, direction);
-            ShootSingleProjectile(projectilePrefab, Quaternion.Euler(0f, 0f, 10f) * direction);
+            ShootSingleProjectile(projectilePrefab, direction, currentAttackPoint);
+            ShootSingleProjectile(projectilePrefab, Quaternion.Euler(0f, 0f, 10f) * direction, currentAttackPoint);
         }
         else
         {
-            ShootSingleProjectile(projectilePrefab, direction);
+            ShootSingleProjectile(projectilePrefab, direction, currentAttackPoint);
         }
 
         if (skillManager != null)
