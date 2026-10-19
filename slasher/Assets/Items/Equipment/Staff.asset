@@ -16,9 +16,21 @@ MonoBehaviour:
   icon: {fileID: 0}
   equipmentType: 0
   weaponType: 3
+  element: 0
+  weaponVisualProfile: {fileID: 11400000, guid: b6bca128433f67044a8e7d426b909ebe, type: 2}
+  rarity: 0
   healthBonus: 0
   defenceBonus: 0
   staminaBonus: 40
   speedBonus: 0
   attackBonus: 10
   expBonus: 0
+  miscType: 0
+  baseHealthBonus: 0
+  baseDefenceBonus: 0
+  baseStaminaBonus: 40
+  baseSpeedBonus: 0
+  baseAttackBonus: 10
+  baseExpBonus: 0
+  appliedRarity: 0
+  bonusesInitialized: 1

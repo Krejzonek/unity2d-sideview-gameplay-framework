@@ -50,7 +50,7 @@ public class WeaponVisualController : MonoBehaviour
         if (!baseTransformsCached)
             CacheBaseTransforms();
 
-        transform.localPosition = profile.gripPosition;
+        transform.localPosition = Vector3.zero;
         transform.localRotation = Quaternion.Euler(0f, 0f, profile.gripRotation);
         transform.localScale = new Vector3(profile.gripScale.x, profile.gripScale.y, 1f);
 
@@ -58,11 +58,23 @@ public class WeaponVisualController : MonoBehaviour
         ApplyPart(guard, profile.guard, guardBasePosition, guardBaseScale, guardBaseRotation, 0f);
         ApplyPart(blade, profile.blade, bladeBasePosition, bladeBaseScale, bladeBaseRotation, 1f);
 
+        if (handle != null)
+        {
+            Vector3 handleOffset = Vector3.Scale(handle.localPosition, transform.localScale);
+            handleOffset = transform.localRotation * handleOffset;
+            transform.localPosition = (Vector3)profile.gripPosition - handleOffset;
+        }
+        else
+        {
+            transform.localPosition = profile.gripPosition;
+        }
+
         if (bladeCollider != null)
         {
-            bladeCollider.enabled = blade != null && profile.blade.enabled;
+            bool isSword = profile.weaponType == WeaponType.Sword;
+            bladeCollider.enabled = isSword && blade != null && profile.blade.enabled;
 
-            if (blade != null)
+            if (bladeCollider.enabled)
             {
                 SpriteRenderer spriteRenderer = blade.GetComponent<SpriteRenderer>();
 
@@ -93,13 +105,5 @@ public class WeaponVisualController : MonoBehaviour
         part.localPosition = basePosition + new Vector3(settings.localPosition.x, settings.localPosition.y + lengthDifference * 0.5f * lengthDirection, 0f);
         part.localRotation = Quaternion.Euler(0f, 0f, baseRotation + settings.localRotation);
         part.localScale = new Vector3(baseScale.x * settings.width, baseScale.y * settings.length, baseScale.z);
-    }
-
-    public void SetSortingOrder(int sortingOrder)
-    {
-        SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>(true);
-
-        foreach (SpriteRenderer renderer in renderers)
-            renderer.sortingOrder = sortingOrder;
     }
 }
