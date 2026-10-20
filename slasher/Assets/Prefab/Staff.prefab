@@ -57,7 +57,7 @@ Transform:
   m_GameObject: {fileID: 5192176069663316055}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -21.41891, y: 4.024673, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -78,10 +78,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91a13a5ddbc2c19459acdf2eaa305b31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  handle: {fileID: 3182479932726351344}
-  guard: {fileID: 3903944070384170057}
-  blade: {fileID: 9070909043722586697}
   bladeCollider: {fileID: 2979938060577717824}
+  parts:
+  - part: {fileID: 9070909043722586697}
+    partName: Blade
+  - part: {fileID: 3903944070384170057}
+    partName: Guard
+  - part: {fileID: 3182479932726351344}
+    partName: Handle
 --- !u!1 &5318488206201679828
 GameObject:
   m_ObjectHideFlags: 0

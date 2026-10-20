@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEditor;
 
@@ -29,13 +30,11 @@ public class WeaponVisualProfileEditor : Editor
 
         DrawDefaultInspector();
 
-        if (EditorGUI.EndChangeCheck())
-        {
-            serializedObject.ApplyModifiedProperties();
+        bool changed = EditorGUI.EndChangeCheck();
+        serializedObject.ApplyModifiedProperties();
+
+        if (changed)
             RebuildPreview();
-        }
-        else
-            serializedObject.ApplyModifiedProperties();
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Weapon Preview", EditorStyles.boldLabel);
@@ -92,15 +91,15 @@ public class WeaponVisualProfileEditor : Editor
         previewObject.transform.rotation = Quaternion.identity;
         previewObject.transform.localScale = Vector3.one;
 
-        WeaponVisualController controller = previewObject.GetComponent<WeaponVisualController>();
-
-        if (controller != null)
-            controller.ApplyProfile(profile);
-
         previewObject.hideFlags = HideFlags.HideAndDontSave;
 
         foreach (Transform child in previewObject.GetComponentsInChildren<Transform>(true))
             child.gameObject.hideFlags = HideFlags.HideAndDontSave;
+
+        WeaponVisualController controller = previewObject.GetComponent<WeaponVisualController>();
+
+        if (controller != null)
+            controller.ApplyProfile(profile);
 
         Repaint();
     }

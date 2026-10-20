@@ -17,6 +17,7 @@ MonoBehaviour:
   equipmentType: 0
   weaponType: 2
   element: 1
+  weaponVisualProfile: {fileID: 11400000, guid: a42b1b2274b8241449745f2a702e0f4b, type: 2}
   rarity: 6
   healthBonus: 0
   defenceBonus: 0
