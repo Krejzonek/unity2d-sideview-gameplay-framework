@@ -14,21 +14,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponPrefab: {fileID: 5192176069663316055, guid: 66d155d0da1932e4588a320b54d5f440, type: 3}
   weaponType: 3
-  handle:
+  hand: 1
+  parts:
+  - partName: Blade
     enabled: 1
     texture: {fileID: 0}
     length: 1
     width: 1
     localPosition: {x: 0, y: 0}
     localRotation: 0
-  guard:
+  - partName: Guard
     enabled: 1
     texture: {fileID: 0}
     length: 1
     width: 1
     localPosition: {x: 0, y: 0}
     localRotation: 0
-  blade:
+  - partName: Handle
     enabled: 1
     texture: {fileID: 0}
     length: 1

@@ -1,15 +1,22 @@
-
+using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
 public class WeaponPartSettings
 {
+    public string partName;
     public bool enabled = true;
     public Sprite texture;
     [Range(0.1f, 3f)] public float length = 1f;
     [Range(0.1f, 3f)] public float width = 1f;
     public Vector2 localPosition;
     public float localRotation;
+}
+
+public enum WeaponHand
+{
+    Left,
+    Right
 }
 
 [CreateAssetMenu(fileName = "New Weapon Visual Profile", menuName = "Weapons/Visual Profile")]
@@ -20,14 +27,11 @@ public class WeaponVisualProfile : ScriptableObject
     [Header("Weapon Type")]
     public WeaponType weaponType = WeaponType.Sword;
 
-    [Header("Handle")]
-    public WeaponPartSettings handle = new WeaponPartSettings();
+    [Header("Hand")]
+    public WeaponHand hand = WeaponHand.Right;
 
-    [Header("Guard")]
-    public WeaponPartSettings guard = new WeaponPartSettings();
-
-    [Header("Blade")]
-    public WeaponPartSettings blade = new WeaponPartSettings();
+    [Header("Parts")]
+    public List<WeaponPartSettings> parts = new List<WeaponPartSettings>();
 
     [Header("Grip")]
     public Vector2 gripPosition;

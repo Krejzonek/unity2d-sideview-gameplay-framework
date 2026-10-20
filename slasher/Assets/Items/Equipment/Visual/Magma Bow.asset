@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 242800b40d4391b44bed0da5bc38e5d4, type: 3}
+  m_Name: Magma Bow
+  m_EditorClassIdentifier: 
+  weaponPrefab: {fileID: 3033398443319774402, guid: 5d469d471967a644094aa39f701d9018, type: 3}
+  weaponType: 2
+  hand: 0
+  parts:
+  - partName: Blade
+    enabled: 1
+    texture: {fileID: 0}
+    length: 1
+    width: 1
+    localPosition: {x: 0, y: 0}
+    localRotation: 0
+  - partName: Guard
+    enabled: 1
+    texture: {fileID: 0}
+    length: 1
+    width: 1
+    localPosition: {x: 0, y: 0}
+    localRotation: 0
+  - partName: Guard (1)
+    enabled: 1
+    texture: {fileID: 0}
+    length: 1
+    width: 1
+    localPosition: {x: 0, y: 0}
+    localRotation: 0
+  - partName: Guard (2)
+    enabled: 1
+    texture: {fileID: 0}
+    length: 1
+    width: 1
+    localPosition: {x: 0, y: 0}
+    localRotation: 0
+  - partName: Guard (3)
+    enabled: 1
+    texture: {fileID: 0}
+    length: 1
+    width: 1
+    localPosition: {x: 0, y: 0}
+    localRotation: 0
+  - partName: Guard (4)
+    enabled: 1
+    texture: {fileID: 0}
+    length: 1
+    width: 1
+    localPosition: {x: 0, y: 0}
+    localRotation: 0
+  - partName: Guard (5)
+    enabled: 1
+    texture: {fileID: 0}
+    length: 1
+    width: 1
+    localPosition: {x: 0, y: 0}
+    localRotation: 0
+  - partName: Handle
+    enabled: 1
+    texture: {fileID: 0}
+    length: 1
+    width: 1
+    localPosition: {x: 0, y: 0}
+    localRotation: 0
+  gripPosition: {x: 0, y: 0}
+  gripRotation: 0
+  gripScale: {x: 1, y: 1}

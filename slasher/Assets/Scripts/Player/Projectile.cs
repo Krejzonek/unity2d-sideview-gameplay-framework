@@ -49,6 +49,25 @@ public class Projectile : MonoBehaviour
         Destroy(gameObject, lifetime);
     }
 
+    public void AlignTipToPoint(Transform point)
+    {
+        if (point == null)
+            return;
+
+        transform.right = direction;
+
+        SpriteRenderer spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
+        if (spriteRenderer == null || spriteRenderer.sprite == null)
+            return;
+
+        Bounds bounds = spriteRenderer.sprite.bounds;
+        Vector3 tipOffset = transform.right * bounds.max.x * Mathf.Abs(spriteRenderer.transform.lossyScale.x);
+
+        transform.position = point.position - tipOffset;
+        startPosition = transform.position;
+    }
+
     private void Update()
     {
         if (stuck)

@@ -13,21 +13,24 @@ MonoBehaviour:
   m_Name: CopperSword
   m_EditorClassIdentifier: 
   weaponPrefab: {fileID: 5365261624965930720, guid: 1c35f8a2ed0a87c4e865f2e95b4212b9, type: 3}
-  handle:
+  weaponType: 1
+  hand: 1
+  parts:
+  - partName: Blade
     enabled: 1
     texture: {fileID: 0}
     length: 1
     width: 1
     localPosition: {x: 0, y: 0}
     localRotation: 0
-  guard:
+  - partName: Guard
     enabled: 1
     texture: {fileID: 0}
     length: 1
     width: 1
     localPosition: {x: 0, y: 0}
     localRotation: 0
-  blade:
+  - partName: Handle
     enabled: 1
     texture: {fileID: 0}
     length: 1

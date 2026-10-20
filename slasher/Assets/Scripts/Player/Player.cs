@@ -1,4 +1,3 @@
-
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
@@ -606,6 +605,9 @@ public class Player : MonoBehaviour
 
         if (projectile != null)
         {
+            projectile.Setup(direction, 0f, 0f, 1f, 0f, 0f, ElementType.None, StatusEffectType.None, 0f, 0f, 0f, false, this);
+            projectile.AlignTipToPoint(currentAttackPoint);
+
             ItemData weapon = stats.GetWeapon();
 
             if (weapon == null)
@@ -953,5 +955,9 @@ public class Player : MonoBehaviour
             staminaCost *= skillManager.GetStaminaCostMultiplier();
 
         return staminaCost;
+    }
+    public void SetBotFacingDirection(int direction)
+    {
+        SetFacingDirection(direction);
     }
 }

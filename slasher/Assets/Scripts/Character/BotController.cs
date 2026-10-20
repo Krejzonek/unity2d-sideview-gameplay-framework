@@ -136,6 +136,7 @@ public class BotController : MonoBehaviour
 
         float targetSpeed = Mathf.Clamp(distance * 5f, -speed, speed);
 
+        UpdateFacingDirection(targetSpeed);
         rb.velocity = new Vector2(targetSpeed, rb.velocity.y);
     }
 
@@ -288,6 +289,7 @@ public class BotController : MonoBehaviour
         }
 
         rb.velocity = new Vector2(0f, rb.velocity.y);
+        UpdateFacingDirection(target.transform.position.x - transform.position.x);
         player.BotMeleeAttack();
     }
 
@@ -312,6 +314,7 @@ public class BotController : MonoBehaviour
         }
 
         rb.velocity = new Vector2(0f, rb.velocity.y);
+        UpdateFacingDirection(target.transform.position.x - transform.position.x);
 
         bool shouldMiss = Random.Range(0f, 100f) < attackMissChance;
         player.BotRangedAttack(target, shouldMiss);
@@ -338,6 +341,7 @@ public class BotController : MonoBehaviour
         }
 
         rb.velocity = new Vector2(0f, rb.velocity.y);
+        UpdateFacingDirection(target.transform.position.x - transform.position.x);
 
         bool shouldMiss = Random.Range(0f, 100f) < attackMissChance;
         player.BotRangedAttack(target, shouldMiss);
@@ -356,6 +360,7 @@ public class BotController : MonoBehaviour
         float speed = stats != null ? stats.speed : 5f;
         float direction = Mathf.Sign(position.x - transform.position.x);
 
+        UpdateFacingDirection(direction);
         rb.velocity = new Vector2(direction * speed, rb.velocity.y);
     }
 
@@ -364,7 +369,16 @@ public class BotController : MonoBehaviour
         float speed = stats != null ? stats.speed : 5f;
         float direction = Mathf.Sign(transform.position.x - position.x);
 
+        UpdateFacingDirection(direction);
         rb.velocity = new Vector2(direction * speed, rb.velocity.y);
+    }
+
+    private void UpdateFacingDirection(float direction)
+    {
+        if (player == null || Mathf.Abs(direction) < 0.01f)
+            return;
+
+        player.SetBotFacingDirection(direction > 0f ? 1 : -1);
     }
 
     private void UseActiveSkill()
