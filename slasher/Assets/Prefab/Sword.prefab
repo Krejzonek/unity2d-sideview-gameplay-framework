@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4919070122989082634}
   - component: {fileID: 5987117110900770377}
   - component: {fileID: 3479081811427151759}
+  - component: {fileID: 6800361805132517229}
   m_Layer: 0
   m_Name: Blade
   m_TagString: Untagged
@@ -130,6 +131,18 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &6800361805132517229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1775580888281250435}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d00319bab2405942a3ee2d1ae2b5cf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &3864771621890107101
 GameObject:
   m_ObjectHideFlags: 0
@@ -261,9 +274,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91a13a5ddbc2c19459acdf2eaa305b31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  handle: {fileID: 4574411431903847935}
-  guard: {fileID: 7234404573568631658}
-  blade: {fileID: 4919070122989082634}
   bladeCollider: {fileID: 3479081811427151759}
 --- !u!1 &7757114178230164297
 GameObject:
