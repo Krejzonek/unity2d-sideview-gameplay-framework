@@ -57,7 +57,7 @@ public class Player : MonoBehaviour
     private float knockbackTimer;
     private bool isTurningToShoot;
     private int facingDirection = 1;
-
+    private MeleeWeaponHitbox meleeWeaponHitbox;
     private bool isBot;
     private TeamManager teamManager;
     private CharacterData characterData;
@@ -88,6 +88,13 @@ public class Player : MonoBehaviour
             if (index >= 0 && CharacterManager.Instance.IsCharacterDead(index))
                 SetDead();
         }
+    }
+    private void Awake()
+    {
+        meleeWeaponHitbox = GetComponentInChildren<MeleeWeaponHitbox>(true);
+
+        if (meleeWeaponHitbox != null)
+            meleeWeaponHitbox.Initialize(this);
     }
 
     private void CacheHandSorting()
@@ -444,7 +451,6 @@ public class Player : MonoBehaviour
             return;
 
         SetFacingDirection(GetMouseDirection());
-
         UseStamina(staminaCost);
 
         if (skillManager != null)
@@ -457,7 +463,13 @@ public class Player : MonoBehaviour
             switch (weapon.weaponType)
             {
                 case WeaponType.Sword:
-                    MeleeAttack();
+                    if (meleeWeaponHitbox != null)
+                    {
+                        meleeWeaponHitbox.StartAttack();
+                        StartCoroutine(EndMeleeAttack(0.25f));
+                    }
+                    else
+                        MeleeAttack();
                     break;
                 case WeaponType.Bow:
                     ShootProjectile(arrowPrefab);
@@ -497,37 +509,17 @@ public class Player : MonoBehaviour
     {
         Collider2D[] enemies = Physics2D.OverlapCircleAll(transform.position, attackRange);
 
-        GetWeaponStatus(out StatusEffectType statusEffect, out float statusChance, out float statusDuration, out float statusDamage);
-
         foreach (Collider2D enemy in enemies)
         {
             EnemyAI enemyAI = enemy.GetComponentInParent<EnemyAI>();
 
-            if (enemyAI != null)
-            {
-                if ((enemy.transform.position.x - transform.position.x) * facingDirection < 0f)
-                    continue;
+            if (enemyAI == null)
+                continue;
 
-                Vector2 hitPoint = enemy.ClosestPoint(transform.position);
-                bool isCrit = Random.Range(0f, 100f) <= stats.critRate;
-                float damage = stats.attack;
-                float distance = Vector2.Distance(transform.position, enemy.transform.position);
+            if ((enemy.transform.position.x - transform.position.x) * facingDirection < 0f)
+                continue;
 
-                if (isCrit)
-                    damage *= stats.critDamage;
-
-                if (skillManager != null)
-                {
-                    damage *= skillManager.GetDamageMultiplier(distance);
-                    skillManager.RegisterHit();
-                }
-
-                float elementMultiplier = ElementSystem.GetDamageMultiplier(GetAttackElement(), enemyAI.GetElement());
-                damage *= elementMultiplier;
-                Vector2 knockbackDirection = (enemy.transform.position - transform.position).normalized;
-
-                enemyAI.TakeDamage(damage, hitPoint, stats.knockback * (skillManager != null ? skillManager.GetKnockbackMultiplier() : 1f), knockbackDirection, stats.stunChance, isCrit, statusEffect, statusChance, statusDuration, statusDamage, this);
-            }
+            DealMeleeHit(enemyAI, enemy);
         }
 
         if (skillManager != null)
@@ -959,5 +951,57 @@ public class Player : MonoBehaviour
     public void SetBotFacingDirection(int direction)
     {
         SetFacingDirection(direction);
+    }
+
+    public void DealMeleeHit(EnemyAI enemyAI, Collider2D enemy)
+    {
+        if (enemyAI == null || enemy == null)
+            return;
+
+        GetWeaponStatus(out StatusEffectType statusEffect, out float statusChance, out float statusDuration, out float statusDamage);
+
+        Vector2 hitPoint = enemy.ClosestPoint(transform.position);
+        bool isCrit = Random.Range(0f, 100f) <= stats.critRate;
+        float damage = stats.attack;
+        float distance = Vector2.Distance(transform.position, enemy.transform.position);
+
+        if (isCrit)
+            damage *= stats.critDamage;
+
+        if (skillManager != null)
+        {
+            damage *= skillManager.GetDamageMultiplier(distance);
+            skillManager.RegisterHit();
+        }
+
+        ElementType attackElement = GetAttackElement();
+        damage *= ElementSystem.GetDamageMultiplier(attackElement, enemyAI.GetElement());
+
+        Vector2 knockbackDirection = (enemy.transform.position - transform.position).normalized;
+
+        enemyAI.TakeDamage(
+            damage,
+            hitPoint,
+            stats.knockback * (skillManager != null ? skillManager.GetKnockbackMultiplier() : 1f),
+            knockbackDirection,
+            stats.stunChance,
+            isCrit,
+            statusEffect,
+            statusChance,
+            statusDuration,
+            statusDamage,
+            this,
+            attackElement
+        );
+    }
+    private System.Collections.IEnumerator EndMeleeAttack(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+
+        if (meleeWeaponHitbox != null)
+            meleeWeaponHitbox.EndAttack();
+
+        if (skillManager != null)
+            skillManager.ConsumeAttackSkill();
     }
 }
