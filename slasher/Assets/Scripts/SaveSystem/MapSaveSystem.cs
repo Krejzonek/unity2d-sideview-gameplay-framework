@@ -11,6 +11,8 @@ public class MapSaveSystem : MonoBehaviour
 {
     public static MapSaveSystem Instance { get; private set; }
 
+    [SerializeField] private LootItem lootItemPrefab;
+
     [Serializable]
     public class MapData
     {
@@ -29,6 +31,17 @@ public class MapSaveSystem : MonoBehaviour
         public Vector3 checkpointPosition;
         public bool hasCheckpoint;
         public List<string> openedChests = new();
+        public List<LootItemSaveData> lootItems = new();
+    }
+
+    [Serializable]
+    public class LootItemSaveData
+    {
+        public LootType lootType;
+        public string itemName;
+        public int amount;
+        public float luck;
+        public Vector3 position;
     }
 
     [Serializable]
@@ -215,6 +228,7 @@ public class MapSaveSystem : MonoBehaviour
         SaveCharacters(data);
         SaveInventories(data);
         SaveTeamPositions(data);
+        SaveLootItems(data);
         data.openedChests = new List<string>(openedChests);
 
         if (CharacterManager.Instance != null)
@@ -245,6 +259,7 @@ public class MapSaveSystem : MonoBehaviour
         data.consumables ??= new List<ConsumableSaveData>();
         data.teamPositions ??= new List<Vector3>();
         data.openedChests ??= new List<string>();
+        data.lootItems ??= new List<LootItemSaveData>();
 
         foreach (CharacterSaveData character in data.characters)
         {
@@ -260,6 +275,130 @@ public class MapSaveSystem : MonoBehaviour
             if (room != null)
                 room.enemies ??= new List<EnemySaveData>();
         }
+    }
+
+    private void SaveLootItems(MapData data)
+    {
+        data.lootItems.Clear();
+
+        LootItem[] lootItems = FindObjectsByType<LootItem>(FindObjectsSortMode.None);
+
+        foreach (LootItem loot in lootItems)
+        {
+            if (loot == null)
+                continue;
+
+            LootDrop drop = loot.GetLootDrop();
+
+            if (drop == null)
+                continue;
+
+            string itemName = "";
+
+            switch (drop.lootType)
+            {
+                case LootType.Ingredient:
+                    if (drop.ingredient != null)
+                        itemName = drop.ingredient.itemName;
+                    break;
+
+                case LootType.Consumable:
+                    if (drop.consumable != null)
+                        itemName = drop.consumable.itemName;
+                    break;
+
+                case LootType.Equipment:
+                    if (drop.equipment != null)
+                        itemName = drop.equipment.itemName;
+                    break;
+            }
+
+            if (string.IsNullOrEmpty(itemName))
+                continue;
+
+            data.lootItems.Add(new LootItemSaveData
+            {
+                lootType = drop.lootType,
+                itemName = itemName,
+                amount = loot.GetAmount(),
+                luck = loot.GetLuck(),
+                position = loot.transform.position
+            });
+        }
+
+        Debug.Log("SAVE: Loot items saved = " + data.lootItems.Count);
+    }
+
+    private void RestoreLootItems(MapData data, MapAssetRegistry registry)
+    {
+        if (lootItemPrefab == null)
+        {
+            Debug.LogError("LootItem prefab is not assigned in MapSaveSystem!");
+            return;
+        }
+
+        LootItem[] existingLoot = FindObjectsByType<LootItem>(FindObjectsSortMode.None);
+
+        foreach (LootItem loot in existingLoot)
+        {
+            if (loot != null)
+                Destroy(loot.gameObject);
+        }
+
+        if (data.lootItems == null)
+            return;
+
+        foreach (LootItemSaveData saved in data.lootItems)
+        {
+            if (saved == null || string.IsNullOrEmpty(saved.itemName))
+                continue;
+
+            LootDrop drop = new LootDrop
+            {
+                lootType = saved.lootType,
+                dropChance = 100f,
+                minAmount = saved.amount,
+                maxAmount = saved.amount
+            };
+
+            switch (saved.lootType)
+            {
+                case LootType.Ingredient:
+                    drop.ingredient = registry.GetIngredient(saved.itemName);
+                    if (drop.ingredient == null)
+                    {
+                        Debug.LogWarning("Missing ground loot ingredient: " + saved.itemName);
+                        continue;
+                    }
+                    break;
+
+                case LootType.Consumable:
+                    drop.consumable = registry.GetConsumable(saved.itemName);
+                    if (drop.consumable == null)
+                    {
+                        Debug.LogWarning("Missing ground loot consumable: " + saved.itemName);
+                        continue;
+                    }
+                    break;
+
+                case LootType.Equipment:
+                    drop.equipment = registry.GetItem(saved.itemName);
+                    if (drop.equipment == null)
+                    {
+                        Debug.LogWarning("Missing ground loot equipment: " + saved.itemName);
+                        continue;
+                    }
+                    break;
+
+                default:
+                    continue;
+            }
+
+            LootItem loot = Instantiate(lootItemPrefab, saved.position, Quaternion.identity);
+            loot.SetupSaved(drop, saved.amount, saved.luck);
+        }
+
+        Debug.Log("RESTORE: Loot items restored = " + data.lootItems.Count);
     }
 
     private void SaveCharacters(MapData data)
@@ -641,7 +780,9 @@ public class MapSaveSystem : MonoBehaviour
             equipment.RefreshEquipmentUI();
         }
 
-        Debug.Log("Character and inventory data restored.");
+        RestoreLootItems(data, registry);
+
+        Debug.Log("Character, inventory and ground loot data restored.");
     }
 
     public bool HasSave()
@@ -677,6 +818,7 @@ public class MapSaveSystem : MonoBehaviour
         SaveCharacters(data);
         SaveInventories(data);
         SaveTeamPositions(data);
+        SaveLootItems(data);
         data.openedChests = new List<string>(openedChests);
 
         if (manager.HasCheckpoint)
@@ -688,7 +830,7 @@ public class MapSaveSystem : MonoBehaviour
         try
         {
             File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
-            Debug.Log("CHARACTERS AND ALL INVENTORIES SAVED: " + SavePath);
+            Debug.Log("CHARACTERS, INVENTORIES AND GROUND LOOT SAVED: " + SavePath);
         }
         catch (Exception exception)
         {
