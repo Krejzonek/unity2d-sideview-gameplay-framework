@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class LootItem : MonoBehaviour
@@ -6,6 +7,10 @@ public class LootItem : MonoBehaviour
     private int amount;
     private float luck;
     private Rigidbody2D rb;
+
+    public LootDrop GetLootDrop() => lootDrop;
+    public int GetAmount() => amount;
+    public float GetLuck() => luck;
 
     private void Awake()
     {
@@ -22,89 +27,96 @@ public class LootItem : MonoBehaviour
     {
         lootDrop = drop;
         amount = itemAmount;
+        luck = killer != null && killer.GetStats() != null ? killer.GetStats().luck : 1f;
+    }
 
-        luck = 1f;
-
-        if (killer != null && killer.GetStats() != null)
-            luck = killer.GetStats().luck;
+    public void SetupSaved(LootDrop drop, int itemAmount, float savedLuck)
+    {
+        lootDrop = drop;
+        amount = itemAmount;
+        luck = savedLuck;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!other.CompareTag("Player"))
+        if (!other.CompareTag("Player") || lootDrop == null)
             return;
 
-        if (lootDrop == null)
-            return;
+        if (TryGiveLoot(out string itemName, out int receivedAmount))
+        {
+            PickupNotificationManager notificationManager = FindFirstObjectByType<PickupNotificationManager>();
 
-        if (!TryGiveLoot())
-            return;
+            if (notificationManager != null)
+                notificationManager.ShowPickup($"{lootDrop.lootType}:{itemName}", itemName, receivedAmount);
 
-        Destroy(gameObject);
+            Destroy(gameObject);
+        }
     }
 
-    private bool TryGiveLoot()
+    private bool TryGiveLoot(out string itemName, out int receivedAmount)
     {
+        itemName = "";
+        receivedAmount = 0;
+
         switch (lootDrop.lootType)
         {
             case LootType.Ingredient:
+                {
+                    ConsumableManager manager = FindFirstObjectByType<ConsumableManager>();
 
-                ConsumableManager consumableManager = FindFirstObjectByType<ConsumableManager>();
+                    if (manager == null || lootDrop.ingredient == null)
+                        return false;
 
-                if (consumableManager == null)
-                    return false;
+                    IngredientInventory inventory = manager.GetIngredientInventory();
 
-                IngredientInventory ingredientInventory = consumableManager.GetIngredientInventory();
+                    if (inventory == null)
+                        return false;
 
-                if (ingredientInventory == null || lootDrop.ingredient == null)
-                    return false;
-
-                int ingredientAmount = LuckSystem.GetAmount(amount, luck);
-
-                ingredientInventory.AddIngredient(lootDrop.ingredient, ingredientAmount);
-
-                return true;
-
+                    itemName = lootDrop.ingredient.itemName;
+                    receivedAmount = LuckSystem.GetAmount(amount, luck);
+                    inventory.AddIngredient(lootDrop.ingredient, receivedAmount);
+                    return true;
+                }
             case LootType.Consumable:
+                {
+                    ConsumableManager manager = FindFirstObjectByType<ConsumableManager>();
 
-                ConsumableManager manager = FindFirstObjectByType<ConsumableManager>();
+                    if (manager == null || lootDrop.consumable == null)
+                        return false;
 
-                if (manager == null)
-                    return false;
+                    ConsumableInventory inventory = manager.GetConsumableInventory();
 
-                ConsumableInventory consumableInventory = manager.GetConsumableInventory();
+                    if (inventory == null)
+                        return false;
 
-                if (consumableInventory == null || lootDrop.consumable == null)
-                    return false;
-
-                int consumableAmount = LuckSystem.GetAmount(amount, luck);
-
-                ConsumableData consumable = Instantiate(lootDrop.consumable);
-                consumable.rarity = LuckSystem.GetConsumableRarity(luck);
-
-                consumableInventory.AddConsumable(consumable, consumableAmount);
-
-                return true;
-
+                    ConsumableData consumable = Instantiate(lootDrop.consumable);
+                    consumable.rarity = LuckSystem.GetConsumableRarity(luck);
+                    itemName = consumable.itemName;
+                    receivedAmount = LuckSystem.GetAmount(amount, luck);
+                    inventory.AddConsumable(consumable, receivedAmount);
+                    return true;
+                }
             case LootType.Equipment:
+                {
+                    if (lootDrop.equipment == null)
+                        return false;
 
-                if (lootDrop.equipment == null)
-                    return false;
+                    EquipmentManager manager = FindFirstObjectByType<EquipmentManager>();
 
-                EquipmentManager equipmentManager = FindFirstObjectByType<EquipmentManager>();
+                    if (manager == null)
+                        return false;
 
-                if (equipmentManager == null)
-                    return false;
+                    ItemData equipment = Instantiate(lootDrop.equipment);
+                    equipment.SetRarity(LuckSystem.GetItemRarity(luck));
 
-                ItemData equipment = Instantiate(lootDrop.equipment);
-                equipment.SetRarity(LuckSystem.GetItemRarity(luck));
+                    if (RarityManager.RollMisc())
+                        equipment.SetMiscType(RarityManager.GetRandomMisc());
 
-                if (RarityManager.RollMisc())
-                    equipment.SetMiscType(RarityManager.GetRandomMisc());
-
-                equipmentManager.AddToInventory(equipment);
-
-                return true;
+                    itemName = equipment.itemName;
+                    receivedAmount = 1;
+                    manager.AddToInventory(equipment);
+                    return true;
+                }
         }
 
         return false;

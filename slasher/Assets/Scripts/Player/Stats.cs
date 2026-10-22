@@ -58,7 +58,8 @@ public class Stats : MonoBehaviour
 
     private void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (transform.childCount > 0)
+            spriteRenderer = transform.GetChild(0).GetComponent<SpriteRenderer>();
 
         LoadCharacterData();
         UpdateStats();
