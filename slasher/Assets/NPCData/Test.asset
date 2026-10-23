@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f055f44e671dee41b08aa20e5a4a143, type: 3}
   m_Name: Test
   m_EditorClassIdentifier: 
-  npcName: Test
+  npcName: Blacksmith
   portrait: {fileID: 0}
   greeting: HI
   dialogues: []
-  activities: []
+  activities:
+  - {fileID: 11400000, guid: 4e298baa592836a4d8228c492c995983, type: 2}
