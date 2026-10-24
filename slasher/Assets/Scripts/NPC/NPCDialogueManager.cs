@@ -27,8 +27,15 @@ public class NPCDialogueManager : MonoBehaviour
     [SerializeField] private Color upgradeDisabledColor = Color.gray;
     [SerializeField] private Color upgradeReadyColor = Color.green;
 
+    [Header("Trader UI")]
+    [SerializeField] private GameObject traderView;
+    [SerializeField] private Transform traderItemsContainer;
+    [SerializeField] private NPCTradeButton traderItemButtonPrefab;
+    [SerializeField] private Button traderBackButton;
+
     private NPC currentNPC;
     private NPCBlacksmithActivity currentBlacksmith;
+    private NPCTraderActivity currentTrader;
     private readonly List<int> selectedInventoryIndices = new();
     private readonly Dictionary<NPCData, NPCDialogue> lastDialogues = new();
 
@@ -42,11 +49,17 @@ public class NPCDialogueManager : MonoBehaviour
         if (blacksmithView != null)
             blacksmithView.SetActive(false);
 
+        if (traderView != null)
+            traderView.SetActive(false);
+
         if (closeButton != null)
             closeButton.onClick.AddListener(Close);
 
         if (backButton != null)
             backButton.onClick.AddListener(BackToActivities);
+
+        if (traderBackButton != null)
+            traderBackButton.onClick.AddListener(BackToActivities);
 
         if (upgradeButton != null)
             upgradeButton.onClick.AddListener(UpgradeBlacksmithItems);
@@ -65,6 +78,7 @@ public class NPCDialogueManager : MonoBehaviour
 
         currentNPC = npc;
         currentBlacksmith = null;
+        currentTrader = null;
         selectedInventoryIndices.Clear();
 
         if (dialoguePanel != null)
@@ -165,6 +179,8 @@ public class NPCDialogueManager : MonoBehaviour
 
         selectedInventoryIndices.Clear();
         currentBlacksmith = null;
+        currentTrader = null;
+
         activity.Execute(new NPCActivityContext(currentNPC, this));
     }
 
@@ -180,6 +196,7 @@ public class NPCDialogueManager : MonoBehaviour
         }
 
         currentBlacksmith = activity;
+        currentTrader = null;
         selectedInventoryIndices.Clear();
 
         if (npcNameText != null)
@@ -196,6 +213,9 @@ public class NPCDialogueManager : MonoBehaviour
 
         if (blacksmithView != null)
             blacksmithView.SetActive(true);
+
+        if (traderView != null)
+            traderView.SetActive(false);
 
         if (blacksmithStatusText != null)
             blacksmithStatusText.text = activity.openingText;
@@ -431,6 +451,78 @@ public class NPCDialogueManager : MonoBehaviour
             blacksmithStatusText.text = "Upgrade successful! You received " + result.itemName + ".";
     }
 
+    public void OpenTrader(NPCTraderActivity activity)
+    {
+        if (activity == null)
+            return;
+
+        currentTrader = activity;
+        currentBlacksmith = null;
+        selectedInventoryIndices.Clear();
+
+        if (dialoguePanel != null)
+            dialoguePanel.SetActive(true);
+
+        ShowTraderView();
+
+        RefreshTraderUI();
+    }
+
+    private void ShowTraderView()
+    {
+        if (npcNameText != null)
+            npcNameText.gameObject.SetActive(false);
+
+        if (greetingText != null)
+            greetingText.gameObject.SetActive(false);
+
+        if (activityContainer != null)
+            activityContainer.gameObject.SetActive(false);
+
+        if (closeButton != null)
+            closeButton.gameObject.SetActive(false);
+
+        if (blacksmithView != null)
+            blacksmithView.SetActive(false);
+
+        if (traderView != null)
+            traderView.SetActive(true);
+    }
+
+    private void RefreshTraderUI()
+    {
+        foreach (Transform child in traderItemsContainer)
+            Destroy(child.gameObject);
+
+        if (currentTrader == null || currentTrader.trades == null)
+            return;
+
+        foreach (NPCTradeData trade in currentTrader.trades)
+        {
+            if (trade == null || !currentTrader.CanTrade(trade))
+                continue;
+
+            NPCTradeButton tradeButton = Instantiate(traderItemButtonPrefab, traderItemsContainer);
+            tradeButton.Setup(trade, true, () => ExecuteTraderTrade(trade));
+        }
+    }
+
+    private void ExecuteTraderTrade(NPCTradeData trade)
+    {
+        if (currentTrader == null || trade == null)
+            return;
+
+        if (!currentTrader.CanTrade(trade))
+        {
+            RefreshTraderUI();
+            return;
+        }
+
+        bool success = currentTrader.ExecuteTrade(trade);
+
+        RefreshTraderUI();
+    }
+
     private void ShowActivityView()
     {
         if (npcNameText != null)
@@ -447,6 +539,9 @@ public class NPCDialogueManager : MonoBehaviour
 
         if (blacksmithView != null)
             blacksmithView.SetActive(false);
+
+        if (traderView != null)
+            traderView.SetActive(false);
     }
 
     private void BackToActivities()
@@ -458,9 +553,11 @@ public class NPCDialogueManager : MonoBehaviour
         }
 
         currentBlacksmith = null;
+        currentTrader = null;
         selectedInventoryIndices.Clear();
 
         ClearContainer(blacksmithItemsContainer);
+        ClearContainer(traderItemsContainer);
 
         if (npcNameText != null)
             npcNameText.text = currentNPC.Data.npcName;
@@ -496,10 +593,18 @@ public class NPCDialogueManager : MonoBehaviour
 
         currentNPC = null;
         currentBlacksmith = null;
+        currentTrader = null;
         selectedInventoryIndices.Clear();
 
         ClearContainer(activityContainer);
         ClearContainer(blacksmithItemsContainer);
+        ClearContainer(traderItemsContainer);
+
+        if (blacksmithView != null)
+            blacksmithView.SetActive(false);
+
+        if (traderView != null)
+            traderView.SetActive(false);
     }
 
     public NPC GetCurrentNPC()
