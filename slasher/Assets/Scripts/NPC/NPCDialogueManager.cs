@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,6 +30,7 @@ public class NPCDialogueManager : MonoBehaviour
     private NPC currentNPC;
     private NPCBlacksmithActivity currentBlacksmith;
     private readonly List<int> selectedInventoryIndices = new();
+    private readonly Dictionary<NPCData, NPCDialogue> lastDialogues = new();
 
     private EquipmentManager Equipment => FindFirstObjectByType<EquipmentManager>();
 
@@ -82,13 +84,28 @@ public class NPCDialogueManager : MonoBehaviour
     {
         ClearContainer(activityContainer);
 
-        if (currentNPC == null || currentNPC.Data.activities == null ||
+        if (currentNPC == null || currentNPC.Data == null ||
             activityButtonPrefab == null || activityContainer == null)
+            return;
+
+        Button talkButton = Instantiate(activityButtonPrefab, activityContainer);
+        TMP_Text talkText = talkButton.GetComponentInChildren<TMP_Text>();
+
+        if (talkText != null)
+            talkText.text = "Talk";
+
+        talkButton.onClick.AddListener(ShowRandomDialogue);
+
+        if (currentNPC.Data.activities == null)
             return;
 
         foreach (NPCActivityData activity in currentNPC.Data.activities)
         {
             if (activity == null)
+                continue;
+
+            if (string.Equals(activity.activityName, "Dialogs", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(activity.activityName, "Talk", StringComparison.OrdinalIgnoreCase))
                 continue;
 
             Button button = Instantiate(activityButtonPrefab, activityContainer);
@@ -100,6 +117,45 @@ public class NPCDialogueManager : MonoBehaviour
             NPCActivityData selectedActivity = activity;
             button.onClick.AddListener(() => SelectActivity(selectedActivity));
         }
+    }
+
+    private void ShowRandomDialogue()
+    {
+        if (currentNPC == null || currentNPC.Data == null ||
+            currentNPC.Data.dialogues == null || currentNPC.Data.dialogues.Length == 0)
+        {
+            if (greetingText != null)
+                greetingText.text = "I have nothing to tell you right now.";
+
+            return;
+        }
+
+        NPCData data = currentNPC.Data;
+        List<NPCDialogue> available = new();
+
+        foreach (NPCDialogue dialogue in data.dialogues)
+        {
+            if (dialogue != null)
+                available.Add(dialogue);
+        }
+
+        if (available.Count == 0)
+        {
+            if (greetingText != null)
+                greetingText.text = "I have nothing to tell you right now.";
+
+            return;
+        }
+
+        if (available.Count > 1 &&
+            lastDialogues.TryGetValue(data, out NPCDialogue last))
+            available.Remove(last);
+
+        NPCDialogue selected = available[UnityEngine.Random.Range(0, available.Count)];
+        lastDialogues[data] = selected;
+
+        if (greetingText != null)
+            greetingText.text = selected.text;
     }
 
     private void SelectActivity(NPCActivityData activity)
