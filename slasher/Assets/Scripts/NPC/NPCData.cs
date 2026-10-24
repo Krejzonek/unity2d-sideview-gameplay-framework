@@ -10,11 +10,3 @@ public class NPCData : ScriptableObject
     public NPCDialogue[] dialogues;
     public NPCActivityData[] activities;
 }
-
-[Serializable]
-public class NPCDialogue
-{
-    public string dialogueId;
-    [TextArea(2, 5)] public string text;
-    public string[] responses;
-}

@@ -15,6 +15,8 @@ MonoBehaviour:
   npcName: Blacksmith
   portrait: {fileID: 0}
   greeting: HI
-  dialogues: []
+  dialogues:
+  - {fileID: 11400000, guid: 5014821553b9ab2449c0c385200dd3f6, type: 2}
+  - {fileID: 11400000, guid: 84d79b16b25c70b4a97c740a47ac255a, type: 2}
   activities:
   - {fileID: 11400000, guid: 4e298baa592836a4d8228c492c995983, type: 2}
