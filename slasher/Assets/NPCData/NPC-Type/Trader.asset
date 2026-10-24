@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58d1af7e2e4cdc04aab11554e53838af, type: 3}
+  m_Name: Trader
+  m_EditorClassIdentifier: 
+  activityName: Trade
+  allowBuying: 1
+  allowSelling: 1
+  trades:
+  - {fileID: 11400000, guid: 8278f6f64f3158448ac0e13d9597b1b7, type: 2}
+  - {fileID: 11400000, guid: 0a8ef5cf301f8124892c96b32283923e, type: 2}

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f055f44e671dee41b08aa20e5a4a143, type: 3}
+  m_Name: Tradet-Test
+  m_EditorClassIdentifier: 
+  npcName: Trader
+  portrait: {fileID: 0}
+  greeting: HI
+  dialogues:
+  - {fileID: 11400000, guid: 5014821553b9ab2449c0c385200dd3f6, type: 2}
+  - {fileID: 11400000, guid: 84d79b16b25c70b4a97c740a47ac255a, type: 2}
+  activities:
+  - {fileID: 11400000, guid: 5a8b002f45e55d549a0bab6678c266f4, type: 2}
