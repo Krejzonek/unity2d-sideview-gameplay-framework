@@ -85,7 +85,7 @@ public class UiEq : MonoBehaviour
 
         selectedSlot = slot;
 
-        
+
 
         itemSelectionPanel.SetActive(true);
 
@@ -135,7 +135,7 @@ public class UiEq : MonoBehaviour
 
         selectedSlot = null;
 
-        
+
     }
 
     public void SelectItem(ItemData item)

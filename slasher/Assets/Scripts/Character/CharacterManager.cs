@@ -80,14 +80,6 @@ public class CharacterManager : MonoBehaviour
         SelectedCharacter.characterClass = characterClass;
     }
 
-    public void UpdateCharacterFromPlayer(Player player, Stats stats)
-    {
-        if (SelectedCharacter == null)
-            return;
-
-        UpdateCharacterFromPlayer(SelectedCharacter, player, stats);
-    }
-
     public void UpdateCharacterFromPlayer(CharacterData character, Player player, Stats stats)
     {
         if (character == null || player == null || stats == null)

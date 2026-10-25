@@ -79,7 +79,7 @@ public class Room : MonoBehaviour
 
         if (roomPoints != null)
             roomPoints.OpenTheDoor();
-        
+
 
         minPhases = Mathf.Max(1, minPhases);
         maxPhases = Mathf.Max(minPhases, maxPhases);
@@ -173,11 +173,6 @@ public class Room : MonoBehaviour
         return roomCleared;
     }
 
-    public bool IsBossRoom()
-    {
-        return isBossRoom;
-    }
-
     public int GetRoomNumber()
     {
         return roomNumber;
@@ -192,16 +187,6 @@ public class Room : MonoBehaviour
     public Collider2D GetMapBounds()
     {
         return mapBounds;
-    }
-
-    public int GetCurrentPhase()
-    {
-        return currentPhase;
-    }
-
-    public int GetTotalPhases()
-    {
-        return totalPhases;
     }
 
     public void RestoreState(bool cleared, int phase, int phases, List<MapSaveSystem.EnemySaveData> enemies)

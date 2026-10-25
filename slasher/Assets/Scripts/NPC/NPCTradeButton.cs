@@ -85,6 +85,6 @@ public class NPCTradeButton : MonoBehaviour
         }
 
         if (text != null)
-            text.text =  amount.ToString();
+            text.text = amount.ToString();
     }
 }

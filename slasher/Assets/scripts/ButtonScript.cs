@@ -45,7 +45,7 @@ public class ButtonScript : MonoBehaviour
             statsPanelVisible = false;
 
             CloseDescriptionPanel();
-           
+
             return;
         }
 
@@ -73,7 +73,7 @@ public class ButtonScript : MonoBehaviour
 
             CloseDescriptionPanel();
 
-         
+
             return;
         }
 
@@ -83,7 +83,7 @@ public class ButtonScript : MonoBehaviour
         if (equipmentPanelManager != null)
             equipmentPanelManager.Refresh();
 
-      
+
         eqPanel.SetActive(true);
         eqPanelVisible = true;
     }
@@ -102,14 +102,14 @@ public class ButtonScript : MonoBehaviour
 
             CloseDescriptionPanel();
 
-        
+
             return;
         }
 
         if (statsPanelVisible || eqPanelVisible)
             return;
 
-        
+
         consumablePanel.SetActive(true);
         consumablePanel.GetComponentInParent<ConsumableHotbar>().ShowAllItems();
         consumablePanelVisible = true;

@@ -1,6 +1,6 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
-using System.Collections;
 
 public class FightPreparationTimer : MonoBehaviour
 {
@@ -14,10 +14,10 @@ public class FightPreparationTimer : MonoBehaviour
     private bool preparing;
 
     private IEnumerator Start()
-    { 
+    {
 
         if (titleText != null)
-            titleText.gameObject.SetActive(false); 
+            titleText.gameObject.SetActive(false);
 
         if (timerText != null)
             timerText.gameObject.SetActive(false);

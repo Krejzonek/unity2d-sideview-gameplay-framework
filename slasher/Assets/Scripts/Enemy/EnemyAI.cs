@@ -1863,11 +1863,6 @@ public class EnemyAI : MonoBehaviour
         return enemyClass;
     }
 
-    public float GetHeadshotMultiplier()
-    {
-        return headshotMultiplier;
-    }
-
     public bool IsDead()
     {
         return health <= 0f;
@@ -1912,11 +1907,6 @@ public class EnemyAI : MonoBehaviour
     public float GetDamage()
     {
         return damage;
-    }
-
-    public float GetAttackRange()
-    {
-        return attackRange;
     }
 
     public Transform GetPlayer()

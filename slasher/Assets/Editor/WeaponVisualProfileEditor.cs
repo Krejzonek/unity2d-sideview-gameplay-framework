@@ -1,6 +1,6 @@
 
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 
 [CustomEditor(typeof(WeaponVisualProfile))]
 public class WeaponVisualProfileEditor : Editor

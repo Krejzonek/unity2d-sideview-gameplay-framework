@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New NPC", menuName = "NPC/NPC Data")]
