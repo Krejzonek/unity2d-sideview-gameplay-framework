@@ -103,7 +103,7 @@ public class CraftingUI : MonoBehaviour
             {
                 GameObject ingredientObject = new GameObject("Ingredient");
 
-                ingredientObject.transform.SetParent(ingredients,false);
+                ingredientObject.transform.SetParent(ingredients, false);
 
                 TextMeshProUGUI text = ingredientObject.AddComponent<TextMeshProUGUI>();
 
@@ -114,7 +114,7 @@ public class CraftingUI : MonoBehaviour
 
                 int currentAmount = GetIngredientAmount(requirement.ingredient);
 
-                string amountColor = currentAmount >= requirement.amount? "#000000": "#FF0000";
+                string amountColor = currentAmount >= requirement.amount ? "#000000" : "#FF0000";
 
                 text.text = requirement.ingredient.itemName + "   <color=" + amountColor + ">" + currentAmount + " / " + requirement.amount + "</color>";
             }
@@ -136,9 +136,7 @@ public class CraftingUI : MonoBehaviour
         }
     }
 
-    private void Craft(
-        CraftingRecipe recipe,
-        Button craftButton)
+    private void Craft(CraftingRecipe recipe, Button craftButton)
     {
         if (currentCauldron == null)
             return;

@@ -431,19 +431,4 @@ public class BotController : MonoBehaviour
             player.BotDefense(false);
         }
     }
-
-    public BotFormationMode GetFormationMode()
-    {
-        return formationMode;
-    }
-
-    public EnemyAI GetTarget()
-    {
-        return target;
-    }
-
-    public Player GetLeader()
-    {
-        return teamManager != null ? teamManager.CurrentPlayer : null;
-    }
 }

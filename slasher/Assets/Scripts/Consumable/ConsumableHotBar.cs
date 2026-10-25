@@ -286,16 +286,6 @@ public class ConsumableHotbar : MonoBehaviour
         selectedSlot = -1;
     }
 
-    public ConsumableData GetFood()
-    {
-        return foodItem;
-    }
-
-    public ConsumableData GetPotion()
-    {
-        return potionItem;
-    }
-
     public void SelectItemFromDescription(ConsumableData item)
     {
         SelectItem(item);

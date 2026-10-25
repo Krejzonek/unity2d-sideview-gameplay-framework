@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class ClassSkillManager : MonoBehaviour
 {
-    private Player player;
     private Stats stats;
 
     private int hitCount;
@@ -16,7 +15,6 @@ public class ClassSkillManager : MonoBehaviour
 
     private void Start()
     {
-        player = GetComponent<Player>();
         stats = GetComponent<Stats>();
     }
 
@@ -200,21 +198,6 @@ public class ClassSkillManager : MonoBehaviour
     public bool IsActiveSkillReady()
     {
         return activeSkillReady;
-    }
-
-    public float GetActiveCooldown()
-    {
-        return activeCooldown;
-    }
-
-    public int GetHitCount()
-    {
-        return hitCount;
-    }
-
-    public bool HasLongShot()
-    {
-        return HasPassive(PassiveSkillType.LongShot);
     }
 
     private bool HasPassive(PassiveSkillType type)

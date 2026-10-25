@@ -20,9 +20,9 @@ public class BetterItemCharacterButton : MonoBehaviour
         if (characterNameText != null)
             characterNameText.text = character.characterName;
 
-        if(characterImage != null)
+        if (characterImage != null)
         {
-            if(character.characterClass == null)
+            if (character.characterClass == null)
             {
                 characterImage.color = Color.gray;
             }
@@ -31,7 +31,7 @@ public class BetterItemCharacterButton : MonoBehaviour
                 characterImage.color = character.characterClass.classColor;
             }
         }
-            
+
 
         if (powerText != null)
             powerText.text = "+" + difference.ToString("0.##") + " Power";

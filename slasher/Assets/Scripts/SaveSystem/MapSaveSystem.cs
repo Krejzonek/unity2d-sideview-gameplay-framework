@@ -785,11 +785,6 @@ public class MapSaveSystem : MonoBehaviour
         Debug.Log("Character, inventory and ground loot data restored.");
     }
 
-    public bool HasSave()
-    {
-        return File.Exists(SavePath);
-    }
-
     public void SaveCharactersNow()
     {
         CharacterManager manager = CharacterManager.Instance;

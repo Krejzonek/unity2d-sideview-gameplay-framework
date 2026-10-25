@@ -113,11 +113,6 @@ public class TeamManager : MonoBehaviour
         return 1f + combo * 0.01f;
     }
 
-    public int GetCombo()
-    {
-        return combo;
-    }
-
     private void UpdateComboText()
     {
         if (comboText == null)
@@ -135,11 +130,6 @@ public class TeamManager : MonoBehaviour
 
         if (CharacterManager.Instance != null)
             CharacterManager.Instance.SetCheckpoint(newCheckpoint.position);
-    }
-
-    public Transform GetCheckpoint()
-    {
-        return checkpoint;
     }
 
     public void PlayerDied(Player player)
@@ -538,11 +528,6 @@ public class TeamManager : MonoBehaviour
         return stats.characterClass.formationPosition;
     }
 
-    public float GetFormationSpeed()
-    {
-        return formationSpeed;
-    }
-
     public void SetFormationMode(BotFormationMode mode)
     {
         formationMode = mode;
@@ -570,40 +555,6 @@ public class TeamManager : MonoBehaviour
         }
     }
 
-    public void SwitchCharacter(int index)
-    {
-        if (index < 0 || index >= team.Count || index == currentPlayerIndex)
-            return;
-
-        Player newPlayer = team[index];
-
-        if (newPlayer == null || newPlayer.IsDead())
-            return;
-
-        Player oldPlayer = CurrentPlayer;
-
-        if (oldPlayer != null)
-        {
-            oldPlayer.SaveCharacterData();
-            oldPlayer.SetBotMode(true);
-        }
-
-        currentPlayerIndex = index;
-
-        if (CharacterManager.Instance != null)
-            CharacterManager.Instance.SelectCharacter(index);
-
-        newPlayer.SetBotMode(false);
-        newPlayer.RefreshStats();
-
-        IgnoreTeamCollisions();
-        UpdateFormationSpeed();
-        UpdateFormation();
-
-        if (CharacterManager.Instance != null)
-            CharacterManager.Instance.EndCharacterSwitch();
-    }
-
     public void SaveTeam()
     {
         foreach (Player player in team)
@@ -611,43 +562,6 @@ public class TeamManager : MonoBehaviour
             if (player != null)
                 player.SaveCharacterData();
         }
-    }
-
-    public Player GetPlayer(int index)
-    {
-        return index >= 0 && index < team.Count ? team[index] : null;
-    }
-
-    public int GetCurrentPlayerIndex()
-    {
-        return currentPlayerIndex;
-    }
-
-    public Player FindClosestAlly(Vector3 position, Player excludedPlayer = null)
-    {
-        Player closest = null;
-        float closestDistance = Mathf.Infinity;
-
-        foreach (Player player in team)
-        {
-            if (player == null || player == excludedPlayer || player.IsDead())
-                continue;
-
-            float distance = Vector2.Distance(position, player.transform.position);
-
-            if (distance < closestDistance)
-            {
-                closestDistance = distance;
-                closest = player;
-            }
-        }
-
-        return closest;
-    }
-
-    public bool CanPayResurrectionCost(Player player)
-    {
-        return player != null && player.lvl > 1 && team.Contains(player);
     }
 
     public bool ReviveAlly(Player fallenPlayer, Player payer, Vector3 spawnPosition)

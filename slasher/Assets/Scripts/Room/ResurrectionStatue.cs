@@ -29,7 +29,7 @@ public class ResurrectionStatue : MonoBehaviour
     {
         if (TeamManager.Instance == null)
             return;
-        
+
 
         Player currentPlayer = TeamManager.Instance.CurrentPlayer;
 
@@ -38,11 +38,11 @@ public class ResurrectionStatue : MonoBehaviour
 
         if (resurrectionPanel == null)
             return;
-       
+
 
         if (buttonsParent == null || buttonPrefab == null)
             return;
-        
+
 
         if (resurrectionPanel.activeSelf)
         {
