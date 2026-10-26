@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7068793247018817431}
   - component: {fileID: 7932348455046359243}
   - component: {fileID: 5904062182343281691}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: Cauldron
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -313,7 +313,7 @@ GameObject:
   - component: {fileID: 1186384594436441127}
   - component: {fileID: 6161175411451729838}
   - component: {fileID: 1569885027463896323}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Chest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -978,7 +978,7 @@ GameObject:
   - component: {fileID: 8884672834858526975}
   - component: {fileID: 8847185428493666299}
   - component: {fileID: 411581185086521601}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: SavePoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1490,7 +1490,7 @@ GameObject:
   - component: {fileID: 3146763334146986715}
   - component: {fileID: 4191303812928964383}
   - component: {fileID: 6170709657029430905}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: ResurrectionStatue
   m_TagString: Untagged
   m_Icon: {fileID: 0}

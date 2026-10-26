@@ -221,7 +221,7 @@ MonoBehaviour:
   projectilePoint: {fileID: 616142456906593333}
   rangedPreferredDistance: 7
   rangedRetreatDistance: 2.5
-  projectileCritRate: 0
+  projectileCritRate: 5
   projectileCritDamage: 1.5
   magePreferredDistance: 7
   mageRetreatDistance: 3.5
