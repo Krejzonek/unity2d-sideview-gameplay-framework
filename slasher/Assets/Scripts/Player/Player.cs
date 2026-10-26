@@ -329,16 +329,6 @@ public class Player : MonoBehaviour
         characterData = data;
     }
 
-    public void InitializeCharacter(CharacterData data)
-    {
-        characterData = data;
-
-        if (CharacterManager.Instance == null || data == null)
-            return;
-
-        CharacterManager.Instance.ApplyCharacterToPlayer(data, this, stats);
-    }
-
     public void SaveCharacterData()
     {
         if (characterData == null || CharacterManager.Instance == null || stats == null)
@@ -707,12 +697,6 @@ public class Player : MonoBehaviour
         rb.AddForce(direction.normalized * force, ForceMode2D.Impulse);
     }
 
-    public void UseClassSkill()
-    {
-        if (skillManager != null)
-            skillManager.UseActiveSkill();
-    }
-
     public float GetHealthPercent()
     {
         return stats.health > 0f ? health / stats.health : 0f;
@@ -901,12 +885,6 @@ public class Player : MonoBehaviour
             skillManager.ConsumeAttackSkill();
 
         SetAttackCooldown();
-    }
-
-    public void BotUseClassSkill()
-    {
-        if (!IsDead() && skillManager != null)
-            skillManager.UseActiveSkill();
     }
 
     public void BotDefense(bool value)
