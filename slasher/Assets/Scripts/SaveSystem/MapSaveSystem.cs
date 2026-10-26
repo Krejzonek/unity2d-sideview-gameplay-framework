@@ -847,8 +847,7 @@ public class MapSaveSystem : MonoBehaviour
 
         if (manager != null)
         {
-            manager.ClearCheckpoint();
-            manager.ResetDeathState();
+            manager.ClearAllCharacters();
         }
 
         EquipmentManager equipment = FindFirstObjectByType<EquipmentManager>();

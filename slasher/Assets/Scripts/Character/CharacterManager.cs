@@ -12,7 +12,6 @@ public class CharacterManager : MonoBehaviour
     private List<bool> deadCharacters = new();
 
     private int selectedCharacterIndex = -1;
-
     private bool characterSwitchMode;
     private bool pendingRespawn;
 
@@ -48,19 +47,14 @@ public class CharacterManager : MonoBehaviour
 
     public bool CreateCharacter(string characterName)
     {
-        if (string.IsNullOrWhiteSpace(characterName))
-            return false;
-
-        if (characters.Count >= maxCharacters)
+        if (string.IsNullOrWhiteSpace(characterName) || characters.Count >= maxCharacters)
             return false;
 
         CharacterData character = new CharacterData(characterName.Trim());
         character.characterClass = null;
-
         characters.Add(character);
         deadCharacters.Add(false);
         selectedCharacterIndex = characters.Count - 1;
-
         return true;
     }
 
@@ -92,9 +86,7 @@ public class CharacterManager : MonoBehaviour
             character.characterClass = stats.characterClass;
 
         character.freePoint = stats.freePoint;
-
         stats.GetStatPoints(out float healthPoint, out float staminaPoint, out float speedPoint, out float attackPoint, out float luckPoint);
-
         character.healthPoint = healthPoint;
         character.staminaPoint = staminaPoint;
         character.speedPoint = speedPoint;
@@ -109,7 +101,6 @@ public class CharacterManager : MonoBehaviour
 
         player.lvl = character.level;
         player.currentEXP = character.currentEXP;
-
         stats.freePoint = character.freePoint;
         stats.SetStatPoints(character.healthPoint, character.staminaPoint, character.speedPoint, character.attackPoint, character.luckPoint);
         stats.characterClass = character.characterClass;
@@ -129,7 +120,7 @@ public class CharacterManager : MonoBehaviour
 
     public bool IsCharacterDead(int index)
     {
-        if (index < 0 || index >= deadCharacters.Count)
+        if (index < 0 || index >= characters.Count || index >= deadCharacters.Count)
             return false;
 
         return deadCharacters[index];
@@ -154,6 +145,7 @@ public class CharacterManager : MonoBehaviour
     public void ClearCharacterSwitchPosition()
     {
         characterSwitchPositionSaved = false;
+        characterSwitchPosition = Vector3.zero;
     }
 
     public void SetCheckpoint(Vector3 position)
@@ -167,7 +159,7 @@ public class CharacterManager : MonoBehaviour
         respawnPosition = position;
         pendingRespawn = true;
         characterSwitchMode = false;
-        characterSwitchPositionSaved = false;
+        ClearCharacterSwitchPosition();
 
         for (int i = 0; i < characters.Count; i++)
             SetCharacterDead(i, false);
@@ -182,7 +174,7 @@ public class CharacterManager : MonoBehaviour
     {
         characterSwitchMode = false;
         pendingRespawn = false;
-        characterSwitchPositionSaved = false;
+        ClearCharacterSwitchPosition();
 
         for (int i = 0; i < characters.Count; i++)
             SetCharacterDead(i, false);
@@ -327,5 +319,17 @@ public class CharacterManager : MonoBehaviour
     {
         checkpointPosition = Vector3.zero;
         hasCheckpoint = false;
+    }
+
+    public void ClearAllCharacters()
+    {
+        characters.Clear();
+        deadCharacters.Clear();
+        selectedCharacterIndex = -1;
+        characterSwitchMode = false;
+        pendingRespawn = false;
+        ClearCharacterSwitchPosition();
+        respawnPosition = Vector3.zero;
+        ClearCheckpoint();
     }
 }

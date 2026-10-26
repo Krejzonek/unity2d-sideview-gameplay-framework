@@ -1272,20 +1272,47 @@ public class EnemyAI : MonoBehaviour
         if (attackTimer > 0f)
             return;
 
-        Vector2 direction = (player.position - projectilePoint.position).normalized;
+        Collider2D playerCollider = player.GetComponentInChildren<Collider2D>();
+        Vector2 targetPosition;
 
-        GameObject projectileObject = Instantiate(projectilePrefab, projectilePoint.position, Quaternion.identity);
-        Projectile projectile = projectileObject.GetComponent<Projectile>();
-
-        if (projectile != null)
+        if (playerCollider != null)
         {
-            projectile.Setup(direction, damage, projectileCritRate, projectileCritDamage, 0, stunChance, enemyElement, StatusEffectType.None, 0f, 0f, 0f, true);
-            attackTimer = attackCooldown;
+            Bounds bounds = playerCollider.bounds;
+
+            targetPosition = new Vector2(
+                Random.Range(bounds.min.x, bounds.max.x),
+                Random.Range(bounds.min.y, bounds.max.y)
+            );
         }
         else
         {
-            Destroy(projectileObject);
+            targetPosition = player.position;
         }
+
+        Vector2 origin = projectilePoint.position;
+        Vector2 direction = (targetPosition - origin).normalized;
+
+        if (Random.value < 0.2f)
+        {
+            float missOffset = Random.Range(1.0f, 2.0f);
+            float missSide = Random.value < 0.5f ? -1f : 1f;
+            Vector2 perpendicular = new Vector2(-direction.y, direction.x);
+
+            targetPosition += perpendicular * missOffset * missSide;
+            direction = (targetPosition - origin).normalized;
+        }
+
+        GameObject projectileObject = Instantiate(projectilePrefab, origin, Quaternion.identity);
+        Projectile projectile = projectileObject.GetComponent<Projectile>();
+
+        if (projectile == null)
+        {
+            Destroy(projectileObject);
+            return;
+        }
+
+        projectile.Setup(direction, damage, projectileCritRate, projectileCritDamage, 0, stunChance, enemyElement, StatusEffectType.None, 0f, 0f, 0f, true);
+        attackTimer = attackCooldown;
     }
 
     private void AttackEnemy(EnemyAI target)
@@ -1963,6 +1990,11 @@ public class EnemyAI : MonoBehaviour
 
         if (value)
             StopMoving();
+    }
+
+    public bool IsSpawning()
+    {
+        return isSpawning;
     }
 
     public MapSaveSystem.EnemySaveData GetSaveData(string prefabName)

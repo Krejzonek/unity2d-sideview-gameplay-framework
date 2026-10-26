@@ -29,12 +29,14 @@ public class BotController : MonoBehaviour
     private ClassSkillManager skillManager;
     private Rigidbody2D rb;
     private TeamManager teamManager;
+    private Animator animator;
 
     private int formationPosition;
     private BotFormationMode formationMode = BotFormationMode.Idle;
 
     private EnemyAI target;
     private Room combatRoom;
+    private bool deathHandled;
 
     private void Awake()
     {
@@ -42,11 +44,13 @@ public class BotController : MonoBehaviour
         stats = GetComponent<Stats>();
         skillManager = GetComponent<ClassSkillManager>();
         rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
     }
 
     private void Start()
     {
         IgnoreTeamCollisions();
+        CheckDeath();
     }
 
     private void FixedUpdate()
@@ -54,12 +58,8 @@ public class BotController : MonoBehaviour
         if (player == null || rb == null)
             return;
 
-        if (player.IsDead())
-        {
-            rb.velocity = new Vector2(0f, rb.velocity.y);
-            player.BotDefense(false);
+        if (CheckDeath())
             return;
-        }
 
         if (TeamManager.Instance == null)
             return;
@@ -83,6 +83,43 @@ public class BotController : MonoBehaviour
         }
 
         Combat();
+    }
+
+    private bool CheckDeath()
+    {
+        if (player == null)
+            return false;
+
+        if (!player.IsDead())
+            return deathHandled;
+
+        HandleDeath();
+
+        if (animator != null)
+            animator.enabled = false;
+
+        return true;
+    }
+
+    private void HandleDeath()
+    {
+        if (deathHandled)
+            return;
+
+        deathHandled = true;
+        target = null;
+        formationMode = BotFormationMode.Idle;
+
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
+
+        player.BotDefense(false);
+
+        if (animator != null)
+            animator.enabled = false;
     }
 
     private void IgnoreTeamCollisions()
@@ -164,9 +201,8 @@ public class BotController : MonoBehaviour
 
             if (target == null)
             {
-                formationMode = BotFormationMode.Idle;
+                rb.velocity = new Vector2(0f, rb.velocity.y);
                 player.BotDefense(false);
-                FollowFormation();
                 return;
             }
         }
@@ -197,10 +233,13 @@ public class BotController : MonoBehaviour
 
         foreach (EnemyAI enemy in enemies)
         {
-            if (!IsValidTarget(enemy))
+            if (enemy == null || !enemy.gameObject.activeInHierarchy || enemy.IsDead())
                 continue;
 
-            return true;
+            Room enemyRoom = enemy.GetComponentInParent<Room>();
+
+            if (enemyRoom == combatRoom)
+                return true;
         }
 
         return false;
@@ -239,6 +278,9 @@ public class BotController : MonoBehaviour
             return false;
 
         if (combatRoom == null)
+            return false;
+
+        if (enemy.IsDead() || enemy.IsSpawning())
             return false;
 
         Room enemyRoom = enemy.GetComponentInParent<Room>();
@@ -410,6 +452,9 @@ public class BotController : MonoBehaviour
 
     public void SetCombatRoom(Room room)
     {
+        if (deathHandled)
+            return;
+
         combatRoom = room;
         formationMode = BotFormationMode.Combat;
         target = null;
@@ -423,6 +468,9 @@ public class BotController : MonoBehaviour
 
     public void SetFormationMode(BotFormationMode mode)
     {
+        if (deathHandled)
+            return;
+
         formationMode = mode;
 
         if (mode == BotFormationMode.Idle)

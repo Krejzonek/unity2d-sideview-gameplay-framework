@@ -51,40 +51,78 @@ public class CharacterSelectUI : MonoBehaviour
         for (int i = 0; i < characterTexts.Length; i++)
         {
             CharacterData character = i < manager.Characters.Count ? manager.Characters[i] : null;
+            Button button = characterButtons != null && i < characterButtons.Length ? characterButtons[i] : null;
 
             if (character != null)
             {
-                characterTexts[i].text = character.characterName + "\nLvl " + character.level;
-
-                bool dead = characterSwitchMode && manager.IsCharacterDead(i);
+                bool dead = manager.IsCharacterDead(i);
                 Color slotColor = character.characterClass != null ? character.characterClass.classColor : Color.gray;
+                slotColor.a = dead ? 0.45f : 1f;
 
-                if (characterButtons != null && i < characterButtons.Length && characterButtons[i] != null)
+                if (characterTexts[i] != null)
                 {
-                    Button button = characterButtons[i];
+                    characterTexts[i].text = character.characterName + "\nLvl " + character.level;
+                    characterTexts[i].color = Color.white;
+                }
+
+                if (button != null)
+                {
                     button.gameObject.SetActive(true);
                     button.interactable = !dead;
                     button.transition = Selectable.Transition.None;
-                    button.image.color = dead ? Color.gray : slotColor;
-                }
 
-                characterTexts[i].color = Color.white;
+                    if (button.image != null)
+                    {
+                        button.image.enabled = true;
+                        button.image.color = slotColor;
+                        button.image.canvasRenderer.SetAlpha(1f);
+                    }
+                }
             }
             else
             {
-                characterTexts[i].text = "EMPTY";
-                characterTexts[i].color = new Color32(0x32, 0x32, 0x32, 0xFF);
-
-                if (characterButtons != null && i < characterButtons.Length && characterButtons[i] != null)
+                if (characterTexts[i] != null)
                 {
-                    characterButtons[i].gameObject.SetActive(true);
-                    characterButtons[i].interactable = true;
-                    characterButtons[i].transition = Selectable.Transition.None;
-                    characterButtons[i].image.color = Color.white;
+                    characterTexts[i].text = "EMPTY";
+                    characterTexts[i].color = new Color32(0x32, 0x32, 0x32, 0xFF);
+                    characterTexts[i].canvasRenderer.SetAlpha(1f);
+                }
 
-                    TMP_Text buttonText = characterButtons[i].GetComponentInChildren<TMP_Text>();
+                if (button != null)
+                {
+                    button.gameObject.SetActive(true);
+                    button.interactable = manager.Characters.Count < characterTexts.Length;
+                    button.transition = Selectable.Transition.None;
+
+                    if (button.image != null)
+                    {
+                        button.image.enabled = true;
+                        button.image.color = Color.white;
+                        button.image.canvasRenderer.SetAlpha(1f);
+                        button.image.CrossFadeAlpha(1f, 0f, true);
+                        button.targetGraphic = button.image;
+                    }
+
+                    ColorBlock colors = button.colors;
+                    colors.normalColor = colors.highlightedColor = colors.pressedColor = colors.selectedColor = colors.disabledColor = Color.white;
+                    button.colors = colors;
+
+                    CanvasGroup[] canvasGroups = button.GetComponentsInChildren<CanvasGroup>(true);
+
+                    foreach (CanvasGroup canvasGroup in canvasGroups)
+                    {
+                        canvasGroup.alpha = 1f;
+                        canvasGroup.interactable = button.interactable;
+                        canvasGroup.blocksRaycasts = true;
+                    }
+
+                    TMP_Text buttonText = button.GetComponentInChildren<TMP_Text>();
+
                     if (buttonText != null)
+                    {
                         buttonText.color = new Color32(0x32, 0x32, 0x32, 0xFF);
+                        buttonText.canvasRenderer.SetAlpha(1f);
+                    }
                 }
             }
         }
@@ -97,18 +135,24 @@ public class CharacterSelectUI : MonoBehaviour
         if (manager == null || index < 0 || index >= characterTexts.Length)
             return;
 
-        if (characterSwitchMode && index < manager.Characters.Count)
+        if (index < manager.Characters.Count)
         {
-            SelectAliveCharacter(index);
-            return;
-        }
+            if (manager.Characters[index] == null || manager.IsCharacterDead(index))
+                return;
 
-        if (index < manager.Characters.Count && manager.Characters[index] != null)
-        {
+            if (characterSwitchMode)
+            {
+                SelectAliveCharacter(index);
+                return;
+            }
+
             manager.SelectCharacter(index);
             SceneManager.LoadScene(gameSceneName);
             return;
         }
+
+        if (index != manager.Characters.Count || manager.Characters.Count >= characterTexts.Length)
+            return;
 
         selectedSlot = index;
 
@@ -137,7 +181,6 @@ public class CharacterSelectUI : MonoBehaviour
 
         manager.SelectCharacter(index);
         manager.EndCharacterSwitch();
-
         SceneManager.LoadScene(gameSceneName);
     }
 
@@ -158,7 +201,7 @@ public class CharacterSelectUI : MonoBehaviour
             return;
         }
 
-        if (selectedSlot < 0 || selectedSlot >= characterTexts.Length || selectedSlot < manager.Characters.Count)
+        if (selectedSlot < 0 || selectedSlot >= characterTexts.Length || selectedSlot != manager.Characters.Count)
         {
             if (errorText != null)
                 errorText.text = "Cannot create character.";
@@ -175,6 +218,7 @@ public class CharacterSelectUI : MonoBehaviour
         }
 
         manager.SelectCharacter(manager.Characters.Count - 1);
+        manager.EndCharacterSwitch();
 
         if (createPanel != null)
             createPanel.SetActive(false);
@@ -196,10 +240,13 @@ public class CharacterSelectUI : MonoBehaviour
 
         if (manager != null)
         {
-            manager.Characters.Clear();
-            manager.EndCharacterSwitch();
+            manager.ClearAllCharacters();
             characterSwitchMode = false;
+            selectedSlot = -1;
         }
+
+        if (createPanel != null)
+            createPanel.SetActive(false);
 
         Refresh();
     }
