@@ -41,16 +41,6 @@ public class EquipmentManager : MonoBehaviour
         return inventory;
     }
 
-    public ItemData GetEquippedItem(EquipmentType type)
-    {
-        UpdateCurrentPlayer();
-
-        if (currentPlayer == null || currentPlayer.GetCharacterData() == null)
-            return null;
-
-        return GetEquippedItemForCharacter(currentPlayer.GetCharacterData(), type);
-    }
-
     public ItemData GetEquippedItemForCharacter(CharacterData character, EquipmentType type)
     {
         if (character == null || character.equippedItems == null)
@@ -224,16 +214,6 @@ public class EquipmentManager : MonoBehaviour
             return;
 
         inventory.Remove(item);
-    }
-
-    public float GetEquipmentPower(ItemData item)
-    {
-        UpdateCurrentPlayer();
-
-        if (currentPlayer == null || currentPlayer.GetCharacterData() == null)
-            return 0f;
-
-        return GetEquipmentPowerForCharacter(item, currentPlayer.GetCharacterData());
     }
 
     public float GetEquipmentPowerForCharacter(ItemData item, CharacterData character)

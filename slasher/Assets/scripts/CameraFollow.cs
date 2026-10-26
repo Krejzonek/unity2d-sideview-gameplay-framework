@@ -118,9 +118,4 @@ public class CameraFollow : MonoBehaviour
 
         mapBounds = newBounds;
     }
-
-    public void SetPlayer(Transform newPlayer)
-    {
-        player = newPlayer;
-    }
 }

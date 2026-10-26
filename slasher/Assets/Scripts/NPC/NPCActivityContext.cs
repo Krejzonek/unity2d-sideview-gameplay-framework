@@ -8,10 +8,4 @@ public class NPCActivityContext
         NPC = npc;
         UI = ui;
     }
-
-    public void ShowText(string text)
-    {
-        if (UI != null)
-            UI.ShowActivityText(text);
-    }
 }

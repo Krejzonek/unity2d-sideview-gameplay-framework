@@ -606,9 +606,4 @@ public class NPCDialogueManager : MonoBehaviour
         if (traderView != null)
             traderView.SetActive(false);
     }
-
-    public NPC GetCurrentNPC()
-    {
-        return currentNPC;
-    }
 }
