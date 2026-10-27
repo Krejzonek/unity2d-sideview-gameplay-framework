@@ -5,24 +5,37 @@ using UnityEngine.UI;
 
 public class ResurrectionStatue : MonoBehaviour
 {
+    [Header("Interaction")]
+    [SerializeField] private LayerMask statueLayer;
+
     [Header("UI")]
     [SerializeField] private GameObject resurrectionPanel;
     [SerializeField] private Transform buttonsParent;
     [SerializeField] private Button buttonPrefab;
     [SerializeField] private TMP_Text infoText;
 
+    private Camera cam;
     private Player selectedFallenPlayer;
     private Player interactingPlayer;
 
     private void Start()
     {
+        cam = Camera.main;
+
         if (resurrectionPanel != null)
             resurrectionPanel.SetActive(false);
     }
 
-    private void OnMouseDown()
+    private void Update()
     {
-        OpenResurrectionPanel();
+        if (!Input.GetMouseButtonDown(0) || cam == null)
+            return;
+
+        Vector2 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
+        Collider2D hit = Physics2D.OverlapPoint(mousePosition, statueLayer);
+
+        if (hit != null && hit.transform == transform)
+            OpenResurrectionPanel();
     }
 
     public void OpenResurrectionPanel()
@@ -30,25 +43,16 @@ public class ResurrectionStatue : MonoBehaviour
         if (TeamManager.Instance == null)
             return;
 
-
         Player currentPlayer = TeamManager.Instance.CurrentPlayer;
 
         if (currentPlayer == null || currentPlayer.IsDead())
             return;
 
-        if (resurrectionPanel == null)
+        if (resurrectionPanel == null || resurrectionPanel.activeSelf)
             return;
-
 
         if (buttonsParent == null || buttonPrefab == null)
             return;
-
-
-        if (resurrectionPanel.activeSelf)
-        {
-            ClosePanel();
-            return;
-        }
 
         interactingPlayer = currentPlayer;
         selectedFallenPlayer = null;
@@ -105,8 +109,12 @@ public class ResurrectionStatue : MonoBehaviour
             return;
         }
 
+        string fallenName = selectedFallenPlayer.GetCharacterData() != null
+            ? selectedFallenPlayer.GetCharacterData().characterName
+            : "Ally";
+
         if (infoText != null)
-            infoText.text = "Choose who pays 1 level to revive " + selectedFallenPlayer.GetCharacterData().characterName + ".";
+            infoText.text = "Choose who pays 1 level to revive " + fallenName + ".";
 
         bool foundPayer = false;
         List<Player> team = TeamManager.Instance.Team;
@@ -115,7 +123,9 @@ public class ResurrectionStatue : MonoBehaviour
         {
             foundPayer = true;
             Player fallenPlayer = selectedFallenPlayer;
-            string name = fallenPlayer.GetCharacterData() != null ? fallenPlayer.GetCharacterData().characterName : "Ally";
+            string name = fallenPlayer.GetCharacterData() != null
+                ? fallenPlayer.GetCharacterData().characterName
+                : "Ally";
 
             CreateButton(name + " - Lv. " + fallenPlayer.lvl + " -> " + (fallenPlayer.lvl - 1) + " (Self)", () => ConfirmResurrection(fallenPlayer));
         }
@@ -124,12 +134,15 @@ public class ResurrectionStatue : MonoBehaviour
         {
             if (player == null || player == selectedFallenPlayer)
                 continue;
+
             if (player.IsDead() || player.lvl <= 1)
                 continue;
 
             foundPayer = true;
             Player payer = player;
-            string name = payer.GetCharacterData() != null ? payer.GetCharacterData().characterName : "Ally";
+            string name = payer.GetCharacterData() != null
+                ? payer.GetCharacterData().characterName
+                : "Ally";
 
             CreateButton(name + " - Lv. " + payer.lvl + " -> " + (payer.lvl - 1), () => ConfirmResurrection(payer));
         }

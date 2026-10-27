@@ -45,13 +45,16 @@ public class CharacterSelectUI : MonoBehaviour
     {
         CharacterManager manager = CharacterManager.Instance;
 
-        if (manager == null)
+        if (manager == null || characterTexts == null)
             return;
 
         for (int i = 0; i < characterTexts.Length; i++)
         {
             CharacterData character = i < manager.Characters.Count ? manager.Characters[i] : null;
             Button button = characterButtons != null && i < characterButtons.Length ? characterButtons[i] : null;
+
+            if (characterTexts[i] != null)
+                characterTexts[i].enabled = true;
 
             if (character != null)
             {
@@ -63,11 +66,13 @@ public class CharacterSelectUI : MonoBehaviour
                 {
                     characterTexts[i].text = character.characterName + "\nLvl " + character.level;
                     characterTexts[i].color = Color.white;
+                    characterTexts[i].canvasRenderer.SetAlpha(1f);
                 }
 
                 if (button != null)
                 {
                     button.gameObject.SetActive(true);
+                    button.enabled = true;
                     button.interactable = !dead;
                     button.transition = Selectable.Transition.None;
 
@@ -76,6 +81,16 @@ public class CharacterSelectUI : MonoBehaviour
                         button.image.enabled = true;
                         button.image.color = slotColor;
                         button.image.canvasRenderer.SetAlpha(1f);
+                        button.image.CrossFadeAlpha(1f, 0f, true);
+                        button.targetGraphic = button.image;
+                    }
+
+                    TMP_Text buttonText = button.GetComponentInChildren<TMP_Text>(true);
+
+                    if (buttonText != null)
+                    {
+                        buttonText.enabled = true;
+                        buttonText.canvasRenderer.SetAlpha(1f);
                     }
                 }
             }
@@ -88,41 +103,49 @@ public class CharacterSelectUI : MonoBehaviour
                     characterTexts[i].canvasRenderer.SetAlpha(1f);
                 }
 
-                if (button != null)
+                if (button == null)
+                    continue;
+
+                button.gameObject.SetActive(true);
+                button.enabled = true;
+                button.interactable = manager.Characters.Count < characterTexts.Length;
+                button.transition = Selectable.Transition.None;
+                button.navigation = new Navigation { mode = Navigation.Mode.None };
+
+                if (button.image != null)
                 {
-                    button.gameObject.SetActive(true);
-                    button.interactable = manager.Characters.Count < characterTexts.Length;
-                    button.transition = Selectable.Transition.None;
+                    button.image.enabled = true;
+                    button.image.color = Color.white;
+                    button.image.canvasRenderer.SetAlpha(1f);
+                    button.image.CrossFadeAlpha(1f, 0f, true);
+                    button.targetGraphic = button.image;
+                }
 
-                    if (button.image != null)
-                    {
-                        button.image.enabled = true;
-                        button.image.color = Color.white;
-                        button.image.canvasRenderer.SetAlpha(1f);
-                        button.image.CrossFadeAlpha(1f, 0f, true);
-                        button.targetGraphic = button.image;
-                    }
+                ColorBlock colors = button.colors;
+                colors.normalColor = Color.white;
+                colors.highlightedColor = Color.white;
+                colors.pressedColor = Color.white;
+                colors.selectedColor = Color.white;
+                colors.disabledColor = Color.white;
+                colors.colorMultiplier = 1f;
+                button.colors = colors;
 
-                    ColorBlock colors = button.colors;
-                    colors.normalColor = colors.highlightedColor = colors.pressedColor = colors.selectedColor = colors.disabledColor = Color.white;
-                    button.colors = colors;
+                CanvasGroup[] canvasGroups = button.GetComponentsInChildren<CanvasGroup>(true);
 
-                    CanvasGroup[] canvasGroups = button.GetComponentsInChildren<CanvasGroup>(true);
+                foreach (CanvasGroup canvasGroup in canvasGroups)
+                {
+                    canvasGroup.alpha = 1f;
+                    canvasGroup.interactable = true;
+                    canvasGroup.blocksRaycasts = true;
+                }
 
-                    foreach (CanvasGroup canvasGroup in canvasGroups)
-                    {
-                        canvasGroup.alpha = 1f;
-                        canvasGroup.interactable = button.interactable;
-                        canvasGroup.blocksRaycasts = true;
-                    }
+                TMP_Text[] texts = button.GetComponentsInChildren<TMP_Text>(true);
 
-                    TMP_Text buttonText = button.GetComponentInChildren<TMP_Text>();
-
-                    if (buttonText != null)
-                    {
-                        buttonText.color = new Color32(0x32, 0x32, 0x32, 0xFF);
-                        buttonText.canvasRenderer.SetAlpha(1f);
-                    }
+                foreach (TMP_Text buttonText in texts)
+                {
+                    buttonText.enabled = true;
+                    buttonText.color = new Color32(0x32, 0x32, 0x32, 0xFF);
+                    buttonText.canvasRenderer.SetAlpha(1f);
                 }
             }
         }

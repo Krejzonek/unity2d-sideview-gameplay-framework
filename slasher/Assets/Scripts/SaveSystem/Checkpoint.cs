@@ -2,15 +2,21 @@ using UnityEngine;
 
 public class Checkpoint : MonoBehaviour
 {
+    [Header("Interaction")]
+    [SerializeField] private LayerMask checkpointLayer;
+
     [Header("Visual")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private Color inactiveColor = Color.white;
     [SerializeField] private Color activeColor = Color.green;
 
     private static Checkpoint activeCheckpoint;
+    private Camera cam;
 
     private void Start()
     {
+        cam = Camera.main;
+
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();
 
@@ -21,7 +27,19 @@ public class Checkpoint : MonoBehaviour
         UpdateColor();
     }
 
-    private void OnMouseDown()
+    private void Update()
+    {
+        if (!Input.GetMouseButtonDown(0) || cam == null)
+            return;
+
+        Vector2 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
+        Collider2D hit = Physics2D.OverlapPoint(mousePosition, checkpointLayer);
+
+        if (hit != null && hit.transform == transform)
+            ActivateCheckpoint();
+    }
+
+    private void ActivateCheckpoint()
     {
         if (CharacterManager.Instance == null || TeamManager.Instance == null)
         {
