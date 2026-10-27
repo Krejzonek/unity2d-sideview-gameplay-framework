@@ -240,7 +240,6 @@ public class MapSaveSystem : MonoBehaviour
         try
         {
             File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
-            Debug.Log("Game saved: " + SavePath);
         }
         catch (Exception exception)
         {
@@ -325,8 +324,6 @@ public class MapSaveSystem : MonoBehaviour
                 position = loot.transform.position
             });
         }
-
-        Debug.Log("SAVE: Loot items saved = " + data.lootItems.Count);
     }
 
     private void RestoreLootItems(MapData data, MapAssetRegistry registry)
@@ -397,8 +394,6 @@ public class MapSaveSystem : MonoBehaviour
             LootItem loot = Instantiate(lootItemPrefab, saved.position, Quaternion.identity);
             loot.SetupSaved(drop, saved.amount, saved.luck);
         }
-
-        Debug.Log("RESTORE: Loot items restored = " + data.lootItems.Count);
     }
 
     private void SaveCharacters(MapData data)
@@ -415,8 +410,6 @@ public class MapSaveSystem : MonoBehaviour
         data.deadCharacters.Clear();
 
         Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
-
-        Debug.Log("SAVE: Characters in manager = " + manager.Characters.Count);
 
         for (int i = 0; i < manager.Characters.Count; i++)
         {
@@ -482,8 +475,6 @@ public class MapSaveSystem : MonoBehaviour
             data.characters.Add(saved);
             data.deadCharacters.Add(manager.IsCharacterDead(i));
         }
-
-        Debug.Log("SAVE: Characters actually serialized = " + data.characters.Count);
     }
 
     private void SaveTeamPositions(MapData data)
@@ -781,8 +772,6 @@ public class MapSaveSystem : MonoBehaviour
         }
 
         RestoreLootItems(data, registry);
-
-        Debug.Log("Character, inventory and ground loot data restored.");
     }
 
     public void SaveCharactersNow()
@@ -825,7 +814,6 @@ public class MapSaveSystem : MonoBehaviour
         try
         {
             File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
-            Debug.Log("CHARACTERS, INVENTORIES AND GROUND LOOT SAVED: " + SavePath);
         }
         catch (Exception exception)
         {
@@ -838,7 +826,6 @@ public class MapSaveSystem : MonoBehaviour
         if (File.Exists(SavePath))
         {
             File.Delete(SavePath);
-            Debug.Log("Save deleted: " + SavePath);
         }
 
         openedChests.Clear();
@@ -869,8 +856,6 @@ public class MapSaveSystem : MonoBehaviour
 
         if (characterSelect != null)
             characterSelect.RefreshAfterDelete();
-
-        Debug.Log("All saved game data cleared.");
     }
 
     private void OnApplicationQuit()

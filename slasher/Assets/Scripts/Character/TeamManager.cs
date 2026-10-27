@@ -134,7 +134,7 @@ public class TeamManager : MonoBehaviour
 
     public void PlayerDied(Player player)
     {
-        if (respawning || player == null || player.IsDead() == false)
+        if (respawning || player == null || !player.IsDead())
             return;
 
         int deadIndex = team.IndexOf(player);
@@ -250,12 +250,16 @@ public class TeamManager : MonoBehaviour
             Vector3 playerPosition = position;
             playerPosition.x += (aliveIndex - (team.Count - 1) / 2f) * respawnSpacing;
 
+            player.Respawn(playerPosition);
+
             BotController botController = player.GetComponent<BotController>();
 
             if (botController != null)
+            {
                 botController.enabled = true;
+                botController.ResetAfterRespawn();
+            }
 
-            player.Respawn(playerPosition);
             aliveIndex++;
         }
 
@@ -383,6 +387,15 @@ public class TeamManager : MonoBehaviour
                 position.x += (i - (team.Count - 1) / 2f) * respawnSpacing;
 
                 team[i].Respawn(position);
+
+                BotController botController = team[i].GetComponent<BotController>();
+
+                if (botController != null)
+                {
+                    botController.enabled = true;
+                    botController.ResetAfterRespawn();
+                }
+
                 characterManager.SetCharacterDead(i, false);
             }
 
@@ -458,7 +471,10 @@ public class TeamManager : MonoBehaviour
         BotController botController = player.GetComponent<BotController>();
 
         if (botController != null)
+        {
+            botController.StopDeathAnimation();
             botController.enabled = false;
+        }
 
         Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
 
@@ -643,12 +659,16 @@ public class TeamManager : MonoBehaviour
 
         int fallenIndex = team.IndexOf(fallenPlayer);
 
+        fallenPlayer.Respawn(spawnPosition);
+
         BotController fallenBotController = fallenPlayer.GetComponent<BotController>();
 
         if (fallenBotController != null)
+        {
             fallenBotController.enabled = true;
+            fallenBotController.ResetAfterRespawn();
+        }
 
-        fallenPlayer.Respawn(spawnPosition);
         fallenPlayer.SetBotMode(fallenPlayer != CurrentPlayer);
 
         if (CharacterManager.Instance != null && fallenIndex >= 0)

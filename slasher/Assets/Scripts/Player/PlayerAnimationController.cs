@@ -1,10 +1,11 @@
-
 using UnityEngine;
 
 public class PlayerAnimationController : MonoBehaviour
 {
     [SerializeField] private Animator animator;
     [SerializeField] private Rigidbody2D rb;
+
+    private bool isDead;
 
     private void Awake()
     {
@@ -17,9 +18,9 @@ public class PlayerAnimationController : MonoBehaviour
 
     private void Update()
     {
-        if (animator == null || rb == null)
+        if (animator == null || rb == null || isDead)
             return;
 
         animator.SetFloat("Speed", Mathf.Abs(rb.velocity.x));
-    }
+    }   
 }

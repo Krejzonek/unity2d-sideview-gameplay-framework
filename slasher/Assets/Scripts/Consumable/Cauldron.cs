@@ -2,16 +2,35 @@ using UnityEngine;
 
 public class Cauldron : MonoBehaviour
 {
+    [Header("Interaction")]
+    [SerializeField] private LayerMask cauldronLayer;
+
     [Header("Recipes")]
     [SerializeField] private CraftingRecipe[] recipes;
 
     [Header("Consumable System")]
     [SerializeField] private ConsumableManager consumableManager;
 
+    private Camera cam;
+
     private void Start()
     {
+        cam = Camera.main;
+
         if (consumableManager == null)
             consumableManager = FindFirstObjectByType<ConsumableManager>();
+    }
+
+    private void Update()
+    {
+        if (!Input.GetMouseButtonDown(0) || cam == null)
+            return;
+
+        Vector2 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
+        Collider2D hit = Physics2D.OverlapPoint(mousePosition, cauldronLayer);
+
+        if (hit != null && hit.transform == transform)
+            OpenCraftingPanel();
     }
 
     public CraftingRecipe[] GetRecipes()
@@ -108,11 +127,6 @@ public class Cauldron : MonoBehaviour
             else if (effect.amount < 0f)
                 effect.amount *= negativeMultiplier;
         }
-    }
-
-    private void OnMouseDown()
-    {
-        OpenCraftingPanel();
     }
 
     public void OpenCraftingPanel()

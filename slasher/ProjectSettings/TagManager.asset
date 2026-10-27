@@ -19,10 +19,10 @@ TagManager:
   - Enemy
   - Loot
   - NPC
-  - 
-  - 
-  - 
-  - 
+  - Chest
+  - Cauldron
+  - ResurrectionStatue
+  - SavePoint
   - 
   - 
   - 

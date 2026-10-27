@@ -93,15 +93,11 @@ public class BotController : MonoBehaviour
         if (!player.IsDead())
             return deathHandled;
 
-        HandleDeath();
-
-        if (animator != null)
-            animator.enabled = false;
-
+        StopDeathAnimation();
         return true;
     }
 
-    private void HandleDeath()
+    public void StopDeathAnimation()
     {
         if (deathHandled)
             return;
@@ -116,10 +112,36 @@ public class BotController : MonoBehaviour
             rb.angularVelocity = 0f;
         }
 
-        player.BotDefense(false);
+        if (player != null)
+            player.BotDefense(false);
 
         if (animator != null)
+        {
+            animator.speed = 0f;
             animator.enabled = false;
+        }
+    }
+
+    public void ResetAfterRespawn()
+    {
+        deathHandled = false;
+        target = null;
+        combatRoom = null;
+        formationMode = BotFormationMode.Idle;
+
+        if (animator != null)
+        {
+            animator.enabled = true;
+            animator.speed = 1f;
+            animator.Rebind();
+            animator.Update(0f);
+        }
+
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
     }
 
     private void IgnoreTeamCollisions()
@@ -425,10 +447,7 @@ public class BotController : MonoBehaviour
 
     private void UseActiveSkill()
     {
-        if (skillManager == null)
-            return;
-
-        if (!skillManager.IsActiveSkillReady())
+        if (skillManager == null || !skillManager.IsActiveSkillReady())
             return;
 
         string className = stats.characterClass.className;

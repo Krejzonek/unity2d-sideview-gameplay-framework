@@ -1,54 +1,56 @@
-using TMPro;
+using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 
 public class ClassSelector : MonoBehaviour
 {
+    [Header("Class Tiers")]
+    [SerializeField] private ClassTier[] availableTiers;
+    [SerializeField] private GameObject classCardPrefab;
+
+    [Header("UI")]
     [SerializeField] private GameObject uiClass;
+    [SerializeField] private Transform classCardsContainer;
     [SerializeField] private LayerMask classStationLayer;
-
-    [Header("Skill Panel")]
     [SerializeField] private GameObject skillPanel;
-    [SerializeField] private TMP_Text skillClassName;
-
-    [Header("Stat Bonuses")]
+    [SerializeField] private TMP_Text className;
     [SerializeField] private TMP_Text statBonuses;
 
-    [Header("Passive Skill 1")]
-    [SerializeField] private TMP_Text passive1Name;
-    [SerializeField] private TMP_Text passive1Description;
-
-    [Header("Passive Skill 2")]
-    [SerializeField] private TMP_Text passive2Name;
-    [SerializeField] private TMP_Text passive2Description;
+    [Header("Passive Skills")]
+    [SerializeField] private TMP_Text passiveSkill1Name;
+    [SerializeField] private TMP_Text passiveSkill1Description;
+    [SerializeField] private TMP_Text passiveSkill2Name;
+    [SerializeField] private TMP_Text passiveSkill2Description;
 
     [Header("Active Skill")]
-    [SerializeField] private TMP_Text activeName;
-    [SerializeField] private TMP_Text activeDescription;
+    [SerializeField] private TMP_Text activeSkillName;
+    [SerializeField] private TMP_Text activeSkillDescription;
 
     [Header("Buttons")]
     [SerializeField] private Button backButton;
     [SerializeField] private Button chooseButton;
+    [SerializeField] private Button closeButton;
 
-    private Camera cam;
-    private Player player;
     private Class selectedClass;
+    private Player currentPlayer;
 
     private void Start()
     {
-        cam = Camera.main;
+        if (backButton != null)
+            backButton.onClick.AddListener(CloseSkillPanel);
+
+        if (chooseButton != null)
+            chooseButton.onClick.AddListener(ChooseClass);
+
+        if (closeButton != null)
+            closeButton.onClick.AddListener(CloseClassPanel);
 
         if (uiClass != null)
             uiClass.SetActive(false);
 
         if (skillPanel != null)
             skillPanel.SetActive(false);
-
-        if (backButton != null)
-            backButton.onClick.AddListener(CloseSkillPanel);
-
-        if (chooseButton != null)
-            chooseButton.onClick.AddListener(ChooseClass);
     }
 
     private void Update()
@@ -56,22 +58,102 @@ public class ClassSelector : MonoBehaviour
         if (!Input.GetMouseButtonDown(0))
             return;
 
-        Vector2 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
+        if (uiClass == null || uiClass.activeSelf)
+            return;
 
-        Collider2D hit = Physics2D.OverlapPoint(mousePosition, classStationLayer);
+        Camera mainCamera = Camera.main;
 
-        if (hit != null && hit.transform == transform)
+        if (mainCamera == null)
+            return;
+
+        Vector2 mousePosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        Collider2D[] hits = Physics2D.OverlapPointAll(mousePosition, classStationLayer);
+
+        foreach (Collider2D hit in hits)
         {
-            bool isOpen = uiClass.activeSelf;
-            uiClass.SetActive(!isOpen);
+            ClassSelector hitSelector = hit.GetComponentInParent<ClassSelector>();
 
-            player = TeamManager.Instance != null ? TeamManager.Instance.CurrentPlayer : null;
-
-
-
-            if (isOpen && skillPanel != null)
-                skillPanel.SetActive(false);
+            if (hitSelector == this)
+            {
+                OpenClassPanel();
+                return;
+            }
         }
+    }
+
+    public void OpenClassPanel()
+    {
+        if (uiClass == null || TeamManager.Instance == null)
+            return;
+
+        currentPlayer = TeamManager.Instance.CurrentPlayer;
+
+        if (currentPlayer == null || currentPlayer.IsDead())
+            return;
+
+        uiClass.SetActive(true);
+
+        if (skillPanel != null)
+            skillPanel.SetActive(false);
+
+        selectedClass = null;
+        GenerateClassCards();
+    }
+
+    private void GenerateClassCards()
+    {
+        if (classCardPrefab == null || classCardsContainer == null || currentPlayer == null)
+            return;
+
+        foreach (Transform child in classCardsContainer)
+        {
+            if (child.GetComponent<ClassCard>() != null)
+                Destroy(child.gameObject);
+        }
+
+        CharacterData characterData = currentPlayer.GetCharacterData();
+
+        if (characterData == null)
+            return;
+
+        Class currentClass = characterData.characterClass;
+        ClassTier currentTier = FindTier(currentClass);
+
+        if (currentTier == null || currentTier.nextClasses == null)
+            return;
+
+        HashSet<Class> generatedClasses = new HashSet<Class>();
+
+        foreach (Class nextClass in currentTier.nextClasses)
+        {
+            if (nextClass == null || !generatedClasses.Add(nextClass))
+                continue;
+
+            GameObject cardObject = Instantiate(classCardPrefab, classCardsContainer);
+            ClassCard card = cardObject.GetComponent<ClassCard>();
+
+            if (card == null)
+            {
+                Destroy(cardObject);
+                continue;
+            }
+
+            card.Setup(nextClass, this);
+        }
+    }
+
+    private ClassTier FindTier(Class classData)
+    {
+        if (availableTiers == null)
+            return null;
+
+        foreach (ClassTier tier in availableTiers)
+        {
+            if (tier != null && tier.classData == classData)
+                return tier;
+        }
+
+        return null;
     }
 
     public void ShowClass(Class classData)
@@ -80,82 +162,63 @@ public class ClassSelector : MonoBehaviour
             return;
 
         selectedClass = classData;
-
-        if (skillClassName != null)
-            skillClassName.text = classData.className;
-
-        if (statBonuses != null)
-            statBonuses.text = "HP   " + classData.healthBonus + "<pos=50%>STA  " + classData.staminaBonus + "\n" +
-                    "SPD  " + classData.speedBonus + "<pos=50%>ATK  " + classData.attackBonus + "\n" +
-                    "DEF  " + classData.defenceBonus;
-
-        if (classData.passiveSkill1 != null)
-        {
-            passive1Name.text = classData.passiveSkill1.skillName;
-            passive1Description.text = classData.passiveSkill1.description;
-        }
-        else
-        {
-            passive1Name.text = "";
-            passive1Description.text = "";
-        }
-
-        if (classData.passiveSkill2 != null)
-        {
-            passive2Name.text = classData.passiveSkill2.skillName;
-            passive2Description.text = classData.passiveSkill2.description;
-        }
-        else
-        {
-            passive2Name.text = "";
-            passive2Description.text = "";
-        }
-
-        if (classData.activeSkill != null)
-        {
-            activeName.text = classData.activeSkill.skillName;
-            activeDescription.text = classData.activeSkill.description;
-        }
-        else
-        {
-            activeName.text = "";
-            activeDescription.text = "";
-        }
+        ShowClassDetails(classData);
 
         if (skillPanel != null)
             skillPanel.SetActive(true);
     }
 
-    private void CloseSkillPanel()
+    private void ShowClassDetails(Class classData)
     {
-        if (skillPanel != null)
-            skillPanel.SetActive(false);
+        if (className != null)
+            className.text = classData.className;
+
+        if (statBonuses != null)
+        {
+            statBonuses.text =
+                $"Health: +{classData.healthBonus}\n" +
+                $"Stamina: +{classData.staminaBonus}\n" +
+                $"Attack: +{classData.attackBonus}\n" +
+                $"Defence: +{classData.defenceBonus}\n" +
+                $"Speed: +{classData.speedBonus}";
+        }
+
+        SetPassiveSkillText(classData.passiveSkill1, passiveSkill1Name, passiveSkill1Description);
+        SetPassiveSkillText(classData.passiveSkill2, passiveSkill2Name, passiveSkill2Description);
+        SetActiveSkillText(classData.activeSkill, activeSkillName, activeSkillDescription);
     }
 
+    private void SetPassiveSkillText(PassiveSkill skill, TMP_Text nameText, TMP_Text descriptionText)
+    {
+        if (nameText != null)
+            nameText.text = skill != null ? skill.skillName : "None";
+
+        if (descriptionText != null)
+            descriptionText.text = skill != null ? skill.description : "";
+    }
+
+    private void SetActiveSkillText(ActiveSkill skill, TMP_Text nameText, TMP_Text descriptionText)
+    {
+        if (nameText != null)
+            nameText.text = skill != null ? skill.skillName : "None";
+
+        if (descriptionText != null)
+            descriptionText.text = skill != null ? skill.description : "";
+    }
 
     private void ChooseClass()
     {
-        if (selectedClass == null)
+        if (selectedClass == null || currentPlayer == null || currentPlayer.IsDead())
             return;
 
-        player = TeamManager.Instance != null ? TeamManager.Instance.CurrentPlayer : null;
+        CharacterData characterData = currentPlayer.GetCharacterData();
 
-        if (player == null)
-        {
-            Debug.LogError("ChooseClass: CurrentPlayer is null!");
+        if (characterData == null)
             return;
-        }
 
-        Stats stats = player.GetComponent<Stats>();
-        CharacterData character = player.GetCharacterData();
+        characterData.characterClass = selectedClass;
 
-        if (character == null)
-        {
-            Debug.LogError("ChooseClass: CharacterData is null!");
-            return;
-        }
-
-        character.characterClass = selectedClass;
+        Stats stats = currentPlayer.GetComponent<Stats>();
 
         if (stats != null)
             stats.SetClass(selectedClass);
@@ -166,12 +229,37 @@ public class ClassSelector : MonoBehaviour
         if (MapSaveSystem.Instance != null)
             MapSaveSystem.Instance.SaveCharactersNow();
 
-        Debug.Log("CLASS SELECTED: " + character.characterName + ", class: " + character.characterClass.className);
+        CloseClassPanel();
+    }
+
+    private void CloseSkillPanel()
+    {
+        if (skillPanel != null)
+            skillPanel.SetActive(false);
+
+        selectedClass = null;
+    }
+
+    public void CloseClassPanel()
+    {
+        if (uiClass != null)
+            uiClass.SetActive(false);
 
         if (skillPanel != null)
             skillPanel.SetActive(false);
 
-        if (uiClass != null)
-            uiClass.SetActive(false);
+        selectedClass = null;
+    }
+
+    private void OnDestroy()
+    {
+        if (backButton != null)
+            backButton.onClick.RemoveListener(CloseSkillPanel);
+
+        if (chooseButton != null)
+            chooseButton.onClick.RemoveListener(ChooseClass);
+
+        if (closeButton != null)
+            closeButton.onClick.RemoveListener(CloseClassPanel);
     }
 }

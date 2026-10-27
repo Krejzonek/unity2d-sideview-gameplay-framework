@@ -2,15 +2,20 @@ using UnityEngine;
 
 public class ChestLoot : MonoBehaviour
 {
+    [Header("Interaction")]
+    [SerializeField] private LayerMask chestLayer;
+
     [SerializeField] private LootTable lootTable;
     [SerializeField] private string chestId = "Chest1";
 
+    private Camera cam;
     private LootManager lootManager;
     private string saveId;
     private bool opened;
 
     private void Start()
     {
+        cam = Camera.main;
         lootManager = FindFirstObjectByType<LootManager>();
 
         Room room = GetComponentInParent<Room>();
@@ -27,7 +32,19 @@ public class ChestLoot : MonoBehaviour
             opened = MapSaveSystem.Instance.IsChestOpened(saveId);
     }
 
-    private void OnMouseDown()
+    private void Update()
+    {
+        if (!Input.GetMouseButtonDown(0) || cam == null)
+            return;
+
+        Vector2 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
+        Collider2D hit = Physics2D.OverlapPoint(mousePosition, chestLayer);
+
+        if (hit != null && hit.transform == transform)
+            OpenChest();
+    }
+
+    private void OpenChest()
     {
         if (opened || string.IsNullOrEmpty(saveId))
             return;
