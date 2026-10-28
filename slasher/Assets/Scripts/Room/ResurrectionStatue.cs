@@ -2,6 +2,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class ResurrectionStatue : MonoBehaviour
 {
@@ -31,11 +32,17 @@ public class ResurrectionStatue : MonoBehaviour
         if (!Input.GetMouseButtonDown(0) || cam == null)
             return;
 
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            return;
+
         Vector2 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
         Collider2D hit = Physics2D.OverlapPoint(mousePosition, statueLayer);
 
         if (hit != null && hit.transform == transform)
+        {
+            Player.BlockAttackUntilMouseRelease();
             OpenResurrectionPanel();
+        }
     }
 
     public void OpenResurrectionPanel()

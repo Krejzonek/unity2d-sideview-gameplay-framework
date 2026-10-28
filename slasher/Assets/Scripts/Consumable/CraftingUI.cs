@@ -175,4 +175,18 @@ public class CraftingUI : MonoBehaviour
             Destroy(child.gameObject);
         }
     }
+
+    public void CloseAfterRoomChange()
+    {
+        currentCauldron = null;
+
+        if (craftingPanel != null)
+            craftingPanel.SetActive(false);
+
+        if (recipeContent != null)
+        {
+            foreach (Transform child in recipeContent)
+                Destroy(child.gameObject);
+        }
+    }
 }
