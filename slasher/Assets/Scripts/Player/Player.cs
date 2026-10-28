@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class Player : MonoBehaviour
 {
@@ -15,6 +16,10 @@ public class Player : MonoBehaviour
     [SerializeField] private float attackCooldown = 1f;
     [SerializeField] private float attackRange = 1.5f;
     [SerializeField] private float defenseDamageReduction = 0.5f;
+
+    [Header("Panel Attack Blocking")]
+    public bool blockAttackWhenPanelOpen = true;
+    public List<GameObject> panelsToCheckForAttackBlock = new List<GameObject>();
 
     [Header("I-Frames")]
     [SerializeField] private float invulnerabilityTime = 0.3f;
@@ -59,6 +64,9 @@ public class Player : MonoBehaviour
     private bool isBot;
     private TeamManager teamManager;
     private CharacterData characterData;
+    private bool waitForAttackRelease;
+    private bool isCrouching;
+    private static bool blockAttackUntilMouseRelease;
 
     private void Start()
     {
@@ -87,6 +95,7 @@ public class Player : MonoBehaviour
                 SetDead();
         }
     }
+
     private void Awake()
     {
         meleeWeaponHitbox = GetComponentInChildren<MeleeWeaponHitbox>(true);
@@ -125,6 +134,28 @@ public class Player : MonoBehaviour
         }
     }
 
+    private bool IsAnyPanelOpen()
+    {
+        if (!blockAttackWhenPanelOpen || TeamManager.Instance == null || TeamManager.Instance.CurrentPlayer != this)
+            return false;
+
+        foreach (GameObject panel in panelsToCheckForAttackBlock)
+        {
+            if (panel != null && panel.activeInHierarchy)
+                return true;
+        }
+
+        PanelAttackBlocker[] blockers = FindObjectsByType<PanelAttackBlocker>(FindObjectsSortMode.None);
+
+        foreach (PanelAttackBlocker blocker in blockers)
+        {
+            if (blocker != null && blocker.gameObject.activeInHierarchy)
+                return true;
+        }
+
+        return false;
+    }
+
     private void Update()
     {
         if (IsDead())
@@ -137,6 +168,14 @@ public class Player : MonoBehaviour
 
         if (isBot)
             return;
+
+        bool pointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+
+        if (pointerOverUI && Input.GetMouseButton(0))
+            waitForAttackRelease = true;
+
+        if (!Input.GetMouseButton(0))
+            waitForAttackRelease = false;
 
         moveInput = Input.GetAxisRaw("Horizontal");
 
@@ -154,7 +193,10 @@ public class Player : MonoBehaviour
         else
             StundUp();
 
-        if (Input.GetMouseButton(0))
+        if (blockAttackUntilMouseRelease && !Input.GetMouseButton(0))
+            blockAttackUntilMouseRelease = false;
+
+        if (Input.GetMouseButton(0) && !Input.GetMouseButtonDown(0) && !waitForAttackRelease && !pointerOverUI && !blockAttackUntilMouseRelease && !IsAnyPanelOpen())
             Attack();
 
         if (Input.GetMouseButton(1))
@@ -286,6 +328,10 @@ public class Player : MonoBehaviour
             return;
 
         float currentMoveSpeed = formationSpeed > 0f ? formationSpeed : moveSpeed;
+
+        if (isCrouching)
+            currentMoveSpeed *= 0.5f;
+
         rb.velocity = new Vector2(moveInput * currentMoveSpeed, rb.velocity.y);
     }
 
@@ -384,12 +430,12 @@ public class Player : MonoBehaviour
 
     private void Crouch()
     {
-        if (!IsCrouching())
+        if (!isCrouching)
         {
+            isCrouching = true;
+
             float oldHeight = playerCollider.size.y;
             float newHeight = oldHeight / 2f;
-
-            moveSpeed /= 2;
 
             playerCollider.size = new Vector2(playerCollider.size.x, newHeight);
             playerCollider.offset = new Vector2(playerCollider.offset.x, normalColliderOffset.y - (oldHeight - newHeight) / 2f);
@@ -398,15 +444,15 @@ public class Player : MonoBehaviour
 
     private bool IsCrouching()
     {
-        return playerCollider.size.y < normalColliderSize.y;
+        return isCrouching;
     }
 
     private void StundUp()
     {
-        if (IsCrouching())
+        if (isCrouching)
         {
+            isCrouching = false;
             playerCollider.size = normalColliderSize;
-            moveSpeed *= 2;
             playerCollider.offset = normalColliderOffset;
         }
     }
@@ -924,6 +970,7 @@ public class Player : MonoBehaviour
 
         return staminaCost;
     }
+
     public void SetBotFacingDirection(int direction)
     {
         SetFacingDirection(direction);
@@ -970,6 +1017,12 @@ public class Player : MonoBehaviour
             attackElement
         );
     }
+
+    public static void BlockAttackUntilMouseRelease()
+    {
+        blockAttackUntilMouseRelease = true;
+    }
+
     private System.Collections.IEnumerator EndMeleeAttack(float duration)
     {
         yield return new WaitForSeconds(duration);

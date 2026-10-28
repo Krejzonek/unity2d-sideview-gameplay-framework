@@ -19,6 +19,8 @@ public class RoomTrigger : MonoBehaviour
         if (player == null)
             return;
 
+        CloseWorldPanels();
+
         CameraFollow cameraFollow = FindFirstObjectByType<CameraFollow>();
 
         if (cameraFollow != null && room != null)
@@ -49,16 +51,18 @@ public class RoomTrigger : MonoBehaviour
 
         activated = true;
 
+        CloseWorldPanels();
+
         RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
 
         if (generator != null)
             generator.SetCurrentRoom(room);
 
-        if (roomPoints == null)
-            roomPoints = GetComponentInParent<RoomPoints>();
-
         if (!room.IsCleared())
         {
+            if (roomPoints == null)
+                roomPoints = GetComponentInParent<RoomPoints>();
+
             if (roomPoints != null)
                 roomPoints.CloseTheDoor();
 
@@ -75,12 +79,38 @@ public class RoomTrigger : MonoBehaviour
 
             TeamManager.Instance.SetFormationMode(BotFormationMode.Combat);
         }
-        else if (roomPoints != null)
+        else
         {
-            roomPoints.OpenTheDoor();
+            if (roomPoints == null)
+                roomPoints = GetComponentInParent<RoomPoints>();
+
+            if (roomPoints != null)
+                roomPoints.OpenTheDoor();
         }
 
         if (generator != null)
             generator.GenerateNextRoom();
+    }
+
+    private void CloseWorldPanels()
+    {
+        if (CraftingUI.Instance != null)
+            CraftingUI.Instance.CloseAfterRoomChange();
+
+        ClassSelector[] classSelectors = FindObjectsByType<ClassSelector>(FindObjectsSortMode.None);
+
+        foreach (ClassSelector selector in classSelectors)
+        {
+            if (selector != null)
+                selector.CloseClassPanel();
+        }
+
+        ResurrectionStatue[] statues = FindObjectsByType<ResurrectionStatue>(FindObjectsSortMode.None);
+
+        foreach (ResurrectionStatue statue in statues)
+        {
+            if (statue != null)
+                statue.ClosePanel();    
+        }
     }
 }

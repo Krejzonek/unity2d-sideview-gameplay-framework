@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class Cauldron : MonoBehaviour
 {
@@ -26,11 +27,17 @@ public class Cauldron : MonoBehaviour
         if (!Input.GetMouseButtonDown(0) || cam == null)
             return;
 
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            return;
+
         Vector2 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
         Collider2D hit = Physics2D.OverlapPoint(mousePosition, cauldronLayer);
 
         if (hit != null && hit.transform == transform)
+        {
+            Player.BlockAttackUntilMouseRelease();
             OpenCraftingPanel();
+        }
     }
 
     public CraftingRecipe[] GetRecipes()

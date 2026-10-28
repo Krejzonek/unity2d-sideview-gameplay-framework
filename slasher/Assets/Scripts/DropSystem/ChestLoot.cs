@@ -57,6 +57,8 @@ public class ChestLoot : MonoBehaviour
         if (player == null)
             return;
 
+        Player.BlockAttackUntilMouseRelease();
+
         opened = true;
 
         if (MapSaveSystem.Instance != null)

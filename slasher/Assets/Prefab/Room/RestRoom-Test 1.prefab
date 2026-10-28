@@ -1535,6 +1535,7 @@ GameObject:
   - component: {fileID: 8607176876082990495}
   - component: {fileID: 1917685874114912356}
   - component: {fileID: 313640062184926744}
+  - component: {fileID: 4534068287396768801}
   m_Layer: 8
   m_Name: ResurectionPanel
   m_TagString: Untagged
@@ -1625,6 +1626,18 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &4534068287396768801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5155962140048933021}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5490d036314d234ba69c2ba5bc8cb26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &5820107651627816610
 GameObject:
   m_ObjectHideFlags: 0

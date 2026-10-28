@@ -3573,13 +3573,14 @@ GameObject:
   - component: {fileID: 446766190}
   - component: {fileID: 446766191}
   - component: {fileID: 446766192}
+  - component: {fileID: 446766193}
   m_Layer: 0
   m_Name: UIStatsPanels
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &446766190
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3638,6 +3639,18 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &446766193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 446766189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5490d036314d234ba69c2ba5bc8cb26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &459139185
 GameObject:
   m_ObjectHideFlags: 0
@@ -15035,6 +15048,7 @@ GameObject:
   - component: {fileID: 1726603239}
   - component: {fileID: 1726603241}
   - component: {fileID: 1726603240}
+  - component: {fileID: 1726603242}
   m_Layer: 0
   m_Name: NPCDialoguePanel
   m_TagString: Untagged
@@ -15105,6 +15119,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1726603238}
   m_CullTransparentMesh: 1
+--- !u!114 &1726603242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1726603238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5490d036314d234ba69c2ba5bc8cb26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1730311279
 GameObject:
   m_ObjectHideFlags: 0
@@ -18120,6 +18146,7 @@ GameObject:
   - component: {fileID: 2012201611}
   - component: {fileID: 2012201613}
   - component: {fileID: 2012201612}
+  - component: {fileID: 2012201614}
   m_Layer: 0
   m_Name: CraftingPanel
   m_TagString: CraftingPanel
@@ -18188,6 +18215,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2012201610}
   m_CullTransparentMesh: 1
+--- !u!114 &2012201614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2012201610}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5490d036314d234ba69c2ba5bc8cb26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2021662080
 GameObject:
   m_ObjectHideFlags: 0
@@ -18769,13 +18808,14 @@ GameObject:
   - component: {fileID: 2062496339}
   - component: {fileID: 2062496341}
   - component: {fileID: 2062496340}
+  - component: {fileID: 2062496342}
   m_Layer: 0
   m_Name: EqPanels
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2062496339
 RectTransform:
   m_ObjectHideFlags: 0
@@ -18834,6 +18874,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   eqPanelPrefab: {fileID: 3912732233833914537, guid: ef56871b19cf0ea4bb35727304606b99, type: 3}
+--- !u!114 &2062496342
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2062496338}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5490d036314d234ba69c2ba5bc8cb26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2076550620
 GameObject:
   m_ObjectHideFlags: 0

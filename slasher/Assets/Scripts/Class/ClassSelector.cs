@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class ClassSelector : MonoBehaviour
 {
@@ -58,6 +59,9 @@ public class ClassSelector : MonoBehaviour
         if (!Input.GetMouseButtonDown(0))
             return;
 
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            return;
+
         if (uiClass == null || uiClass.activeSelf)
             return;
 
@@ -75,6 +79,7 @@ public class ClassSelector : MonoBehaviour
 
             if (hitSelector == this)
             {
+                Player.BlockAttackUntilMouseRelease();
                 OpenClassPanel();
                 return;
             }

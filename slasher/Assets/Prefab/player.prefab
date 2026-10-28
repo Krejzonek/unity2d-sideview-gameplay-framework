@@ -1454,6 +1454,12 @@ MonoBehaviour:
   attackCooldown: 2
   attackRange: 1.5
   defenseDamageReduction: 0.5
+  blockAttackWhenPanelOpen: 1
+  panelsToCheckForAttackBlock:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   invulnerabilityTime: 0.3
   attackPoint: {fileID: 0}
   arrowPrefab: {fileID: 2441591654384667964, guid: 4d52780754f3daf408289931041f4529, type: 3}

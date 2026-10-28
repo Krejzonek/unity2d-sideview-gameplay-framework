@@ -47,6 +47,8 @@ public class Checkpoint : MonoBehaviour
             return;
         }
 
+        Player.BlockAttackUntilMouseRelease();
+
         activeCheckpoint = this;
         CharacterManager.Instance.SetCheckpoint(transform.position);
         TeamManager.Instance.SetCheckpoint(transform);
