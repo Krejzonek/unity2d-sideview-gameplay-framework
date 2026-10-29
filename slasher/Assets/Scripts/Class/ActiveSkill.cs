@@ -7,7 +7,7 @@ public enum ActiveSkillType
     EmpoweredSpell
 }
 
-[CreateAssetMenu(fileName = "ActiveSkill", menuName = "Game/Skills/Active Skill")]
+[CreateAssetMenu(fileName = "ActiveSkill", menuName = "Class/Skills/Active Skill")]
 public class ActiveSkill : ClassSkill
 {
     public ActiveSkillType type;

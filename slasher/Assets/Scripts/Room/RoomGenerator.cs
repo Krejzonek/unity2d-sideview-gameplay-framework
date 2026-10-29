@@ -15,6 +15,9 @@ public class RoomGenerator : MonoBehaviour
     [Header("Start")]
     [SerializeField] private Room startRoom;
 
+    [Header("Special Rooms")]
+    [SerializeField] private SpecialRoomData[] specialRooms;
+
     private Room currentRoom;
     private int nextRoomNumber = 1;
     private Transform previousExit;
@@ -59,41 +62,72 @@ public class RoomGenerator : MonoBehaviour
 
     public void GenerateNextRoom()
     {
-        if (nextRoomNumber > maxRooms)
+        if (currentRoom == null)
             return;
 
-        GameObject prefab;
-        int roomPosition = nextRoomNumber % 10;
+        int targetRoomNumber = currentRoom.GetRoomNumber() + 1;
 
-        if (roomPosition == 0 && bossRoomPrefab != null)
-        {
-            prefab = bossRoomPrefab;
-        }
-        else if ((roomPosition == 5 || roomPosition == 9) && restRoomPrefab != null)
-        {
-            prefab = restRoomPrefab;
-        }
-        else
-        {
-            if (roomPrefabs == null || roomPrefabs.Length == 0)
-                return;
+        if (targetRoomNumber > maxRooms)
+            return;
 
-            int randomIndex;
-
-            do
+        foreach (Room room in generatedRooms)
+        {
+            if (room != null && room.GetRoomNumber() == targetRoomNumber)
             {
-                randomIndex = Random.Range(0, roomPrefabs.Length);
+                nextRoomNumber = Mathf.Max(nextRoomNumber, targetRoomNumber + 1);
+                return;
             }
-            while (roomPrefabs.Length > 1 && randomIndex == lastRoomIndex);
-
-            lastRoomIndex = randomIndex;
-            prefab = roomPrefabs[randomIndex];
         }
 
-        if (!CreateRoom(prefab, nextRoomNumber, null))
+        GameObject prefab = GetSpecialRoomPrefab(targetRoomNumber);
+        int roomPosition = targetRoomNumber % 10;
+
+        if (prefab == null)
+        {
+            if (roomPosition == 0 && bossRoomPrefab != null)
+            {
+                prefab = bossRoomPrefab;
+            }
+            else if ((roomPosition == 5 || roomPosition == 9) && restRoomPrefab != null)
+            {
+                prefab = restRoomPrefab;
+            }
+            else
+            {
+                if (roomPrefabs == null || roomPrefabs.Length == 0)
+                    return;
+
+                int randomIndex;
+
+                do
+                {
+                    randomIndex = Random.Range(0, roomPrefabs.Length);
+                }
+                while (roomPrefabs.Length > 1 && randomIndex == lastRoomIndex);
+
+                lastRoomIndex = randomIndex;
+                prefab = roomPrefabs[randomIndex];
+            }
+        }
+
+        if (!CreateRoom(prefab, targetRoomNumber, null))
             return;
 
-        nextRoomNumber++;
+        nextRoomNumber = targetRoomNumber + 1;
+    }
+
+    private GameObject GetSpecialRoomPrefab(int roomNumber)
+    {
+        if (specialRooms == null)
+            return null;
+
+        foreach (SpecialRoomData specialRoom in specialRooms)
+        {
+            if (specialRoom != null && specialRoom.roomNumber == roomNumber && specialRoom.roomPrefab != null)
+                return specialRoom.roomPrefab;
+        }
+
+        return null;
     }
 
     private bool CreateRoom(GameObject prefab, int number, MapSaveSystem.RoomData savedData)
@@ -288,8 +322,6 @@ public class RoomGenerator : MonoBehaviour
 
         currentRoom = startRoom;
         previousExit = startPoints.GetExit();
-        nextRoomNumber = data.nextRoomNumber;
-        lastRoomIndex = data.lastRoomIndex;
 
         generatedRooms.Clear();
         generatedPrefabNames.Clear();
@@ -297,12 +329,13 @@ public class RoomGenerator : MonoBehaviour
         generatedPrefabNames.Add(startRoom.gameObject.name);
 
         bool savedCurrentRoomFound = data.currentRoomNumber == 0;
+        int highestLoadedRoom = 0;
 
         for (int i = 1; i < data.rooms.Count; i++)
         {
             MapSaveSystem.RoomData roomData = data.rooms[i];
 
-            if (roomData == null)
+            if (roomData == null || roomData.roomNumber > data.currentRoomNumber + 1 || roomData.roomNumber <= 0)
                 continue;
 
             GameObject prefab = FindPrefab(roomData.prefabName);
@@ -314,6 +347,7 @@ public class RoomGenerator : MonoBehaviour
                 continue;
 
             Room loadedRoom = generatedRooms[generatedRooms.Count - 1];
+            highestLoadedRoom = Mathf.Max(highestLoadedRoom, roomData.roomNumber);
 
             if (roomData.roomNumber == data.currentRoomNumber)
             {
@@ -324,6 +358,8 @@ public class RoomGenerator : MonoBehaviour
 
         if (!savedCurrentRoomFound)
             currentRoom = startRoom;
+
+        nextRoomNumber = highestLoadedRoom + 1;
     }
 
     private IEnumerator RestoreDoorsAfterLoad()
@@ -342,6 +378,15 @@ public class RoomGenerator : MonoBehaviour
 
     private GameObject FindPrefab(string prefabName)
     {
+        if (specialRooms != null)
+        {
+            foreach (SpecialRoomData specialRoom in specialRooms)
+            {
+                if (specialRoom != null && specialRoom.roomPrefab != null && specialRoom.roomPrefab.name == prefabName)
+                    return specialRoom.roomPrefab;
+            }
+        }
+
         if (roomPrefabs != null)
         {
             foreach (GameObject prefab in roomPrefabs)

@@ -84,7 +84,7 @@ public class Room : MonoBehaviour
         minPhases = Mathf.Max(1, minPhases);
         maxPhases = Mathf.Max(minPhases, maxPhases);
 
-        totalPhases = Random.Range(minPhases, maxPhases + 1);
+        totalPhases = isBossRoom ? 1 : Random.Range(minPhases, maxPhases + 1);
         currentPhase = 1;
 
         if (exit != null)

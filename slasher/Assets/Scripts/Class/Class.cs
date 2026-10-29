@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "Class", menuName = "Game/Class")]
+[CreateAssetMenu(fileName = "Class", menuName = "Class/Class")]
 public class Class : ScriptableObject
 {
     [Header("Class Info")]
