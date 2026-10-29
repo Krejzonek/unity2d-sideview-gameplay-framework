@@ -19,7 +19,7 @@ public enum WeaponHand
     Right
 }
 
-[CreateAssetMenu(fileName = "New Weapon Visual Profile", menuName = "Weapons/Visual Profile")]
+[CreateAssetMenu(fileName = "New Weapon Visual Profile", menuName = "Visual Weapon/Visual Profile")]
 public class WeaponVisualProfile : ScriptableObject
 {
     public GameObject weaponPrefab;

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "ClassTier", menuName = "Game/Class Tier")]
+[CreateAssetMenu(fileName = "ClassTier", menuName = "Class/Class Tier")]
 public class ClassTier : ScriptableObject
 {
     public Class classData;

@@ -145,6 +145,8 @@ public class TeamManager : MonoBehaviour
         StopDeadPlayerFollowing(player);
         player.SaveCharacterData();
 
+        SaveDeathState();
+
         bool allDead = true;
 
         foreach (Player teamPlayer in team)
@@ -173,7 +175,18 @@ public class TeamManager : MonoBehaviour
             SceneManager.LoadScene(characterSelectSceneName);
         }
     }
+    private void SaveDeathState()
+    {
+        if (MapSaveSystem.Instance == null)
+            return;
 
+        RoomGenerator generator = FindFirstObjectByType<RoomGenerator>();
+
+        if (generator != null)
+            MapSaveSystem.Instance.SaveMap(generator);
+        else
+            MapSaveSystem.Instance.SaveCharactersNow();
+    }
     private void StartDeath()
     {
         if (respawning)

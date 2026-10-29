@@ -16496,6 +16496,8 @@ MonoBehaviour:
   restRoomPrefab: {fileID: 8400709920527852291, guid: 23cd813b7e9dc414e883574ed5429306, type: 3}
   maxRooms: 100
   startRoom: {fileID: 230450013}
+  specialRooms:
+  - {fileID: 11400000, guid: b917796e029cbdf4784273a09b06ada1, type: 2}
 --- !u!1 &1822661288
 GameObject:
   m_ObjectHideFlags: 0

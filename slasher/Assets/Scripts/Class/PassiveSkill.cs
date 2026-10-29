@@ -10,7 +10,7 @@ public enum PassiveSkillType
     ManaSaving
 }
 
-[CreateAssetMenu(fileName = "PassiveSkill", menuName = "Game/Skills/Passive Skill")]
+[CreateAssetMenu(fileName = "PassiveSkill", menuName = "Class/Skills/Passive Skill")]
 public class PassiveSkill : ClassSkill
 {
     public PassiveSkillType type;
