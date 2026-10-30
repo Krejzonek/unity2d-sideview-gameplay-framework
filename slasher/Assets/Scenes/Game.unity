@@ -3683,9 +3683,10 @@ MonoBehaviour:
   inventory:
   - {fileID: 11400000, guid: 05955358e5068cd469d691fa365602f6, type: 2}
   - {fileID: 11400000, guid: 87065221eadd9574d8dc8540503ccab8, type: 2}
+  - {fileID: 11400000, guid: 3b52f7d54d4f61c46b8b7db0fcc30ac3, type: 2}
+  - {fileID: 11400000, guid: b256e87db3a3c7440ba41ade87c85745, type: 2}
   - {fileID: 11400000, guid: cdf5243c77eeb054088427d540c7f2a3, type: 2}
   - {fileID: 11400000, guid: c21f6aaf54474ac42bcc89e0597e5c15, type: 2}
-  - {fileID: 11400000, guid: 3b52f7d54d4f61c46b8b7db0fcc30ac3, type: 2}
 --- !u!4 &459139187
 Transform:
   m_ObjectHideFlags: 0
@@ -16492,7 +16493,6 @@ MonoBehaviour:
   roomPrefabs:
   - {fileID: 1039459844659967235, guid: 5cb46040bab30d742a33b59d83313574, type: 3}
   - {fileID: 3764944364824592511, guid: a931981432de4864caeb820ba933ba9e, type: 3}
-  bossRoomPrefab: {fileID: 1039459844659967235, guid: 7319f68769252aa47b91519c331ddd1c, type: 3}
   restRoomPrefab: {fileID: 8400709920527852291, guid: 23cd813b7e9dc414e883574ed5429306, type: 3}
   maxRooms: 100
   startRoom: {fileID: 230450013}

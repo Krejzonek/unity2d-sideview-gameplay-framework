@@ -14,13 +14,13 @@ public class NPCTradeData : ScriptableObject
     public NPCTradeItemType requiredItemType;
     public IngredientData requiredIngredient;
     public ConsumableData requiredConsumable;
-    public ItemData requiredEquipment;
+    public EquipmentData requiredEquipment;
     [Min(1)] public int requiredAmount = 1;
 
     [Header("Reward Item")]
     public NPCTradeItemType rewardItemType;
     public IngredientData rewardIngredient;
     public ConsumableData rewardConsumable;
-    public ItemData rewardEquipment;
+    public EquipmentData rewardEquipment;
     [Min(1)] public int rewardAmount = 1;
 }

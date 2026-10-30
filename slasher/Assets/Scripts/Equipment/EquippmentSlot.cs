@@ -59,7 +59,7 @@ public class EquipmentSlot : MonoBehaviour
         uiEq.OpenItemList(this);
     }
 
-    public bool CanEquip(ItemData item)
+    public bool CanEquip(EquipmentData item)
     {
         if (item == null)
             return false;
@@ -89,7 +89,7 @@ public class EquipmentSlot : MonoBehaviour
         }
     }
 
-    public void Equip(ItemData item)
+    public void Equip(EquipmentData item)
     {
         if (!CanEquip(item))
             return;
@@ -109,7 +109,7 @@ public class EquipmentSlot : MonoBehaviour
         if (equipmentManager == null || character == null)
             return;
 
-        ItemData item = equipmentManager.GetEquippedItemForCharacter(character, equipmentType);
+        EquipmentData item = equipmentManager.GetEquippedItemForCharacter(character, equipmentType);
 
         if (icon != null)
         {

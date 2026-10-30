@@ -125,7 +125,7 @@ public class Stats : MonoBehaviour
 
         if (character != null && character.equippedItems != null)
         {
-            foreach (ItemData item in character.equippedItems)
+            foreach (EquipmentData item in character.equippedItems)
             {
                 if (item == null)
                     continue;
@@ -294,14 +294,14 @@ public class Stats : MonoBehaviour
         UpdateStats();
     }
 
-    public ItemData GetWeapon()
+    public EquipmentData GetWeapon()
     {
         Player player = GetComponent<Player>();
 
         if (player == null || player.GetCharacterData() == null)
             return null;
 
-        foreach (ItemData item in player.GetCharacterData().equippedItems)
+        foreach (EquipmentData item in player.GetCharacterData().equippedItems)
         {
             if (item != null && item.equipmentType == EquipmentType.Weapon)
                 return item;

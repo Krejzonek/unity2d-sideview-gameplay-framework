@@ -106,7 +106,7 @@ public class UiEq : MonoBehaviour
             .Where(item => !equipmentManager.IsItemEquippedByOtherCharacter(item, character))
             .OrderByDescending(item => equipmentManager.GetEquipmentPowerForCharacter(item, character));
 
-        foreach (ItemData item in items)
+        foreach (EquipmentData item in items)
         {
             GameObject button = Instantiate(itemButtonPrefab, itemListContent);
 
@@ -117,7 +117,7 @@ public class UiEq : MonoBehaviour
         }
     }
 
-    public void ShowItemDescription(ItemData item)
+    public void ShowItemDescription(EquipmentData item)
     {
         if (item == null)
             return;
@@ -138,7 +138,7 @@ public class UiEq : MonoBehaviour
 
     }
 
-    public void SelectItem(ItemData item)
+    public void SelectItem(EquipmentData item)
     {
         if (item == null || selectedSlot == null)
             return;

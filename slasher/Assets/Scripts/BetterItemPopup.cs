@@ -19,7 +19,7 @@ public class BetterItemPopup : MonoBehaviour
             closeButton.onClick.AddListener(Close);
     }
 
-    public void Show(ItemData item)
+    public void Show(EquipmentData item)
     {
         if (item == null || CharacterManager.Instance == null || characterList == null)
             return;
@@ -39,7 +39,7 @@ public class BetterItemPopup : MonoBehaviour
             if (character == null)
                 continue;
 
-            ItemData equippedItem = equipmentManager.GetEquippedItemForCharacter(character, item.equipmentType);
+            EquipmentData equippedItem = equipmentManager.GetEquippedItemForCharacter(character, item.equipmentType);
 
             float newPower = equipmentManager.GetEquipmentPowerForCharacter(item, character);
             float oldPower = equippedItem != null ? equipmentManager.GetEquipmentPowerForCharacter(equippedItem, character) : 0f;

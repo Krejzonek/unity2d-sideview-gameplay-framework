@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c53f63f110b72f94c85f817f16a8eacb, type: 3}
+  m_Script: {fileID: 11500000, guid: 557e0bdd3de0bc045b455172f8980cc3, type: 3}
   m_Name: Staff
   m_EditorClassIdentifier: 
   itemName: Staff
@@ -21,16 +21,16 @@ MonoBehaviour:
   rarity: 0
   healthBonus: 0
   defenceBonus: 0
-  staminaBonus: 40
+  staminaBonus: 15
   speedBonus: 0
-  attackBonus: 10
+  attackBonus: 30
   expBonus: 0
   miscType: 0
   baseHealthBonus: 0
   baseDefenceBonus: 0
-  baseStaminaBonus: 40
+  baseStaminaBonus: 15
   baseSpeedBonus: 0
-  baseAttackBonus: 10
+  baseAttackBonus: 30
   baseExpBonus: 0
   appliedRarity: 0
   bonusesInitialized: 1

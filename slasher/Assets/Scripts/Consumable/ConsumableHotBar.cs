@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -67,6 +66,47 @@ public class ConsumableHotbar : MonoBehaviour
 
         if (cameraObject != null)
             buttonScript = cameraObject.GetComponent<ButtonScript>();
+    }
+
+    public string GetFoodItemName()
+    {
+        return foodItem != null ? foodItem.itemName : "";
+    }
+
+    public ConsumableRarity GetFoodItemRarity()
+    {
+        return foodItem != null ? foodItem.rarity : default;
+    }
+
+    public string GetPotionItemName()
+    {
+        return potionItem != null ? potionItem.itemName : "";
+    }
+
+    public ConsumableRarity GetPotionItemRarity()
+    {
+        return potionItem != null ? potionItem.rarity : default;
+    }
+
+    public void RestoreSelectedItems(string foodName, ConsumableRarity foodRarity, string potionName, ConsumableRarity potionRarity)
+    {
+        foodItem = null;
+        potionItem = null;
+
+        if (consumableInventory == null)
+            return;
+
+        foreach (ConsumableInventory.ConsumableStack stack in consumableInventory.GetConsumables())
+        {
+            if (stack == null || stack.item == null || stack.amount <= 0)
+                continue;
+
+            if (stack.item.itemName == foodName && stack.rarity == foodRarity && stack.item.consumableType == ConsumableType.Food)
+                foodItem = stack.item;
+
+            if (stack.item.itemName == potionName && stack.rarity == potionRarity && stack.item.consumableType == ConsumableType.Potion)
+                potionItem = stack.item;
+        }
     }
 
     public void SelectFoodSlot()

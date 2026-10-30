@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -141,6 +142,7 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float spawnTime = 0.8f;
 
     private bool isSpawning;
+    private bool isRestoring;
 
     private Rigidbody2D rb;
     private float attackTimer;
@@ -180,6 +182,8 @@ public class EnemyAI : MonoBehaviour
     private Vector2 dodgeDirection;
     private float dodgeTimer;
 
+    private float facingDirection = 1f;
+
     private Dictionary<Projectile, Vector3> projectilePreviousPositions = new();
 
     private void Awake()
@@ -198,16 +202,28 @@ public class EnemyAI : MonoBehaviour
         }
 
         lootManager = FindFirstObjectByType<LootManager>();
-        health = maxHealth;
         attackTimer = 0f;
         room = GetComponentInParent<Room>();
-        rb.freezeRotation = true;
+
+        if (rb != null)
+            rb.freezeRotation = true;
 
         normalDetectionRange = detectionRange;
         normalMoveSpeed = moveSpeed;
 
-        if (restorePending)
+        if (restorePending && pendingSaveData != null)
         {
+            isRestoring = true;
+
+            transform.position = pendingSaveData.position;
+
+            if (rb != null)
+            {
+                rb.position = pendingSaveData.position;
+                rb.velocity = Vector2.zero;
+                rb.angularVelocity = 0f;
+            }
+
             maxHealth = pendingSaveData.maxHealth;
             health = pendingSaveData.health;
             damage = pendingSaveData.damage;
@@ -224,13 +240,40 @@ public class EnemyAI : MonoBehaviour
             isElite = pendingSaveData.isElite;
             eliteAffix = pendingSaveData.eliteAffix;
             transform.localScale = pendingSaveData.localScale;
+
             restorePending = false;
             pendingSaveData = null;
+
+            StartCoroutine(FinishRestore());
         }
         else if (enemyClass != EnemyClass.Boss && Random.value <= eliteChance)
         {
             MakeElite();
         }
+        else
+        {
+            health = maxHealth;
+        }
+    }
+
+    private IEnumerator FinishRestore()
+    {
+        yield return null;
+        yield return new WaitForEndOfFrame();
+        yield return null;
+        yield return new WaitForFixedUpdate();
+
+        if (this == null)
+            yield break;
+
+        if (rb != null)
+        {
+            rb.position = transform.position;
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
+
+        isRestoring = false;
     }
 
     private void MakeElite()
@@ -320,6 +363,12 @@ public class EnemyAI : MonoBehaviour
 
     private void Update()
     {
+        if (isRestoring)
+        {
+            StopMoving();
+            return;
+        }
+
         if (player == null)
             return;
 
@@ -1185,8 +1234,10 @@ public class EnemyAI : MonoBehaviour
         if (Mathf.Abs(direction) < 0.01f)
             return;
 
+        facingDirection = Mathf.Sign(direction);
+
         Vector3 scale = transform.localScale;
-        scale.x = Mathf.Abs(scale.x) * Mathf.Sign(direction);
+        scale.x = Mathf.Abs(scale.x) * facingDirection;
         transform.localScale = scale;
     }
 
@@ -1407,7 +1458,7 @@ public class EnemyAI : MonoBehaviour
 
         float hitDirection = hitPoint.x - collider.bounds.center.x;
 
-        return hitDirection < 0f;
+        return hitDirection * facingDirection < 0f;
     }
 
     private float GetDodgeChance()
@@ -2029,5 +2080,11 @@ public class EnemyAI : MonoBehaviour
 
         pendingSaveData = data;
         restorePending = true;
+        isRestoring = true;
+    }
+
+    public float GetHealthPercent()
+    {
+        return maxHealth > 0f ? health / maxHealth : 0f;
     }
 }

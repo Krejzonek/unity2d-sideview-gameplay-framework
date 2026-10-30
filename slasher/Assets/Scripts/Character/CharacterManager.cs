@@ -276,6 +276,8 @@ public class CharacterManager : MonoBehaviour
 
             if (registry != null)
             {
+                character.characterClass = null;
+
                 if (!string.IsNullOrEmpty(saved.className))
                 {
                     Class restoredClass = registry.GetClass(saved.className);
@@ -286,19 +288,39 @@ public class CharacterManager : MonoBehaviour
                         Debug.LogWarning("Missing class: " + saved.className);
                 }
 
-                if (character.equippedItems == null)
-                    character.equippedItems = new List<ItemData>();
-                else
-                    character.equippedItems.Clear();
+                character.equippedItems ??= new List<EquipmentData>();
+                character.equippedItems.Clear();
 
-                if (saved.equippedItems != null)
+                if (saved.equippedItemData != null && saved.equippedItemData.Count > 0)
+                {
+                    foreach (MapSaveSystem.ItemSaveData savedItem in saved.equippedItemData)
+                    {
+                        if (savedItem == null || string.IsNullOrEmpty(savedItem.itemName))
+                            continue;
+
+                        EquipmentData item = registry.GetItem(savedItem.itemName);
+
+                        if (item != null)
+                        {
+                            item = Instantiate(item);
+                            item.SetRarity(savedItem.rarity);
+                            character.equippedItems.Add(item);
+                        }
+                        else
+                            Debug.LogWarning("Missing equipped item: " + savedItem.itemName);
+                    }
+                }
+                else if (saved.equippedItems != null)
                 {
                     foreach (string itemName in saved.equippedItems)
                     {
-                        ItemData item = registry.GetItem(itemName);
+                        if (string.IsNullOrEmpty(itemName))
+                            continue;
+
+                        EquipmentData item = registry.GetItem(itemName);
 
                         if (item != null)
-                            character.equippedItems.Add(item);
+                            character.equippedItems.Add(Instantiate(item));
                         else
                             Debug.LogWarning("Missing equipped item: " + itemName);
                     }

@@ -265,7 +265,7 @@ public class Player : MonoBehaviour
         }
     }
 
-    private Transform GetWeaponAttackPoint(ItemData weapon)
+    private Transform GetWeaponAttackPoint(EquipmentData weapon)
     {
         if (weapon == null)
             return attackPoint;
@@ -329,7 +329,7 @@ public class Player : MonoBehaviour
 
         float currentMoveSpeed = formationSpeed > 0f ? formationSpeed : moveSpeed;
 
-        if (isCrouching)
+        if (isCrouching || isDefending)
             currentMoveSpeed *= 0.5f;
 
         rb.velocity = new Vector2(moveInput * currentMoveSpeed, rb.velocity.y);
@@ -478,7 +478,7 @@ public class Player : MonoBehaviour
         if (Time.time < nextAttackTime)
             return;
 
-        ItemData weapon = stats.GetWeapon();
+        EquipmentData weapon = stats.GetWeapon();
         float staminaCost = weapon != null ? GetAttackStaminaCost() : 5f;
 
         if (stamina < staminaCost)
@@ -565,7 +565,7 @@ public class Player : MonoBehaviour
         if (projectilePrefab == null)
             return;
 
-        ItemData weapon = stats.GetWeapon();
+        EquipmentData weapon = stats.GetWeapon();
 
         if (weapon == null)
             return;
@@ -634,7 +634,7 @@ public class Player : MonoBehaviour
             projectile.Setup(direction, 0f, 0f, 1f, 0f, 0f, ElementType.None, StatusEffectType.None, 0f, 0f, 0f, false, this);
             projectile.AlignTipToPoint(currentAttackPoint);
 
-            ItemData weapon = stats.GetWeapon();
+            EquipmentData weapon = stats.GetWeapon();
 
             if (weapon == null)
                 return;
@@ -653,7 +653,7 @@ public class Player : MonoBehaviour
 
     private ElementType GetAttackElement()
     {
-        ItemData weapon = stats.GetWeapon();
+        EquipmentData weapon = stats.GetWeapon();
 
         if (weapon == null)
             return ElementType.None;
@@ -711,7 +711,7 @@ public class Player : MonoBehaviour
         statusDuration = 0f;
         statusDamage = 0f;
 
-        ItemData weapon = stats.GetWeapon();
+        EquipmentData weapon = stats.GetWeapon();
 
         if (weapon == null)
             return;
@@ -854,7 +854,7 @@ public class Player : MonoBehaviour
         if (enemy == null || isDefending || IsDead() || Time.time < nextAttackTime)
             return;
 
-        ItemData weapon = stats.GetWeapon();
+        EquipmentData weapon = stats.GetWeapon();
 
         if (weapon == null)
             return;
@@ -943,7 +943,7 @@ public class Player : MonoBehaviour
 
     public float GetAttackStaminaCost()
     {
-        ItemData weapon = stats.GetWeapon();
+        EquipmentData weapon = stats.GetWeapon();
         float staminaCost = 5f;
 
         if (weapon != null)
