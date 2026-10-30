@@ -39,7 +39,7 @@ public class NPCBlacksmithItemButton : MonoBehaviour
             itemIcon.raycastTarget = false;
     }
 
-    public void SetItem(ItemData item, bool selected, bool compatible)
+    public void SetItem(EquipmentData item, bool selected, bool compatible)
     {
         if (button == null || item == null)
             return;

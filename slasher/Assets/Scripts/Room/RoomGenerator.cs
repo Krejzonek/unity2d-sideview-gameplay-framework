@@ -6,7 +6,6 @@ public class RoomGenerator : MonoBehaviour
 {
     [Header("Rooms")]
     [SerializeField] private GameObject[] roomPrefabs;
-    [SerializeField] private GameObject bossRoomPrefab;
     [SerializeField] private GameObject restRoomPrefab;
 
     [Header("Generation")]
@@ -84,11 +83,7 @@ public class RoomGenerator : MonoBehaviour
 
         if (prefab == null)
         {
-            if (roomPosition == 0 && bossRoomPrefab != null)
-            {
-                prefab = bossRoomPrefab;
-            }
-            else if ((roomPosition == 5 || roomPosition == 9) && restRoomPrefab != null)
+            if ((roomPosition == 5 || roomPosition == 9) && restRoomPrefab != null)
             {
                 prefab = restRoomPrefab;
             }
@@ -393,9 +388,6 @@ public class RoomGenerator : MonoBehaviour
                 if (prefab != null && prefab.name == prefabName)
                     return prefab;
         }
-
-        if (bossRoomPrefab != null && bossRoomPrefab.name == prefabName)
-            return bossRoomPrefab;
 
         if (restRoomPrefab != null && restRoomPrefab.name == prefabName)
             return restRoomPrefab;

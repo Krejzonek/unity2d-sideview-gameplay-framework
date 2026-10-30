@@ -26,6 +26,10 @@ public class MapSaveSystem : MonoBehaviour
         public List<ItemSaveData> inventoryItems = new();
         public List<IngredientSaveData> ingredients = new();
         public List<ConsumableSaveData> consumables = new();
+        public string foodHotbarItem;
+        public ConsumableRarity foodHotbarRarity;
+        public string potionHotbarItem;
+        public ConsumableRarity potionHotbarRarity;
         public List<Vector3> teamPositions = new();
         public bool hasTeamPositions;
         public Vector3 checkpointPosition;
@@ -227,6 +231,7 @@ public class MapSaveSystem : MonoBehaviour
         InitializeLists(data);
         SaveCharacters(data);
         SaveInventories(data);
+        SaveConsumableHotbar(data);
         SaveTeamPositions(data);
         SaveLootItems(data);
         data.openedChests = new List<string>(openedChests);
@@ -458,7 +463,7 @@ public class MapSaveSystem : MonoBehaviour
 
             if (character.equippedItems != null)
             {
-                foreach (ItemData item in character.equippedItems)
+                foreach (EquipmentData item in character.equippedItems)
                 {
                     if (item != null)
                     {
@@ -525,7 +530,7 @@ public class MapSaveSystem : MonoBehaviour
             data.inventory.Clear();
             data.inventoryItems.Clear();
 
-            foreach (ItemData item in equipment.GetInventory())
+            foreach (EquipmentData item in equipment.GetInventory())
             {
                 if (item != null)
                 {
@@ -569,6 +574,19 @@ public class MapSaveSystem : MonoBehaviour
                     });
             }
         }
+    }
+
+    private void SaveConsumableHotbar(MapData data)
+    {
+        ConsumableHotbar hotbar = FindFirstObjectByType<ConsumableHotbar>();
+
+        if (hotbar == null)
+            return;
+
+        data.foodHotbarItem = hotbar.GetFoodItemName();
+        data.foodHotbarRarity = hotbar.GetFoodItemRarity();
+        data.potionHotbarItem = hotbar.GetPotionItemName();
+        data.potionHotbarRarity = hotbar.GetPotionItemRarity();
     }
 
     public bool TryLoadMap(out MapData data)
@@ -639,42 +657,13 @@ public class MapSaveSystem : MonoBehaviour
 
             if (data.hasCheckpoint)
                 manager.SetCheckpoint(data.checkpointPosition);
-
-            for (int i = 0; i < manager.Characters.Count && i < data.characters.Count; i++)
-            {
-                CharacterData character = manager.Characters[i];
-                CharacterSaveData saved = data.characters[i];
-
-                if (character == null || saved == null || character.equippedItems == null || saved.equippedItemData == null)
-                    continue;
-
-                List<ItemSaveData> remaining = new(saved.equippedItemData);
-
-                for (int j = 0; j < character.equippedItems.Count; j++)
-                {
-                    ItemData item = character.equippedItems[j];
-
-                    if (item == null)
-                        continue;
-
-                    int index = remaining.FindIndex(x => x != null && x.itemName == item.itemName);
-
-                    if (index < 0)
-                        continue;
-
-                    ItemData restoredItem = Instantiate(item);
-                    restoredItem.SetRarity(remaining[index].rarity);
-                    character.equippedItems[j] = restoredItem;
-                    remaining.RemoveAt(index);
-                }
-            }
         }
 
         EquipmentManager equipment = FindFirstObjectByType<EquipmentManager>();
 
         if (equipment != null)
         {
-            List<ItemData> inventory = new();
+            List<EquipmentData> inventory = new();
 
             if (data.inventoryItems != null && data.inventoryItems.Count > 0)
             {
@@ -683,7 +672,7 @@ public class MapSaveSystem : MonoBehaviour
                     if (saved == null)
                         continue;
 
-                    ItemData item = registry.GetItem(saved.itemName);
+                    EquipmentData item = registry.GetItem(saved.itemName);
 
                     if (item != null)
                     {
@@ -699,7 +688,7 @@ public class MapSaveSystem : MonoBehaviour
             {
                 foreach (string itemName in data.inventory)
                 {
-                    ItemData item = registry.GetItem(itemName);
+                    EquipmentData item = registry.GetItem(itemName);
 
                     if (item != null)
                         inventory.Add(Instantiate(item));
@@ -748,6 +737,11 @@ public class MapSaveSystem : MonoBehaviour
                     Debug.LogWarning("Missing consumable: " + saved.itemName);
             }
         }
+
+        ConsumableHotbar hotbar = FindFirstObjectByType<ConsumableHotbar>();
+
+        if (hotbar != null)
+            hotbar.RestoreSelectedItems(data.foodHotbarItem, data.foodHotbarRarity, data.potionHotbarItem, data.potionHotbarRarity);
 
         Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
 
@@ -801,6 +795,7 @@ public class MapSaveSystem : MonoBehaviour
         InitializeLists(data);
         SaveCharacters(data);
         SaveInventories(data);
+        SaveConsumableHotbar(data);
         SaveTeamPositions(data);
         SaveLootItems(data);
         data.openedChests = new List<string>(openedChests);
@@ -840,7 +835,7 @@ public class MapSaveSystem : MonoBehaviour
         EquipmentManager equipment = FindFirstObjectByType<EquipmentManager>();
 
         if (equipment != null)
-            equipment.SetInventory(new List<ItemData>());
+            equipment.SetInventory(new List<EquipmentData>());
 
         IngredientInventory ingredientInventory = FindFirstObjectByType<IngredientInventory>();
 

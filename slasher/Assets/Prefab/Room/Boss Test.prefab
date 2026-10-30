@@ -216,6 +216,9 @@ MonoBehaviour:
   player: {fileID: 0}
   playerScript: {fileID: 0}
   lootTable: {fileID: 11400000, guid: 0527eb1ecfdf23e4b80a680219ddb6f5, type: 2}
+  spawnType: 0
+  spawnDistance: 3
+  spawnTime: 0.8
 --- !u!114 &4552839389873959823
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -228,7 +231,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36d018ede380efd489473e128aa0d777, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chargeSpeed: 12
-  chargeDuration: 1
-  chargeCooldown: 1.5
-  knockbackForce: 15
+  bossClassData: {fileID: 11400000, guid: 86b556d179a3ba541bef98d9ca768836, type: 2}
+  enableAttacks: 1
+  enablePhaseSystem: 1
+  enableEnrage: 1
+  attackCheckInterval: 0.2
+  enableCharge: 1
+  enableGroundSlam: 1
+  enableShockwave: 1
+  enableUppercut: 1
+  enableFireball: 1
+  enableMeteor: 1
+  enableMagicBeam: 1
+  enableExplosion: 1
+  enablePounce: 1
+  enableTailSweep: 1
+  enableRoar: 1
+  obstacleLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  obstacleCheckOffset: 0.5

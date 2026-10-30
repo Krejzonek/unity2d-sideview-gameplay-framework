@@ -16,7 +16,7 @@ public class ItemDescriptionPanel : MonoBehaviour
     [Header("Position")]
     [SerializeField] private Vector2 panelOffset = new Vector2(20f, 0f);
 
-    private ItemData equipmentItem;
+    private EquipmentData equipmentItem;
     private ConsumableData consumableItem;
     private ConsumableHotbar consumableHotbar;
     private UiEq uiEq;
@@ -37,12 +37,12 @@ public class ItemDescriptionPanel : MonoBehaviour
         }
     }
 
-    public void ShowEquipment(ItemData item)
+    public void ShowEquipment(EquipmentData item)
     {
         ShowEquipment(item, null);
     }
 
-    public void ShowEquipment(ItemData item, UiEq sourceUiEq)
+    public void ShowEquipment(EquipmentData item, UiEq sourceUiEq)
     {
         if (item == null)
             return;
@@ -82,7 +82,7 @@ public class ItemDescriptionPanel : MonoBehaviour
         panelRect.position = sourceRect.position + (Vector3)panelOffset;
     }
 
-    private void ShowEquipmentStats(ItemData item)
+    private void ShowEquipmentStats(EquipmentData item)
     {
         string stats = "";
 
@@ -130,7 +130,7 @@ public class ItemDescriptionPanel : MonoBehaviour
         statsText.text = stats;
     }
 
-    private void ShowEquipmentComparison(ItemData item)
+    private void ShowEquipmentComparison(EquipmentData item)
     {
         if (comparisonImage == null)
             return;
@@ -145,7 +145,7 @@ public class ItemDescriptionPanel : MonoBehaviour
         if (targetCharacter == null)
             return;
 
-        ItemData equippedItem = equipmentManager.GetEquippedItemForCharacter(targetCharacter, item.equipmentType);
+        EquipmentData equippedItem = equipmentManager.GetEquippedItemForCharacter(targetCharacter, item.equipmentType);
 
         if (equippedItem == null)
         {

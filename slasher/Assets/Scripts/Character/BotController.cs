@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public enum BotFormationMode
@@ -313,6 +314,11 @@ public class BotController : MonoBehaviour
         return true;
     }
 
+    private float GetHorizontalDistance(Transform targetTransform)
+    {
+        return Mathf.Abs(transform.position.x - targetTransform.position.x);
+    }
+
     private bool HandleLowStamina()
     {
         float attackStaminaCost = player.GetAttackStaminaCost();
@@ -344,7 +350,7 @@ public class BotController : MonoBehaviour
         if (target == null)
             return;
 
-        float distance = Vector2.Distance(transform.position, target.transform.position);
+        float distance = GetHorizontalDistance(target.transform);
 
         if (distance > meleeAttackRange)
         {
@@ -363,7 +369,7 @@ public class BotController : MonoBehaviour
             return;
 
         float retreatRange = IsLowHealth() ? lowHealthRetreatDistance : retreatDistance;
-        float distance = Vector2.Distance(transform.position, target.transform.position);
+        float distance = GetHorizontalDistance(target.transform);
 
         if (distance < retreatRange)
         {
@@ -390,7 +396,7 @@ public class BotController : MonoBehaviour
             return;
 
         float retreatRange = IsLowHealth() ? lowHealthRetreatDistance : retreatDistance;
-        float distance = Vector2.Distance(transform.position, target.transform.position);
+        float distance = GetHorizontalDistance(target.transform);
 
         if (distance < retreatRange)
         {
@@ -413,7 +419,7 @@ public class BotController : MonoBehaviour
 
     private void MoveTowardsCombatTarget(Vector3 position)
     {
-        float distance = Vector2.Distance(transform.position, position);
+        float distance = Mathf.Abs(transform.position.x - position.x);
 
         if (distance > maxCombatDistance)
         {
@@ -454,12 +460,12 @@ public class BotController : MonoBehaviour
 
         if (className == "Warrior")
         {
-            if (target != null && Vector2.Distance(transform.position, target.transform.position) <= meleeAttackRange)
+            if (target != null && GetHorizontalDistance(target.transform) <= meleeAttackRange)
                 skillManager.UseActiveSkill();
         }
         else if (className == "Archer" || className == "Mage")
         {
-            if (target != null && Vector2.Distance(transform.position, target.transform.position) <= rangedAttackRange)
+            if (target != null && GetHorizontalDistance(target.transform) <= rangedAttackRange)
                 skillManager.UseActiveSkill();
         }
     }

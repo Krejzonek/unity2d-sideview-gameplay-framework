@@ -4,7 +4,7 @@ public class MapAssetRegistry : MonoBehaviour
 {
     public static MapAssetRegistry Instance { get; private set; }
 
-    [SerializeField] private ItemData[] items;
+    [SerializeField] private EquipmentData[] items;
     [SerializeField] private IngredientData[] ingredients;
     [SerializeField] private ConsumableData[] consumables;
     [SerializeField] private Class[] classes;
@@ -20,10 +20,10 @@ public class MapAssetRegistry : MonoBehaviour
         Instance = this;
     }
 
-    public ItemData GetItem(string name)
+    public EquipmentData GetItem(string name)
     {
         if (items == null) return null;
-        foreach (ItemData item in items)
+        foreach (EquipmentData item in items)
             if (item != null && item.itemName == name)
                 return item;
         return null;

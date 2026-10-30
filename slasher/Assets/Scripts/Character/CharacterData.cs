@@ -18,7 +18,7 @@ public class CharacterData
     public float attackPoint;
     public float luckPoint;
 
-    public List<ItemData> equippedItems = new();
+    public List<EquipmentData> equippedItems = new();
 
     public CharacterData(string name)
     {
@@ -34,6 +34,6 @@ public class CharacterData
         attackPoint = 0;
         luckPoint = 0;
 
-        equippedItems = new List<ItemData>();
+        equippedItems = new List<EquipmentData>();
     }
 }

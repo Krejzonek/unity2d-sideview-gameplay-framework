@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 557e0bdd3de0bc045b455172f8980cc3, type: 3}
+  m_Name: Iron Helmet
+  m_EditorClassIdentifier: 
+  itemName: Iron Helmet
+  icon: {fileID: 0}
+  equipmentType: 1
+  weaponType: 0
+  element: 0
+  weaponVisualProfile: {fileID: 0}
+  rarity: 0
+  healthBonus: 50
+  defenceBonus: 10
+  staminaBonus: 0
+  speedBonus: 0
+  attackBonus: 0
+  expBonus: 2
+  miscType: 0
+  baseHealthBonus: 50
+  baseDefenceBonus: 10
+  baseStaminaBonus: 0
+  baseSpeedBonus: 0
+  baseAttackBonus: 0
+  baseExpBonus: 2
+  appliedRarity: 0
+  bonusesInitialized: 1

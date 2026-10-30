@@ -9,19 +9,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c53f63f110b72f94c85f817f16a8eacb, type: 3}
-  m_Name: IronHelmet
+  m_Script: {fileID: 11500000, guid: 557e0bdd3de0bc045b455172f8980cc3, type: 3}
+  m_Name: Copper Helmet
   m_EditorClassIdentifier: 
-  itemName: Iron Helmet
+  itemName: Copper Helmet
   icon: {fileID: 0}
   equipmentType: 1
   weaponType: 0
+  element: 0
+  weaponVisualProfile: {fileID: 0}
   rarity: 0
-  healthBonus: 50
-  defenceBonus: 100
+  healthBonus: 25
+  defenceBonus: 5
   staminaBonus: 0
   speedBonus: 0
-  attackBonus: 30
+  attackBonus: 0
   expBonus: 2
-  description: iron helmet
   miscType: 0
+  baseHealthBonus: 25
+  baseDefenceBonus: 5
+  baseStaminaBonus: 0
+  baseSpeedBonus: 0
+  baseAttackBonus: 0
+  baseExpBonus: 2
+  appliedRarity: 0
+  bonusesInitialized: 1

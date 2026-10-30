@@ -6,15 +6,15 @@ public class WeaponVisualEquipment : MonoBehaviour
     [SerializeField] private Transform weaponHolder;
 
     private GameObject currentWeaponObject;
-    private ItemData currentItem;
+    private EquipmentData currentItem;
 
     public void RefreshFromCharacter(CharacterData character)
     {
-        ItemData weapon = null;
+        EquipmentData weapon = null;
 
         if (character != null && character.equippedItems != null)
         {
-            foreach (ItemData item in character.equippedItems)
+            foreach (EquipmentData item in character.equippedItems)
             {
                 if (item != null && item.equipmentType == EquipmentType.Weapon)
                 {
@@ -27,7 +27,7 @@ public class WeaponVisualEquipment : MonoBehaviour
         Equip(weapon);
     }
 
-    public void Equip(ItemData item)
+    public void Equip(EquipmentData item)
     {
         if (currentItem == item && currentWeaponObject != null)
             return;

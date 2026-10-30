@@ -28,7 +28,7 @@ public enum ItemRarity
 }
 
 [CreateAssetMenu(fileName = "New Equipment", menuName = "Equipment/Equipment")]
-public class ItemData : ScriptableObject
+public class EquipmentData : ScriptableObject
 {
     public string itemName;
     public Sprite icon;

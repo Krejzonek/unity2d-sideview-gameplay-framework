@@ -9,8 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c53f63f110b72f94c85f817f16a8eacb, type: 3}
-  m_Name: CopperSword
+  m_Script: {fileID: 11500000, guid: 557e0bdd3de0bc045b455172f8980cc3, type: 3}
+  m_Name: Copper Sword
   m_EditorClassIdentifier: 
   itemName: Copper Sword
   icon: {fileID: 0}
@@ -23,14 +23,14 @@ MonoBehaviour:
   defenceBonus: 0
   staminaBonus: 0
   speedBonus: 1
-  attackBonus: 20
+  attackBonus: 25
   expBonus: 0
   miscType: 0
   baseHealthBonus: 0
   baseDefenceBonus: 0
   baseStaminaBonus: 0
   baseSpeedBonus: 1
-  baseAttackBonus: 20
+  baseAttackBonus: 25
   baseExpBonus: 0
   appliedRarity: 0
   bonusesInitialized: 1

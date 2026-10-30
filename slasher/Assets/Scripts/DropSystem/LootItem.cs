@@ -106,7 +106,7 @@ public class LootItem : MonoBehaviour
                     if (manager == null)
                         return false;
 
-                    ItemData equipment = Instantiate(lootDrop.equipment);
+                    EquipmentData equipment = Instantiate(lootDrop.equipment);
                     equipment.SetRarity(LuckSystem.GetItemRarity(luck));
 
                     if (RarityManager.RollMisc())

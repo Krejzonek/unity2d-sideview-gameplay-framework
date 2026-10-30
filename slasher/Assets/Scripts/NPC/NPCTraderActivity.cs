@@ -65,7 +65,7 @@ public class NPCTraderActivity : NPCActivityData
 
                 int count = 0;
 
-                foreach (ItemData item in equipment.GetInventory())
+                foreach (EquipmentData item in equipment.GetInventory())
                 {
                     if (item != null && item.itemName == trade.requiredEquipment.itemName)
                         count++;
@@ -98,7 +98,7 @@ public class NPCTraderActivity : NPCActivityData
 
                 for (int i = 0; i < trade.requiredAmount; i++)
                 {
-                    ItemData item = equipment.GetInventory().Find(x => x != null && x.itemName == trade.requiredEquipment.itemName);
+                    EquipmentData item = equipment.GetInventory().Find(x => x != null && x.itemName == trade.requiredEquipment.itemName);
 
                     if (item == null)
                         return false;

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class EquipmentManager : MonoBehaviour
 {
-    [SerializeField] private List<ItemData> inventory = new();
+    [SerializeField] private List<EquipmentData> inventory = new();
 
     private Player currentPlayer;
 
@@ -36,17 +36,17 @@ public class EquipmentManager : MonoBehaviour
             MapSaveSystem.Instance.SaveCharactersNow();
     }
 
-    public List<ItemData> GetInventory()
+    public List<EquipmentData> GetInventory()
     {
         return inventory;
     }
 
-    public ItemData GetEquippedItemForCharacter(CharacterData character, EquipmentType type)
+    public EquipmentData GetEquippedItemForCharacter(CharacterData character, EquipmentType type)
     {
         if (character == null || character.equippedItems == null)
             return null;
 
-        foreach (ItemData item in character.equippedItems)
+        foreach (EquipmentData item in character.equippedItems)
         {
             if (item != null && item.equipmentType == type)
                 return item;
@@ -55,7 +55,7 @@ public class EquipmentManager : MonoBehaviour
         return null;
     }
 
-    public bool IsItemEquippedByOtherCharacter(ItemData item, CharacterData ignoredCharacter = null)
+    public bool IsItemEquippedByOtherCharacter(EquipmentData item, CharacterData ignoredCharacter = null)
     {
         if (item == null || CharacterManager.Instance == null)
             return false;
@@ -72,7 +72,7 @@ public class EquipmentManager : MonoBehaviour
         return false;
     }
 
-    public void EquipItem(EquipmentSlot slot, ItemData item)
+    public void EquipItem(EquipmentSlot slot, EquipmentData item)
     {
         if (slot == null || item == null || slot.Character == null)
             return;
@@ -82,13 +82,13 @@ public class EquipmentManager : MonoBehaviour
         if (!slot.CanEquip(item) || IsItemEquippedByOtherCharacter(item, character))
             return;
 
-        ItemData oldItem = GetEquippedItemForCharacter(character, slot.Type);
+        EquipmentData oldItem = GetEquippedItemForCharacter(character, slot.Type);
 
         if (oldItem != null)
             inventory.Add(oldItem);
 
         if (character.equippedItems == null)
-            character.equippedItems = new List<ItemData>();
+            character.equippedItems = new List<EquipmentData>();
 
         character.equippedItems.RemoveAll(x => x != null && x.equipmentType == slot.Type);
         character.equippedItems.Add(item);
@@ -105,7 +105,7 @@ public class EquipmentManager : MonoBehaviour
         SaveEquipment();
     }
 
-    public void EquipItemToCharacter(CharacterData character, ItemData item)
+    public void EquipItemToCharacter(CharacterData character, EquipmentData item)
     {
         if (character == null || item == null)
             return;
@@ -134,13 +134,13 @@ public class EquipmentManager : MonoBehaviour
             }
         }
 
-        ItemData oldItem = GetEquippedItemForCharacter(character, item.equipmentType);
+        EquipmentData oldItem = GetEquippedItemForCharacter(character, item.equipmentType);
 
         if (oldItem != null)
             inventory.Add(oldItem);
 
         if (character.equippedItems == null)
-            character.equippedItems = new List<ItemData>();
+            character.equippedItems = new List<EquipmentData>();
 
         character.equippedItems.RemoveAll(x => x != null && x.equipmentType == item.equipmentType);
         character.equippedItems.Add(item);
@@ -195,7 +195,7 @@ public class EquipmentManager : MonoBehaviour
         }
     }
 
-    public void AddToInventory(ItemData item)
+    public void AddToInventory(EquipmentData item)
     {
         if (item == null)
             return;
@@ -208,7 +208,7 @@ public class EquipmentManager : MonoBehaviour
             popup.Show(item);
     }
 
-    public void RemoveFromInventory(ItemData item)
+    public void RemoveFromInventory(EquipmentData item)
     {
         if (item == null)
             return;
@@ -216,7 +216,7 @@ public class EquipmentManager : MonoBehaviour
         inventory.Remove(item);
     }
 
-    public float GetEquipmentPowerForCharacter(ItemData item, CharacterData character)
+    public float GetEquipmentPowerForCharacter(EquipmentData item, CharacterData character)
     {
         if (item == null || character == null)
             return 0f;
@@ -279,7 +279,7 @@ public class EquipmentManager : MonoBehaviour
         return null;
     }
 
-    public void SetInventory(List<ItemData> items)
+    public void SetInventory(List<EquipmentData> items)
     {
         inventory.Clear();
 

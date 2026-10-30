@@ -10,9 +10,9 @@ public class BetterItemCharacterButton : MonoBehaviour
     [SerializeField] private Image characterImage;
 
     private CharacterData character;
-    private ItemData item;
+    private EquipmentData item;
 
-    public void Setup(CharacterData characterData, ItemData itemData, float difference)
+    public void Setup(CharacterData characterData, EquipmentData itemData, float difference)
     {
         character = characterData;
         item = itemData;

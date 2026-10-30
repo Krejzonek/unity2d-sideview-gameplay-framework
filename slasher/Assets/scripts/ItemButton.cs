@@ -3,10 +3,10 @@ using UnityEngine.UI;
 
 public class ItemButton : MonoBehaviour
 {
-    private ItemData item;
+    private EquipmentData item;
     private UiEq uiEq;
 
-    public void Setup(ItemData newItem, UiEq sourceUiEq)
+    public void Setup(EquipmentData newItem, UiEq sourceUiEq)
     {
         item = newItem;
         uiEq = sourceUiEq;

@@ -231,7 +231,7 @@ public class NPCDialogueManager : MonoBehaviour
             blacksmithItemsContainer == null || blacksmithItemButtonPrefab == null)
             return;
 
-        List<ItemData> inventory = equipment.GetInventory();
+        List<EquipmentData> inventory = equipment.GetInventory();
 
         if (inventory == null)
             return;
@@ -246,8 +246,8 @@ public class NPCDialogueManager : MonoBehaviour
 
         if (selectedInventoryIndices.Count == 2)
         {
-            ItemData first = inventory[selectedInventoryIndices[0]];
-            ItemData second = inventory[selectedInventoryIndices[1]];
+            EquipmentData first = inventory[selectedInventoryIndices[0]];
+            EquipmentData second = inventory[selectedInventoryIndices[1]];
 
             if (first == null || second == null ||
                 first.GetRarity() != second.GetRarity() ||
@@ -264,13 +264,13 @@ public class NPCDialogueManager : MonoBehaviour
 
         ClearContainer(blacksmithItemsContainer);
 
-        ItemData firstSelected = selectedInventoryIndices.Count > 0
+        EquipmentData firstSelected = selectedInventoryIndices.Count > 0
             ? inventory[selectedInventoryIndices[0]]
             : null;
 
         for (int i = 0; i < inventory.Count; i++)
         {
-            ItemData item = inventory[i];
+            EquipmentData item = inventory[i];
 
             if (item == null)
                 continue;
@@ -307,8 +307,8 @@ public class NPCDialogueManager : MonoBehaviour
 
         if (ready)
         {
-            ItemData first = inventory[selectedInventoryIndices[0]];
-            ItemData second = inventory[selectedInventoryIndices[1]];
+            EquipmentData first = inventory[selectedInventoryIndices[0]];
+            EquipmentData second = inventory[selectedInventoryIndices[1]];
 
             ready = first != null && second != null &&
                 first.GetRarity() == second.GetRarity() &&
@@ -323,7 +323,7 @@ public class NPCDialogueManager : MonoBehaviour
             upgradeButtonImage.color = ready ? upgradeReadyColor : upgradeDisabledColor;
     }
 
-    private void SetSelectedSlot(Image slot, ItemData item)
+    private void SetSelectedSlot(Image slot, EquipmentData item)
     {
         if (slot == null)
             return;
@@ -341,7 +341,7 @@ public class NPCDialogueManager : MonoBehaviour
         if (equipment == null || currentBlacksmith == null)
             return;
 
-        List<ItemData> inventory = equipment.GetInventory();
+        List<EquipmentData> inventory = equipment.GetInventory();
 
         if (inventory == null || index < 0 || index >= inventory.Count || inventory[index] == null)
             return;
@@ -357,14 +357,14 @@ public class NPCDialogueManager : MonoBehaviour
         if (selectedInventoryIndices.Count >= 2)
             return;
 
-        ItemData item = inventory[index];
+        EquipmentData item = inventory[index];
 
         if (item.GetRarity() == ItemRarity.Godest)
             return;
 
         if (selectedInventoryIndices.Count > 0)
         {
-            ItemData first = inventory[selectedInventoryIndices[0]];
+            EquipmentData first = inventory[selectedInventoryIndices[0]];
 
             if (first == null ||
                 first.GetRarity() != item.GetRarity() ||
@@ -402,7 +402,7 @@ public class NPCDialogueManager : MonoBehaviour
         if (equipment == null)
             return;
 
-        List<ItemData> inventory = new List<ItemData>(equipment.GetInventory());
+        List<EquipmentData> inventory = new List<EquipmentData>(equipment.GetInventory());
         int firstIndex = selectedInventoryIndices[0];
         int secondIndex = selectedInventoryIndices[1];
 
@@ -414,8 +414,8 @@ public class NPCDialogueManager : MonoBehaviour
             return;
         }
 
-        ItemData first = inventory[firstIndex];
-        ItemData second = inventory[secondIndex];
+        EquipmentData first = inventory[firstIndex];
+        EquipmentData second = inventory[secondIndex];
 
         if (first == null || second == null ||
             first.GetRarity() != second.GetRarity() ||
@@ -428,7 +428,7 @@ public class NPCDialogueManager : MonoBehaviour
         }
 
         ItemRarity nextRarity = (ItemRarity)((int)first.GetRarity() + 1);
-        ItemData result = Instantiate(first);
+        EquipmentData result = Instantiate(first);
 
         result.name = first.name + "_Upgraded";
         result.SetRarity(nextRarity);

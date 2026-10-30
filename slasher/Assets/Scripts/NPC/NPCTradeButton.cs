@@ -49,7 +49,7 @@ public class NPCTradeButton : MonoBehaviour
     }
 
     private void SetItem(Image image, TMP_Text text, NPCTradeItemType type,
-        IngredientData ingredient, ConsumableData consumable, ItemData equipment, int amount)
+        IngredientData ingredient, ConsumableData consumable, EquipmentData equipment, int amount)
     {
         Sprite icon = null;
 
