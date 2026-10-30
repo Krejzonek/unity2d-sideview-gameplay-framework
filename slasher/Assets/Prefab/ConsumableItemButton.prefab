@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -11.938, y: 0}
-  m_SizeDelta: {x: -23.876, y: 0}
+  m_AnchoredPosition: {x: -10, y: 0}
+  m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1046057191621894018
 CanvasRenderer:
@@ -92,7 +92,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 26.25
+  m_fontSize: 53.7
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -147,6 +147,7 @@ GameObject:
   - component: {fileID: 2153187585405117633}
   - component: {fileID: 466098155659108367}
   - component: {fileID: 482490289881593383}
+  - component: {fileID: 4472227390592626574}
   m_Layer: 0
   m_Name: ConsumableItemButton
   m_TagString: Untagged
@@ -173,7 +174,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -596, y: -252}
-  m_SizeDelta: {x: 100, y: 30}
+  m_SizeDelta: {x: 200, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &562230418357885108
 CanvasRenderer:
@@ -271,6 +272,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemNameText: {fileID: 2571280372382460283}
   itemAmountText: {fileID: 2497103785323006331}
+--- !u!114 &4472227390592626574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2238015200863307772}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreLayout: 0
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: 100
+  m_PreferredHeight: 30
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!1 &3919599573384690620
 GameObject:
   m_ObjectHideFlags: 0
@@ -305,8 +326,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0.00030517578, y: 0.000008583069}
-  m_SizeDelta: {x: 23.876602, y: 14.1378}
+  m_AnchoredPosition: {x: 5, y: -5.8}
+  m_SizeDelta: {x: 25, y: 20}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &87329979793201574
 CanvasRenderer:
@@ -363,7 +384,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 6.2
+  m_fontSize: 8.8
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
