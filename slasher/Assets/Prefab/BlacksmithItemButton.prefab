@@ -245,7 +245,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -596, y: -252}
-  m_SizeDelta: {x: 32, y: 32}
+  m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5595183342464293319
 MonoBehaviour:
@@ -260,7 +260,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   button: {fileID: 5759296122174631604}
+  itemIcon: {fileID: 0}
   selectionOutline: {fileID: 6785947765172270838}
+  compatibleColor: {r: 1, g: 1, b: 1, a: 1}
+  incompatibleColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
 --- !u!1 &6074467132821484709
 GameObject:
   m_ObjectHideFlags: 0
