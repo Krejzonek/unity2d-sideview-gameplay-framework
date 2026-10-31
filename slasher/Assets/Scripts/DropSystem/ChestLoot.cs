@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class ChestLoot : MonoBehaviour
 {
@@ -35,6 +36,9 @@ public class ChestLoot : MonoBehaviour
     private void Update()
     {
         if (!Input.GetMouseButtonDown(0) || cam == null)
+            return;
+
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             return;
 
         Vector2 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);

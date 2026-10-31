@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class NPC : MonoBehaviour
 {
@@ -9,6 +10,9 @@ public class NPC : MonoBehaviour
     private void Update()
     {
         if (!Input.GetMouseButtonDown(0))
+            return;
+
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             return;
 
         if (Camera.main == null)

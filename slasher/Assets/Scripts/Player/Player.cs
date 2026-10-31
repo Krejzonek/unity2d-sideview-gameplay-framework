@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public class Player : MonoBehaviour
 {
@@ -19,7 +18,6 @@ public class Player : MonoBehaviour
 
     [Header("Panel Attack Blocking")]
     public bool blockAttackWhenPanelOpen = true;
-    public List<GameObject> panelsToCheckForAttackBlock = new List<GameObject>();
 
     [Header("I-Frames")]
     [SerializeField] private float invulnerabilityTime = 0.3f;
@@ -50,6 +48,7 @@ public class Player : MonoBehaviour
     private Vector2 normalColliderOffset;
 
     private Rigidbody2D rb;
+    private GameInputManager inputManager;
     private float moveInput;
     private float formationSpeed = -1f;
     private Stats stats;
@@ -68,11 +67,57 @@ public class Player : MonoBehaviour
     private bool isCrouching;
     private static bool blockAttackUntilMouseRelease;
 
+    private void OnEnable()
+    {
+        ConnectInputManager();
+    }
+
+    private void OnDisable()
+    {
+        DisconnectInputManager();
+    }
+
+    private void ConnectInputManager()
+    {
+        if (inputManager != null)
+            return;
+
+        inputManager = GameInputManager.Instance;
+
+        if (inputManager != null)
+            inputManager.ActionStarted += OnActionStarted;
+    }
+
+    private void DisconnectInputManager()
+    {
+        if (inputManager == null)
+            return;
+
+        inputManager.ActionStarted -= OnActionStarted;
+        inputManager = null;
+    }
+
+    private void OnActionStarted(GameInputAction action)
+    {
+        if (IsDead() || isBot)
+            return;
+
+        if (action == GameInputAction.Jump && rb != null && OnFloor() && !IsCrouching() && stamina > 25f)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            UseStamina(25f);
+        }
+
+        if (action == GameInputAction.Skill1 && skillManager != null)
+            skillManager.UseActiveSkill();
+    }
+
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         stats = GetComponent<Stats>();
         skillManager = GetComponent<ClassSkillManager>();
+        ConnectInputManager();
 
         normalColliderSize = playerCollider.size;
         normalColliderOffset = playerCollider.offset;
@@ -139,12 +184,6 @@ public class Player : MonoBehaviour
         if (!blockAttackWhenPanelOpen || TeamManager.Instance == null || TeamManager.Instance.CurrentPlayer != this)
             return false;
 
-        foreach (GameObject panel in panelsToCheckForAttackBlock)
-        {
-            if (panel != null && panel.activeInHierarchy)
-                return true;
-        }
-
         PanelAttackBlocker[] blockers = FindObjectsByType<PanelAttackBlocker>(FindObjectsSortMode.None);
 
         foreach (PanelAttackBlocker blocker in blockers)
@@ -169,37 +208,36 @@ public class Player : MonoBehaviour
         if (isBot)
             return;
 
-        bool pointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+        if (inputManager == null)
+            ConnectInputManager();
 
-        if (pointerOverUI && Input.GetMouseButton(0))
-            waitForAttackRelease = true;
+        if (inputManager == null)
+            return;
 
-        if (!Input.GetMouseButton(0))
-            waitForAttackRelease = false;
+        moveInput = inputManager.Movement.x;
 
-        moveInput = Input.GetAxisRaw("Horizontal");
+        Vector2 aimDirection = GetAttackAimDirection();
+        bool aiming = inputManager.MobileAimActive;
 
-        if (!isTurningToShoot && !Input.GetMouseButton(0))
+        if (aiming && aimDirection.sqrMagnitude > 0.01f)
+            SetFacingDirection(aimDirection.x >= 0f ? 1 : -1);
+        else if (!inputManager.IsActionHeld(GameInputAction.Attack))
             UpdateFacingDirection();
 
-        if (Input.GetKeyDown(KeyCode.Space) && OnFloor() && !IsCrouching() && stamina > 25f)
-        {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-            UseStamina(25);
-        }
-
-        if (Input.GetKey(KeyCode.LeftShift))
+        if (inputManager.IsActionHeld(GameInputAction.Crouch))
             Crouch();
         else
             StundUp();
 
-        if (blockAttackUntilMouseRelease && !Input.GetMouseButton(0))
+        if (blockAttackUntilMouseRelease && !inputManager.IsActionHeld(GameInputAction.Attack))
             blockAttackUntilMouseRelease = false;
 
-        if (Input.GetMouseButton(0) && !Input.GetMouseButtonDown(0) && !waitForAttackRelease && !pointerOverUI && !blockAttackUntilMouseRelease && !IsAnyPanelOpen())
-            Attack();
+        bool attackHeld = inputManager.IsActionHeld(GameInputAction.Attack) || aiming;
 
-        if (Input.GetMouseButton(1))
+        if (attackHeld && !blockAttackUntilMouseRelease && !IsAnyPanelOpen())
+            Attack(aimDirection);
+
+        if (inputManager.IsActionHeld(GameInputAction.Defend))
             StartDefense();
         else
             StopDefense();
@@ -470,7 +508,7 @@ public class Player : MonoBehaviour
         isDefending = false;
     }
 
-    private void Attack()
+    private void Attack(Vector2 aimDirection)
     {
         if (isDefending || isTurningToShoot)
             return;
@@ -484,7 +522,9 @@ public class Player : MonoBehaviour
         if (stamina < staminaCost)
             return;
 
-        SetFacingDirection(GetMouseDirection());
+        if (aimDirection.sqrMagnitude > 0.01f)
+            SetFacingDirection(aimDirection.x >= 0f ? 1 : -1);
+
         UseStamina(staminaCost);
 
         if (skillManager != null)
@@ -506,10 +546,10 @@ public class Player : MonoBehaviour
                         MeleeAttack();
                     break;
                 case WeaponType.Bow:
-                    ShootProjectile(arrowPrefab);
+                    ShootProjectile(arrowPrefab, aimDirection);
                     break;
                 case WeaponType.Staff:
-                    ShootProjectile(magicPrefab);
+                    ShootProjectile(magicPrefab, aimDirection);
                     break;
                 default:
                     MeleeAttack();
@@ -520,15 +560,21 @@ public class Player : MonoBehaviour
         SetAttackCooldown();
     }
 
-    private int GetMouseDirection()
+    private Vector2 GetAttackAimDirection()
     {
+        if (inputManager != null && inputManager.MobileAimActive)
+            return inputManager.MobileAim.normalized;
+
         Camera cam = Camera.main;
 
         if (cam == null)
-            return facingDirection;
+            return new Vector2(facingDirection, 0f);
 
         Vector3 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
-        return mousePosition.x >= transform.position.x ? 1 : -1;
+        mousePosition.z = transform.position.z;
+        Vector2 direction = (mousePosition - transform.position);
+
+        return direction.sqrMagnitude > 0.01f ? direction.normalized : new Vector2(facingDirection, 0f);
     }
 
     private void SetAttackCooldown()
@@ -560,7 +606,7 @@ public class Player : MonoBehaviour
             skillManager.ConsumeAttackSkill();
     }
 
-    private void ShootProjectile(GameObject projectilePrefab)
+    private void ShootProjectile(GameObject projectilePrefab, Vector2 aimDirection)
     {
         if (projectilePrefab == null)
             return;
@@ -578,27 +624,10 @@ public class Player : MonoBehaviour
             return;
         }
 
-        Camera cam = Camera.main;
+        if (aimDirection.sqrMagnitude <= 0.01f)
+            aimDirection = new Vector2(facingDirection, 0f);
 
-        if (cam == null)
-            return;
-
-        Vector3 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
-        mousePosition.z = currentAttackPoint.position.z;
-
-        Vector2 direction = (mousePosition - currentAttackPoint.position).normalized;
-
-        if (weapon.weaponType == WeaponType.Bow)
-        {
-            int desiredDirection = mousePosition.x >= transform.position.x ? 1 : -1;
-
-            if (desiredDirection != facingDirection)
-            {
-                SetFacingDirection(desiredDirection);
-                direction = (mousePosition - currentAttackPoint.position).normalized;
-            }
-        }
-
+        Vector2 direction = aimDirection.normalized;
         bool doubleShot = false;
 
         if (skillManager != null && weapon.weaponType == WeaponType.Bow)
