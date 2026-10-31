@@ -20,9 +20,6 @@ public class ClassSkillManager : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E))
-            UseActiveSkill();
-
         if (agilityTimer > 0f)
             agilityTimer -= Time.deltaTime;
 
@@ -149,6 +146,9 @@ public class ClassSkillManager : MonoBehaviour
 
     public void UseActiveSkill()
     {
+        if (stats == null)
+            return;
+
         Class characterClass = stats.characterClass;
 
         if (characterClass == null || characterClass.activeSkill == null)
