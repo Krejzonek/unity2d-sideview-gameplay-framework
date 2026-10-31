@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class MobileControls : MonoBehaviour
 {
@@ -10,10 +9,11 @@ public class MobileControls : MonoBehaviour
     [SerializeField] private MobileActionButton[] actionButtons;
     [SerializeField] private RectTransform movementJoystickRect;
     [SerializeField] private RectTransform aimJoystickRect;
-    [SerializeField] private RectTransform buttonsRect;
+    [SerializeField] private RectTransform[] actionButtonRects;
 
     private void Start()
     {
+        GameSettings.Load();
         ApplySettings();
     }
 
@@ -25,44 +25,51 @@ public class MobileControls : MonoBehaviour
             return;
         }
 
-        bool showControls = settings.mobileControlsMode switch
-        {
-            MobileControlsMode.Always => true,
-            MobileControlsMode.Never => false,
-            _ => Application.isMobilePlatform || Touchscreen.current != null
-        };
+        bool showJoysticks = settings.enableVirtualJoystick;
+        bool showActionButtons = settings.enableActionButtons;
 
         if (mobileControlsRoot != null)
-            mobileControlsRoot.SetActive(showControls);
+            mobileControlsRoot.SetActive(showJoysticks || showActionButtons);
 
         if (movementJoystick != null)
-            movementJoystick.gameObject.SetActive(showControls && settings.enableVirtualJoystick);
+            movementJoystick.gameObject.SetActive(showJoysticks);
 
         if (aimJoystick != null)
-            aimJoystick.gameObject.SetActive(showControls && settings.enableVirtualJoystick);
+            aimJoystick.gameObject.SetActive(showJoysticks);
 
         if (actionButtons != null)
         {
             foreach (MobileActionButton button in actionButtons)
             {
                 if (button != null)
-                    button.gameObject.SetActive(showControls && settings.enableActionButtons);
+                    button.gameObject.SetActive(showActionButtons);
             }
         }
 
-        if (movementJoystickRect != null)
-        {
-            Vector2 anchor = settings.joystickSide == JoystickSide.Left ? new Vector2(0f, 0f) : new Vector2(1f, 0f);
-            movementJoystickRect.anchorMin = anchor;
-            movementJoystickRect.anchorMax = anchor;
-            movementJoystickRect.localScale = Vector3.one * settings.joystickScale;
-        }
+        ApplyRect(movementJoystickRect, GameSettings.MovementPosition, GameSettings.MovementScale);
+        ApplyRect(aimJoystickRect, GameSettings.AimPosition, GameSettings.AimScale);
 
-        if (aimJoystickRect != null)
+        if (actionButtonRects != null)
         {
-            aimJoystickRect.anchorMin = new Vector2(1f, 0f);
-            aimJoystickRect.anchorMax = new Vector2(1f, 0f);
-            aimJoystickRect.localScale = Vector3.one * settings.joystickScale;
+            for (int i = 0; i < actionButtonRects.Length; i++)
+            {
+                RectTransform rect = actionButtonRects[i];
+
+                if (rect == null)
+                    continue;
+
+                Vector2 position = GameSettings.GetActionButtonPosition(i, rect.anchoredPosition);
+                ApplyRect(rect, position, 1f);
+            }
         }
+    }
+
+    private void ApplyRect(RectTransform rect, Vector2 position, float scale)
+    {
+        if (rect == null)
+            return;
+
+        rect.anchoredPosition = position;
+        rect.localScale = Vector3.one * scale;
     }
 }

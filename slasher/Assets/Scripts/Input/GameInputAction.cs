@@ -4,7 +4,10 @@ public enum GameInputAction
     Attack,
     Defend,
     Skill1,
-    Crouch
+    Crouch,
+    Interact,
+    MoveLeft,
+    MoveRight
 }
 
 public enum MobileControlsMode
@@ -24,4 +27,10 @@ public enum JoystickRole
 {
     Movement,
     Aim
+}
+
+public enum InputDeviceType
+{
+    Keyboard,
+    Gamepad
 }
