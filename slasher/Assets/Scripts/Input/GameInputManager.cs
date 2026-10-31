@@ -20,6 +20,8 @@ public class GameInputManager : MonoBehaviour
     public event Action<GamepadMenuAction> MenuActionStarted;
     public event Action GamepadBackStarted;
     public event Action<bool> GamepadConfirmChanged;
+    public event Action<GameInputAction, InputDeviceType, string> BindingChanged;
+    public event Action InteractStarted;
 
     public Vector2 Movement => mobileMovementActive ? mobileMovement : keyboardMovement;
     public Vector2 MobileAim => mobileAim.sqrMagnitude > 0.04f ? mobileAim : gamepadAim;
@@ -43,6 +45,12 @@ public class GameInputManager : MonoBehaviour
     private bool mobileMovementActive;
     private bool gamepadUIOpen;
 
+    private InputActionRebindingExtensions.RebindingOperation rebindingOperation;
+    private GameInputAction rebindingAction;
+    private InputDeviceType rebindingDevice;
+
+    private const string BindingKeyPrefix = "InputBinding_";
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -52,7 +60,11 @@ public class GameInputManager : MonoBehaviour
         }
 
         Instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        GameSettings.Load();
         CreateInputActions();
+        LoadBindings();
     }
 
     private void OnEnable()
@@ -62,6 +74,7 @@ public class GameInputManager : MonoBehaviour
 
     private void OnDisable()
     {
+        CancelRebinding();
         DisableInputActions();
     }
 
@@ -86,8 +99,12 @@ public class GameInputManager : MonoBehaviour
         {
             keyboardMovement = movementAction.ReadValue<Vector2>();
 
-            if (movementAction.activeControl != null && movementAction.activeControl.device is Gamepad && keyboardMovement.sqrMagnitude > 0.04f)
+            if (movementAction.activeControl != null &&
+                movementAction.activeControl.device is Gamepad &&
+                keyboardMovement.sqrMagnitude > 0.04f)
+            {
                 IsGamepadActive = true;
+            }
         }
 
         if (aimAction != null)
@@ -107,8 +124,15 @@ public class GameInputManager : MonoBehaviour
     private void CreateInputActions()
     {
         movementAction = new InputAction("Movement", InputActionType.Value, expectedControlType: "Vector2");
-        movementAction.AddCompositeBinding("2DVector").With("Up", "<Keyboard>/w").With("Down", "<Keyboard>/s").With("Left", "<Keyboard>/a").With("Right", "<Keyboard>/d");
-        movementAction.AddCompositeBinding("2DVector").With("Up", "<Keyboard>/upArrow").With("Down", "<Keyboard>/downArrow").With("Left", "<Keyboard>/leftArrow").With("Right", "<Keyboard>/rightArrow");
+
+        movementAction.AddCompositeBinding("2DVector")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        movementAction.AddCompositeBinding("2DVector")
+            .With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/rightArrow");
+
         movementAction.AddBinding("<Gamepad>/leftStick");
 
         aimAction = new InputAction("Aim", InputActionType.Value, expectedControlType: "Vector2");
@@ -119,6 +143,7 @@ public class GameInputManager : MonoBehaviour
         AddButtonAction(GameInputAction.Defend, "<Mouse>/rightButton", "<Gamepad>/leftShoulder");
         AddButtonAction(GameInputAction.Skill1, "<Keyboard>/q", "<Gamepad>/buttonWest");
         AddButtonAction(GameInputAction.Crouch, "<Keyboard>/leftCtrl", "<Gamepad>/buttonEast");
+        AddButtonAction(GameInputAction.Interact, "<Keyboard>/e", "<Gamepad>/buttonNorth");
 
         AddMenuAction(GamepadMenuAction.Stats, "<Gamepad>/dpad/up");
         AddMenuAction(GamepadMenuAction.Equipment, "<Gamepad>/dpad/right");
@@ -128,10 +153,16 @@ public class GameInputManager : MonoBehaviour
     private void AddButtonAction(GameInputAction gameAction, string keyboardBinding, string gamepadBinding)
     {
         InputAction action = new InputAction(gameAction.ToString(), InputActionType.Button);
-        action.AddBinding(keyboardBinding);
-        action.AddBinding(gamepadBinding);
+
+        if (!string.IsNullOrEmpty(keyboardBinding))
+            action.AddBinding(keyboardBinding);
+
+        if (!string.IsNullOrEmpty(gamepadBinding))
+            action.AddBinding(gamepadBinding);
+
         action.performed += context => SetPCActionState(gameAction, true, context);
         action.canceled += context => SetPCActionState(gameAction, false, context);
+
         actions.Add(gameAction, action);
     }
 
@@ -139,6 +170,7 @@ public class GameInputManager : MonoBehaviour
     {
         InputAction action = new InputAction(menuAction.ToString(), InputActionType.Button);
         action.AddBinding(binding);
+
         action.performed += context =>
         {
             if (context.control.device is Gamepad)
@@ -147,7 +179,240 @@ public class GameInputManager : MonoBehaviour
                 MenuActionStarted?.Invoke(menuAction);
             }
         };
+
         menuActions.Add(menuAction, action);
+    }
+
+    private bool IsMovementAction(GameInputAction gameAction)
+    {
+        return gameAction == GameInputAction.MoveLeft ||
+               gameAction == GameInputAction.MoveRight;
+    }
+
+    private string GetMovementPartName(GameInputAction gameAction)
+    {
+        switch (gameAction)
+        {
+            case GameInputAction.MoveLeft:
+                return "Left";
+            case GameInputAction.MoveRight:
+                return "Right";
+            default:
+                return null;
+        }
+    }
+
+    private int GetBindingIndex(GameInputAction gameAction, InputDeviceType device)
+    {
+        if (IsMovementAction(gameAction))
+        {
+            if (device != InputDeviceType.Keyboard)
+                return -1;
+
+            string partName = GetMovementPartName(gameAction);
+
+            for (int i = 0; i < movementAction.bindings.Count; i++)
+            {
+                InputBinding binding = movementAction.bindings[i];
+
+                if (binding.isPartOfComposite &&
+                    binding.name == partName &&
+                    binding.path != null &&
+                    binding.path.StartsWith("<Keyboard>"))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        if (!actions.ContainsKey(gameAction))
+            return -1;
+
+        InputAction action = actions[gameAction];
+
+        for (int i = 0; i < action.bindings.Count; i++)
+        {
+            InputBinding binding = action.bindings[i];
+
+            if (device == InputDeviceType.Keyboard &&
+                binding.path != null &&
+                (binding.path.StartsWith("<Keyboard>") || binding.path.StartsWith("<Mouse>")))
+            {
+                return i;
+            }
+
+            if (device == InputDeviceType.Gamepad &&
+                binding.path != null &&
+                binding.path.StartsWith("<Gamepad>") &&
+                !binding.isComposite)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private InputAction GetTargetAction(GameInputAction gameAction)
+    {
+        return IsMovementAction(gameAction) ? movementAction :
+            actions.ContainsKey(gameAction) ? actions[gameAction] : null;
+    }
+
+    private string GetBindingKey(GameInputAction gameAction, InputDeviceType device)
+    {
+        return BindingKeyPrefix + gameAction + "_" + device;
+    }
+
+    private void LoadBindings()
+    {
+        foreach (GameInputAction gameAction in Enum.GetValues(typeof(GameInputAction)))
+        {
+            LoadBinding(gameAction, InputDeviceType.Keyboard);
+            LoadBinding(gameAction, InputDeviceType.Gamepad);
+        }
+    }
+
+    private void LoadBinding(GameInputAction gameAction, InputDeviceType device)
+    {
+        int bindingIndex = GetBindingIndex(gameAction, device);
+
+        if (bindingIndex < 0)
+            return;
+
+        string key = GetBindingKey(gameAction, device);
+
+        if (!PlayerPrefs.HasKey(key))
+            return;
+
+        InputAction action = GetTargetAction(gameAction);
+
+        if (action == null)
+            return;
+
+        string savedPath = PlayerPrefs.GetString(key);
+        action.ApplyBindingOverride(bindingIndex, savedPath);
+    }
+
+    public void StartRebinding(GameInputAction gameAction, InputDeviceType device)
+    {
+        int bindingIndex = GetBindingIndex(gameAction, device);
+        InputAction action = GetTargetAction(gameAction);
+
+        if (bindingIndex < 0 || action == null)
+            return;
+
+        CancelRebinding();
+
+        rebindingAction = gameAction;
+        rebindingDevice = device;
+
+        bool wasEnabled = action.enabled;
+
+        if (wasEnabled)
+            action.Disable();
+
+        rebindingOperation = action.PerformInteractiveRebinding(bindingIndex)
+            .WithControlsExcluding(device == InputDeviceType.Gamepad ? "<Keyboard>" : "<Gamepad>")
+            .WithControlsExcluding(device == InputDeviceType.Gamepad ? "<Mouse>" : "<Touchscreen>")
+            .WithCancelingThrough(device == InputDeviceType.Keyboard ? "<Keyboard>/escape" : "<Gamepad>/buttonEast")
+            .OnMatchWaitForAnother(0.1f)
+            .OnComplete(operation =>
+            {
+                string path = action.bindings[bindingIndex].effectivePath;
+
+                if (!string.IsNullOrEmpty(path))
+                {
+                    PlayerPrefs.SetString(GetBindingKey(gameAction, device), path);
+                    PlayerPrefs.Save();
+
+                    BindingChanged?.Invoke(
+                        gameAction,
+                        device,
+                        GetBindingDisplayName(gameAction, device)
+                    );
+                }
+
+                operation.Dispose();
+                rebindingOperation = null;
+
+                if (wasEnabled)
+                    action.Enable();
+            })
+            .OnCancel(operation =>
+            {
+                operation.Dispose();
+                rebindingOperation = null;
+
+                if (wasEnabled)
+                    action.Enable();
+            });
+
+        rebindingOperation.Start();
+    }
+
+    public void CancelRebinding()
+    {
+        if (rebindingOperation == null)
+            return;
+
+        rebindingOperation.Cancel();
+        rebindingOperation.Dispose();
+        rebindingOperation = null;
+    }
+
+    public string GetBindingDisplayName(GameInputAction gameAction, InputDeviceType device)
+    {
+        int bindingIndex = GetBindingIndex(gameAction, device);
+        InputAction action = GetTargetAction(gameAction);
+
+        if (bindingIndex < 0 || action == null)
+            return "-";
+
+        string path = action.bindings[bindingIndex].effectivePath;
+
+        if (string.IsNullOrEmpty(path))
+            return "-";
+
+        return InputControlPath.ToHumanReadableString(
+            path,
+            InputControlPath.HumanReadableStringOptions.OmitDevice
+        );
+    }
+
+    public void ResetBindings()
+    {
+        CancelRebinding();
+
+        foreach (InputAction action in actions.Values)
+            action.RemoveAllBindingOverrides();
+
+        movementAction.RemoveAllBindingOverrides();
+
+        foreach (GameInputAction gameAction in Enum.GetValues(typeof(GameInputAction)))
+        {
+            PlayerPrefs.DeleteKey(GetBindingKey(gameAction, InputDeviceType.Keyboard));
+            PlayerPrefs.DeleteKey(GetBindingKey(gameAction, InputDeviceType.Gamepad));
+        }
+
+        PlayerPrefs.Save();
+
+        foreach (GameInputAction gameAction in Enum.GetValues(typeof(GameInputAction)))
+        {
+            BindingChanged?.Invoke(
+                gameAction,
+                InputDeviceType.Keyboard,
+                GetBindingDisplayName(gameAction, InputDeviceType.Keyboard)
+            );
+
+            BindingChanged?.Invoke(
+                gameAction,
+                InputDeviceType.Gamepad,
+                GetBindingDisplayName(gameAction, InputDeviceType.Gamepad)
+            );
+        }
     }
 
     private void EnableInputActions()
@@ -197,8 +462,22 @@ public class GameInputManager : MonoBehaviour
             return;
         }
 
-        if (gameAction == GameInputAction.Attack && pressed && !gamepadInput && EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        if (gameAction == GameInputAction.Attack &&
+            pressed &&
+            !gamepadInput &&
+            EventSystem.current != null &&
+            EventSystem.current.IsPointerOverGameObject())
+        {
             return;
+        }
+
+        if (gameAction == GameInputAction.Interact && pressed)
+        {
+            if (gamepadInput)
+                InteractStarted?.Invoke();
+
+            return;
+        }
 
         SetActionState(pcHeldActions, gameAction, pressed);
     }

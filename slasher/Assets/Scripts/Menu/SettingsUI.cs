@@ -1,16 +1,29 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Audio;
 
 public class SettingsUI : MonoBehaviour
 {
+    [Header("Audio")]
+    [SerializeField] private AudioMixer audioMixer;
     [SerializeField] private Slider masterVolumeSlider;
     [SerializeField] private Slider musicVolumeSlider;
     [SerializeField] private Slider sfxVolumeSlider;
+
+    [Header("Graphics")]
     [SerializeField] private Button lowQualityButton;
     [SerializeField] private Button mediumQualityButton;
     [SerializeField] private Button highQualityButton;
     [SerializeField] private Color normalColor = Color.white;
     [SerializeField] private Color selectedColor = Color.gray;
+
+    [Header("Reset")]
+    [SerializeField] private Button resetButton;
+
+    private void Awake()
+    {
+        GameSettings.SetAudioMixer(audioMixer);
+    }
 
     private void OnEnable()
     {
@@ -38,6 +51,9 @@ public class SettingsUI : MonoBehaviour
         if (highQualityButton != null)
             highQualityButton.onClick.AddListener(SetHighQuality);
 
+        if (resetButton != null)
+            resetButton.onClick.AddListener(ResetSettings);
+
         RefreshSettings();
     }
 
@@ -60,6 +76,9 @@ public class SettingsUI : MonoBehaviour
 
         if (highQualityButton != null)
             highQualityButton.onClick.RemoveListener(SetHighQuality);
+
+        if (resetButton != null)
+            resetButton.onClick.RemoveListener(ResetSettings);
     }
 
     private void SetLowQuality()
@@ -78,6 +97,22 @@ public class SettingsUI : MonoBehaviour
     {
         GameSettings.SetGraphicsQuality(2);
         UpdateQualityButtons();
+    }
+
+    private void ResetSettings()
+    {
+        GameSettings.ResetDefaults();
+        RefreshSettings();
+
+        MobileControls[] controls = FindObjectsByType<MobileControls>(FindObjectsSortMode.None);
+
+        foreach (MobileControls control in controls)
+            control.ApplySettings();
+
+        RebindButton[] rebindButtons = FindObjectsByType<RebindButton>(FindObjectsSortMode.None);
+
+        foreach (RebindButton button in rebindButtons)
+            button.Refresh();
     }
 
     private void RefreshSettings()
