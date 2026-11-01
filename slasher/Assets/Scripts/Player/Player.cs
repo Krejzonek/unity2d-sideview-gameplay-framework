@@ -65,6 +65,7 @@ public class Player : MonoBehaviour
     private CharacterData characterData;
     private bool waitForAttackRelease;
     private bool isCrouching;
+    private bool inputBlocked;
     private static bool blockAttackUntilMouseRelease;
 
     private void OnEnable()
@@ -99,7 +100,7 @@ public class Player : MonoBehaviour
 
     private void OnActionStarted(GameInputAction action)
     {
-        if (IsDead() || isBot)
+        if (IsDead() || isBot || inputBlocked)
             return;
 
         if (action == GameInputAction.Jump && rb != null && OnFloor() && !IsCrouching() && stamina > 25f)
@@ -199,6 +200,12 @@ public class Player : MonoBehaviour
     {
         if (IsDead())
             return;
+
+        if (inputBlocked)
+        {
+            moveInput = 0f;
+            return;
+        }
 
         if (invulnerabilityTimer > 0f)
             invulnerabilityTimer -= Time.deltaTime;
@@ -356,6 +363,12 @@ public class Player : MonoBehaviour
             return;
         }
 
+        if (inputBlocked)
+        {
+            rb.velocity = new Vector2(0f, rb.velocity.y);
+            return;
+        }
+
         if (knockbackTimer > 0f)
         {
             knockbackTimer -= Time.fixedDeltaTime;
@@ -371,6 +384,21 @@ public class Player : MonoBehaviour
             currentMoveSpeed *= 0.5f;
 
         rb.velocity = new Vector2(moveInput * currentMoveSpeed, rb.velocity.y);
+    }
+
+    public void SetInputBlocked(bool blocked)
+    {
+        inputBlocked = blocked;
+
+        if (blocked)
+        {
+            moveInput = 0f;
+            StopDefense();
+            StundUp();
+
+            if (rb != null)
+                rb.velocity = new Vector2(0f, rb.velocity.y);
+        }
     }
 
     public void SetFormationSpeed(float speed)

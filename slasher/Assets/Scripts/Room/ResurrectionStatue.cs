@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class ResurrectionStatue : MonoBehaviour
+public class ResurrectionStatue : MonoBehaviour, IInteractable
 {
     [Header("Interaction")]
     [SerializeField] private LayerMask statueLayer;
@@ -45,6 +45,11 @@ public class ResurrectionStatue : MonoBehaviour
         }
     }
 
+    public void Interact()
+    {
+        OpenResurrectionPanel();
+    }
+
     public void OpenResurrectionPanel()
     {
         if (TeamManager.Instance == null)
@@ -64,6 +69,8 @@ public class ResurrectionStatue : MonoBehaviour
         interactingPlayer = currentPlayer;
         selectedFallenPlayer = null;
         resurrectionPanel.SetActive(true);
+
+        GamepadUIState.Register(resurrectionPanel);
 
         ShowFallenCharacters();
     }
@@ -209,6 +216,8 @@ public class ResurrectionStatue : MonoBehaviour
     {
         if (resurrectionPanel != null)
             resurrectionPanel.SetActive(false);
+
+        GamepadUIState.Unregister(resurrectionPanel);
 
         ClearButtons();
 

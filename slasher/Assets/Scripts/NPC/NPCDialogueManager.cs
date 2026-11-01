@@ -84,6 +84,8 @@ public class NPCDialogueManager : MonoBehaviour
         if (dialoguePanel != null)
             dialoguePanel.SetActive(true);
 
+        GamepadUIState.Register(dialoguePanel);
+
         if (npcNameText != null)
             npcNameText.text = npc.Data.npcName;
 
@@ -108,7 +110,10 @@ public class NPCDialogueManager : MonoBehaviour
         if (talkText != null)
             talkText.text = "Talk";
 
-        talkButton.onClick.AddListener(ShowRandomDialogue);
+        talkButton.onClick.AddListener(() =>
+        {
+            ShowRandomDialogue();
+        });
 
         if (currentNPC.Data.activities == null)
             return;
@@ -138,6 +143,8 @@ public class NPCDialogueManager : MonoBehaviour
         if (currentNPC == null || currentNPC.Data == null ||
             currentNPC.Data.dialogues == null || currentNPC.Data.dialogues.Length == 0)
         {
+            Debug.LogWarning("[NPCDialogueManager] No dialogues available.");
+
             if (greetingText != null)
                 greetingText.text = "I have nothing to tell you right now.";
 
@@ -155,6 +162,8 @@ public class NPCDialogueManager : MonoBehaviour
 
         if (available.Count == 0)
         {
+            Debug.LogWarning("[NPCDialogueManager] Dialogue list contains no valid entries.");
+
             if (greetingText != null)
                 greetingText.text = "I have nothing to tell you right now.";
 
@@ -590,6 +599,8 @@ public class NPCDialogueManager : MonoBehaviour
     {
         if (dialoguePanel != null)
             dialoguePanel.SetActive(false);
+
+        GamepadUIState.Unregister(dialoguePanel);
 
         currentNPC = null;
         currentBlacksmith = null;

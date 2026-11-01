@@ -22,16 +22,18 @@ public class GameInputManager : MonoBehaviour
     public event Action<bool> GamepadConfirmChanged;
     public event Action<GameInputAction, InputDeviceType, string> BindingChanged;
     public event Action InteractStarted;
+    public event Action PauseStarted;
 
     public Vector2 Movement => mobileMovementActive ? mobileMovement : keyboardMovement;
     public Vector2 MobileAim => mobileAim.sqrMagnitude > 0.04f ? mobileAim : gamepadAim;
     public Vector2 GamepadAim => gamepadAim;
-    public bool MobileAimActive => !gamepadUIOpen && (mobileAim.sqrMagnitude > 0.04f || gamepadAim.sqrMagnitude > 0.04f);
-    public bool GamepadUIOpen => gamepadUIOpen;
+    public bool MobileAimActive => !GamepadUIOpen && (mobileAim.sqrMagnitude > 0.04f || gamepadAim.sqrMagnitude > 0.04f);
+    public bool GamepadUIOpen => gamepadUIOpen || GamepadUIState.IsOpen;
     public bool IsGamepadActive { get; private set; }
 
     private InputAction movementAction;
     private InputAction aimAction;
+    private InputAction pauseAction;
 
     private readonly Dictionary<GameInputAction, InputAction> actions = new Dictionary<GameInputAction, InputAction>();
     private readonly Dictionary<GamepadMenuAction, InputAction> menuActions = new Dictionary<GamepadMenuAction, InputAction>();
@@ -85,6 +87,7 @@ public class GameInputManager : MonoBehaviour
 
         movementAction?.Dispose();
         aimAction?.Dispose();
+        pauseAction?.Dispose();
 
         foreach (InputAction action in actions.Values)
             action.Dispose();
@@ -148,6 +151,17 @@ public class GameInputManager : MonoBehaviour
         AddMenuAction(GamepadMenuAction.Stats, "<Gamepad>/dpad/up");
         AddMenuAction(GamepadMenuAction.Equipment, "<Gamepad>/dpad/right");
         AddMenuAction(GamepadMenuAction.Consumables, "<Gamepad>/dpad/down");
+
+        pauseAction = new InputAction("Pause", InputActionType.Button);
+        pauseAction.AddBinding("<Keyboard>/escape");
+        pauseAction.AddBinding("<Gamepad>/start");
+        pauseAction.performed += context =>
+        {
+            if (context.control.device is Gamepad)
+                IsGamepadActive = true;
+
+            PauseStarted?.Invoke();
+        };
     }
 
     private void AddButtonAction(GameInputAction gameAction, string keyboardBinding, string gamepadBinding)
@@ -419,6 +433,7 @@ public class GameInputManager : MonoBehaviour
     {
         movementAction?.Enable();
         aimAction?.Enable();
+        pauseAction?.Enable();
 
         foreach (InputAction action in actions.Values)
             action.Enable();
@@ -431,6 +446,7 @@ public class GameInputManager : MonoBehaviour
     {
         movementAction?.Disable();
         aimAction?.Disable();
+        pauseAction?.Disable();
 
         foreach (InputAction action in actions.Values)
             action.Disable();
@@ -452,7 +468,7 @@ public class GameInputManager : MonoBehaviour
         if (gamepadInput)
             IsGamepadActive = true;
 
-        if (gamepadInput && gamepadUIOpen)
+        if (gamepadInput && GamepadUIOpen)
         {
             if (gameAction == GameInputAction.Jump)
                 GamepadConfirmChanged?.Invoke(pressed);

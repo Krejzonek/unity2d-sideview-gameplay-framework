@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class CharacterSelectUI : MonoBehaviour
 {
@@ -12,16 +12,23 @@ public class CharacterSelectUI : MonoBehaviour
     [Header("Create Character")]
     [SerializeField] private GameObject createPanel;
     [SerializeField] private TMP_InputField nameInput;
+    [SerializeField] private Button createButton;
+    [SerializeField] private Button cancelButton;
     [SerializeField] private TMP_Text errorText;
+    [SerializeField] private VirtualKeyboardUI virtualKeyboard;
 
     [Header("Scene")]
+    [SerializeField] private SceneLoader sceneLoader;
     [SerializeField] private string gameSceneName = "Game";
 
     private int selectedSlot = -1;
     private bool characterSwitchMode;
+    private GameObject previousSelected;
 
     private void Awake()
     {
+        SetupCreatePanelNavigation();
+
         if (createPanel != null)
             createPanel.SetActive(false);
     }
@@ -39,6 +46,45 @@ public class CharacterSelectUI : MonoBehaviour
             createPanel.SetActive(false);
 
         Refresh();
+    }
+
+    private void SetupCreatePanelNavigation()
+    {
+        if (nameInput == null || createButton == null || cancelButton == null)
+            return;
+
+        Navigation inputNavigation = new Navigation
+        {
+            mode = Navigation.Mode.Explicit,
+            selectOnUp = nameInput,
+            selectOnDown = createButton,
+            selectOnLeft = nameInput,
+            selectOnRight = nameInput
+        };
+
+        nameInput.navigation = inputNavigation;
+
+        Navigation createNavigation = new Navigation
+        {
+            mode = Navigation.Mode.Explicit,
+            selectOnUp = nameInput,
+            selectOnDown = createButton,
+            selectOnLeft = createButton,
+            selectOnRight = cancelButton
+        };
+
+        createButton.navigation = createNavigation;
+
+        Navigation cancelNavigation = new Navigation
+        {
+            mode = Navigation.Mode.Explicit,
+            selectOnUp = nameInput,
+            selectOnDown = cancelButton,
+            selectOnLeft = createButton,
+            selectOnRight = cancelButton
+        };
+
+        cancelButton.navigation = cancelNavigation;
     }
 
     private void Refresh()
@@ -110,7 +156,6 @@ public class CharacterSelectUI : MonoBehaviour
                 button.enabled = true;
                 button.interactable = manager.Characters.Count < characterTexts.Length;
                 button.transition = Selectable.Transition.None;
-                button.navigation = new Navigation { mode = Navigation.Mode.None };
 
                 if (button.image != null)
                 {
@@ -155,7 +200,7 @@ public class CharacterSelectUI : MonoBehaviour
     {
         CharacterManager manager = CharacterManager.Instance;
 
-        if (manager == null || index < 0 || index >= characterTexts.Length)
+        if (manager == null || characterTexts == null || index < 0 || index >= characterTexts.Length)
             return;
 
         if (index < manager.Characters.Count)
@@ -170,7 +215,7 @@ public class CharacterSelectUI : MonoBehaviour
             }
 
             manager.SelectCharacter(index);
-            SceneManager.LoadScene(gameSceneName);
+            LoadGameScene();
             return;
         }
 
@@ -179,17 +224,28 @@ public class CharacterSelectUI : MonoBehaviour
 
         selectedSlot = index;
 
+        if (EventSystem.current != null)
+            previousSelected = EventSystem.current.currentSelectedGameObject;
+
         if (nameInput != null)
+        {
             nameInput.text = "";
+            nameInput.DeactivateInputField();
+        }
 
         if (errorText != null)
             errorText.text = "";
 
+        if (virtualKeyboard != null)
+            virtualKeyboard.Close();
+
         if (createPanel != null)
             createPanel.SetActive(true);
 
-        if (nameInput != null)
-            nameInput.Select();
+        SetupCreatePanelNavigation();
+
+        if (EventSystem.current != null && nameInput != null && nameInput.gameObject.activeInHierarchy)
+            EventSystem.current.SetSelectedGameObject(nameInput.gameObject);
     }
 
     private void SelectAliveCharacter(int index)
@@ -204,7 +260,7 @@ public class CharacterSelectUI : MonoBehaviour
 
         manager.SelectCharacter(index);
         manager.EndCharacterSwitch();
-        SceneManager.LoadScene(gameSceneName);
+        LoadGameScene();
     }
 
     public void CreateCharacter()
@@ -220,6 +276,11 @@ public class CharacterSelectUI : MonoBehaviour
         {
             if (errorText != null)
                 errorText.text = "Enter character name.";
+
+            RestoreNameInputSelection();
+
+            if (virtualKeyboard != null && nameInput != null)
+                virtualKeyboard.Open(nameInput);
 
             return;
         }
@@ -243,18 +304,56 @@ public class CharacterSelectUI : MonoBehaviour
         manager.SelectCharacter(manager.Characters.Count - 1);
         manager.EndCharacterSwitch();
 
+        if (virtualKeyboard != null)
+            virtualKeyboard.Close();
+
         if (createPanel != null)
             createPanel.SetActive(false);
 
-        SceneManager.LoadScene(gameSceneName);
+        LoadGameScene();
+    }
+
+    private void LoadGameScene()
+    {
+        if (sceneLoader != null)
+        {
+            sceneLoader.LoadScene(gameSceneName);
+            return;
+        }
+
+        Debug.LogError("SceneLoader is not assigned in CharacterSelectUI.");
     }
 
     public void CancelCreate()
     {
         selectedSlot = -1;
 
+        if (virtualKeyboard != null)
+            virtualKeyboard.Close();
+
+        if (nameInput != null)
+            nameInput.DeactivateInputField();
+
         if (createPanel != null)
             createPanel.SetActive(false);
+
+        if (EventSystem.current != null)
+        {
+            GameObject target = previousSelected;
+
+            if (target == null || !target.activeInHierarchy)
+            {
+                CharacterManager manager = CharacterManager.Instance;
+
+                if (manager != null && characterButtons != null && manager.Characters.Count < characterButtons.Length)
+                    target = characterButtons[manager.Characters.Count].gameObject;
+            }
+
+            if (target != null && target.activeInHierarchy)
+                EventSystem.current.SetSelectedGameObject(target);
+        }
+
+        previousSelected = null;
     }
 
     public void RefreshAfterDelete()
@@ -268,9 +367,25 @@ public class CharacterSelectUI : MonoBehaviour
             selectedSlot = -1;
         }
 
+        if (virtualKeyboard != null)
+            virtualKeyboard.Close();
+
         if (createPanel != null)
             createPanel.SetActive(false);
 
+        previousSelected = null;
+
         Refresh();
+    }
+
+    public void Back()
+    {
+        sceneLoader?.LoadScene("MainMenu");
+    }
+
+    private void RestoreNameInputSelection()
+    {
+        if (EventSystem.current != null && nameInput != null && nameInput.gameObject.activeInHierarchy)
+            EventSystem.current.SetSelectedGameObject(nameInput.gameObject);
     }
 }

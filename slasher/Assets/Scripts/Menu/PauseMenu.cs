@@ -1,15 +1,19 @@
-
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class PauseMenu : MonoBehaviour
 {
     [SerializeField] private GameObject pauseMenu;
     [SerializeField] private GameObject settingsMenu;
     [SerializeField] private SceneLoader sceneLoader;
+    [SerializeField] private Button pauseButtonUI;
+    [SerializeField] private Button settingsButton;
     [SerializeField] private FightPreparationTimer preparationTimer;
     [SerializeField] private string mainMenuSceneName = "MainMenu";
     [SerializeField] private string characterSelectSceneName = "CharacterSelect";
+    [SerializeField] private GameObject selectedBorder;
 
     private bool isPaused;
     private bool isChangingScene;
@@ -25,21 +29,59 @@ public class PauseMenu : MonoBehaviour
         if (preparationTimer == null)
             preparationTimer = FindFirstObjectByType<FightPreparationTimer>();
 
+        if (pauseButtonUI != null)
+            pauseButtonUI.onClick.AddListener(Pause);
+
+        if (GameInputManager.Instance != null)
+            GameInputManager.Instance.PauseStarted += TogglePause;
+
+        SetSelectedBorder(false);
+
         GameSettings.Load();
         Time.timeScale = 1f;
     }
 
-    private void Update()
+    private void OnDestroy()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (settingsMenu != null && settingsMenu.activeSelf)
-                CloseSettings();
-            else if (isPaused)
-                Resume();
-            else
-                Pause();
-        }
+        if (pauseButtonUI != null)
+            pauseButtonUI.onClick.RemoveListener(Pause);
+
+        if (GameInputManager.Instance != null)
+            GameInputManager.Instance.PauseStarted -= TogglePause;
+    }
+
+    private void TogglePause()
+    {
+        if (isChangingScene)
+            return;
+
+        if (settingsMenu != null && settingsMenu.activeSelf)
+            CloseSettings();
+        else if (isPaused)
+            Resume();
+        else
+            Pause();
+    }
+
+    private void SetSelectedBorder(bool active)
+    {
+        if (selectedBorder != null)
+            selectedBorder.SetActive(active);
+    }
+
+    private void SetPlayerInputBlocked(bool blocked)
+    {
+        if (TeamManager.Instance != null && TeamManager.Instance.CurrentPlayer != null)
+            TeamManager.Instance.CurrentPlayer.SetInputBlocked(blocked);
+    }
+
+    private void SelectButton(Button button)
+    {
+        if (button == null || EventSystem.current == null)
+            return;
+
+        EventSystem.current.SetSelectedGameObject(null);
+        EventSystem.current.SetSelectedGameObject(button.gameObject);
     }
 
     public void Pause()
@@ -48,6 +90,7 @@ public class PauseMenu : MonoBehaviour
             return;
 
         isPaused = true;
+        SetPlayerInputBlocked(true);
 
         if (preparationTimer != null)
             preparationTimer.CancelPreparation();
@@ -58,6 +101,11 @@ public class PauseMenu : MonoBehaviour
         if (pauseMenu != null)
             pauseMenu.SetActive(true);
 
+        if (pauseButtonUI != null)
+            pauseButtonUI.gameObject.SetActive(false);
+
+        SetSelectedBorder(true);
+
         Time.timeScale = 0f;
     }
 
@@ -67,12 +115,18 @@ public class PauseMenu : MonoBehaviour
             return;
 
         isPaused = false;
+        SetPlayerInputBlocked(false);
 
         if (settingsMenu != null)
             settingsMenu.SetActive(false);
 
         if (pauseMenu != null)
             pauseMenu.SetActive(false);
+
+        if (pauseButtonUI != null)
+            pauseButtonUI.gameObject.SetActive(true);
+
+        SetSelectedBorder(false);
 
         Time.timeScale = 1f;
 
@@ -85,11 +139,15 @@ public class PauseMenu : MonoBehaviour
         if (!isPaused || isChangingScene)
             return;
 
+        SetPlayerInputBlocked(true);
+
         if (pauseMenu != null)
             pauseMenu.SetActive(false);
 
         if (settingsMenu != null)
             settingsMenu.SetActive(true);
+
+        SetSelectedBorder(true);
     }
 
     public void CloseSettings()
@@ -97,11 +155,16 @@ public class PauseMenu : MonoBehaviour
         if (!isPaused || isChangingScene)
             return;
 
+        SetPlayerInputBlocked(true);
+
         if (settingsMenu != null)
             settingsMenu.SetActive(false);
 
         if (pauseMenu != null)
             pauseMenu.SetActive(true);
+
+        SelectButton(settingsButton);
+        SetSelectedBorder(true);
     }
 
     private void SaveBeforeSceneChange()
@@ -141,6 +204,8 @@ public class PauseMenu : MonoBehaviour
             return;
 
         isChangingScene = true;
+        SetPlayerInputBlocked(true);
+        SetSelectedBorder(false);
         Time.timeScale = 1f;
 
         SaveBeforeSceneChange();
@@ -153,6 +218,8 @@ public class PauseMenu : MonoBehaviour
             return;
 
         isChangingScene = true;
+        SetPlayerInputBlocked(true);
+        SetSelectedBorder(false);
         Time.timeScale = 1f;
 
         if (preparationTimer != null)

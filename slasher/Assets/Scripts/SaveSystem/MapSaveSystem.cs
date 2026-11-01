@@ -12,6 +12,7 @@ public class MapSaveSystem : MonoBehaviour
     public static MapSaveSystem Instance { get; private set; }
 
     [SerializeField] private LootItem lootItemPrefab;
+    [SerializeField] private ConfirmationDialog confirmationDialog;
 
     [Serializable]
     public class MapData
@@ -818,19 +819,26 @@ public class MapSaveSystem : MonoBehaviour
 
     public void DeleteSave()
     {
-        if (File.Exists(SavePath))
+        if (confirmationDialog != null)
         {
-            File.Delete(SavePath);
+            confirmationDialog.Show("Are you sure you want to delete your save?", DeleteSaveConfirmed);
+            return;
         }
+
+        DeleteSaveConfirmed();
+    }
+
+    private void DeleteSaveConfirmed()
+    {
+        if (File.Exists(SavePath))
+            File.Delete(SavePath);
 
         openedChests.Clear();
 
         CharacterManager manager = CharacterManager.Instance;
 
         if (manager != null)
-        {
             manager.ClearAllCharacters();
-        }
 
         EquipmentManager equipment = FindFirstObjectByType<EquipmentManager>();
 

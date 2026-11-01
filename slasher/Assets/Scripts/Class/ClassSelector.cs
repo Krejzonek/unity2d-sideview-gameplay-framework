@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class ClassSelector : MonoBehaviour
+public class ClassSelector : MonoBehaviour, IInteractable
 {
     [Header("Class Tiers")]
     [SerializeField] private ClassTier[] availableTiers;
@@ -86,6 +86,11 @@ public class ClassSelector : MonoBehaviour
         }
     }
 
+    public void Interact()
+    {
+        OpenClassPanel();
+    }
+
     public void OpenClassPanel()
     {
         if (uiClass == null || TeamManager.Instance == null)
@@ -95,8 +100,10 @@ public class ClassSelector : MonoBehaviour
 
         if (currentPlayer == null || currentPlayer.IsDead())
             return;
+        if(uiClass != null)
+            uiClass.SetActive(true);
 
-        uiClass.SetActive(true);
+        GamepadUIState.Register(uiClass);
 
         if (skillPanel != null)
             skillPanel.SetActive(false);
@@ -249,6 +256,8 @@ public class ClassSelector : MonoBehaviour
     {
         if (uiClass != null)
             uiClass.SetActive(false);
+
+        GamepadUIState.Unregister(uiClass);
 
         if (skillPanel != null)
             skillPanel.SetActive(false);

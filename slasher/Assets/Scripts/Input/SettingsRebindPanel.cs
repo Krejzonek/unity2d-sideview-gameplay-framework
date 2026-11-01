@@ -4,12 +4,13 @@ using UnityEngine;
 public class SettingsRebindPanel : MonoBehaviour
 {
     [SerializeField] private TMP_Text messageText;
+    [SerializeField] private SelectionBorder selectionBorder;
 
     private GameInputManager inputManager;
 
     private void Awake()
     {
-        inputManager = GameInputManager.Instance;     
+        inputManager = GameInputManager.Instance;
     }
 
     public void Open(RebindButton rebindButton)
@@ -27,11 +28,17 @@ public class SettingsRebindPanel : MonoBehaviour
                 : "Press Any Gamepad Button...";
         }
 
+        if (selectionBorder != null)
+            selectionBorder.gameObject.SetActive(false);
+
         gameObject.SetActive(true);
     }
 
     public void Close()
     {
         gameObject.SetActive(false);
+
+        if (selectionBorder != null)
+            selectionBorder.gameObject.SetActive(true);
     }
 }

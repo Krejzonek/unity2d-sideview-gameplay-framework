@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Checkpoint : MonoBehaviour
+public class Checkpoint : MonoBehaviour, IInteractable
 {
     [Header("Interaction")]
     [SerializeField] private LayerMask checkpointLayer;
@@ -41,6 +41,11 @@ public class Checkpoint : MonoBehaviour
 
         if (hit != null && hit.transform == transform)
             ActivateCheckpoint();
+    }
+
+    public void Interact()
+    {
+        ActivateCheckpoint();
     }
 
     private void ActivateCheckpoint()

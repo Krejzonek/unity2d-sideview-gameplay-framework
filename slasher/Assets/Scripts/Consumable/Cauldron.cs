@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Cauldron : MonoBehaviour
+public class Cauldron : MonoBehaviour, IInteractable
 {
     [Header("Interaction")]
     [SerializeField] private LayerMask cauldronLayer;
@@ -38,6 +38,11 @@ public class Cauldron : MonoBehaviour
             Player.BlockAttackUntilMouseRelease();
             OpenCraftingPanel();
         }
+    }
+
+    public void Interact()
+    {
+        OpenCraftingPanel();
     }
 
     public CraftingRecipe[] GetRecipes()

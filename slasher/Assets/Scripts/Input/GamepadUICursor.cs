@@ -1,6 +1,8 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.UI;
 
 public class GamepadUICursor : MonoBehaviour
 {
@@ -10,7 +12,10 @@ public class GamepadUICursor : MonoBehaviour
     private GameInputManager inputManager;
     private Canvas canvas;
     private Mouse virtualMouse;
+    private InputAction submitAction;
+    private bool submitSuppressed;
     private Vector2 cursorPosition;
+    private bool confirmPressed;
 
     private void Awake()
     {
@@ -20,7 +25,7 @@ public class GamepadUICursor : MonoBehaviour
         cursorPosition = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
 
         virtualMouse = InputSystem.AddDevice<Mouse>("Gamepad Virtual Mouse");
-        UpdateVirtualMouse(Vector2.zero, false);
+        UpdateVirtualMouse(Vector2.zero);
 
         if (cursorVisual != null)
             cursorVisual.gameObject.SetActive(false);
@@ -46,14 +51,50 @@ public class GamepadUICursor : MonoBehaviour
             inputManager.GamepadBackStarted -= OnBack;
         }
 
+        confirmPressed = false;
+        SetSubmitSuppressed(false);
+
         if (virtualMouse != null && virtualMouse.added)
-            InputSystem.QueueStateEvent(virtualMouse, new MouseState());
+            UpdateVirtualMouse(Vector2.zero);
     }
 
     private void OnDestroy()
     {
+        SetSubmitSuppressed(false);
+
         if (virtualMouse != null && virtualMouse.added)
             InputSystem.RemoveDevice(virtualMouse);
+    }
+
+    // Gdy kursor jest aktywny, wylaczamy akcje Submit modulu UI,
+    // zeby przycisk A nie klikal podwojnie (mysz wirtualna + Submit).
+    private void SetSubmitSuppressed(bool suppress)
+    {
+        if (submitAction == null)
+        {
+            InputSystemUIInputModule module = FindObjectOfType<InputSystemUIInputModule>();
+
+            if (module == null || module.submit == null)
+                return;
+
+            submitAction = module.submit.action;
+
+            if (submitAction == null)
+                return;
+        }
+
+        if (suppress)
+        {
+            if (submitAction.enabled)
+                submitAction.Disable();
+
+            submitSuppressed = true;
+        }
+        else if (submitSuppressed)
+        {
+            submitAction.Enable();
+            submitSuppressed = false;
+        }
     }
 
     private void Update()
@@ -61,14 +102,19 @@ public class GamepadUICursor : MonoBehaviour
         if (inputManager == null || virtualMouse == null || !virtualMouse.added)
             return;
 
-        bool cursorActive = inputManager.GamepadUIOpen;
+        bool cursorActive = GamepadUIState.IsOpen || inputManager.GamepadUIOpen;
+
+        SetSubmitSuppressed(cursorActive);
 
         if (cursorVisual != null && cursorVisual.gameObject.activeSelf != cursorActive)
         {
             cursorVisual.gameObject.SetActive(cursorActive);
 
             if (cursorActive)
+            {
                 cursorVisual.SetAsLastSibling();
+                UpdateVirtualMouse(Vector2.zero);
+            }
         }
 
         if (!cursorActive)
@@ -79,11 +125,12 @@ public class GamepadUICursor : MonoBehaviour
         if (stick.sqrMagnitude > 0.04f)
         {
             Vector2 delta = stick * cursorSpeed * Time.unscaledDeltaTime;
+
             cursorPosition += delta;
             cursorPosition.x = Mathf.Clamp(cursorPosition.x, 0f, Screen.width);
             cursorPosition.y = Mathf.Clamp(cursorPosition.y, 0f, Screen.height);
 
-            UpdateVirtualMouse(delta, false);
+            UpdateVirtualMouse(delta);
         }
 
         if (cursorVisual != null && canvas != null)
@@ -99,7 +146,7 @@ public class GamepadUICursor : MonoBehaviour
         }
     }
 
-    private void UpdateVirtualMouse(Vector2 delta, bool click)
+    private void UpdateVirtualMouse(Vector2 delta)
     {
         MouseState state = new MouseState
         {
@@ -107,7 +154,7 @@ public class GamepadUICursor : MonoBehaviour
             delta = delta
         };
 
-        if (click)
+        if (confirmPressed)
             state = state.WithButton(MouseButton.Left);
 
         InputSystem.QueueStateEvent(virtualMouse, state);
@@ -118,15 +165,11 @@ public class GamepadUICursor : MonoBehaviour
         if (virtualMouse == null || !virtualMouse.added)
             return;
 
-        MouseState state = new MouseState
-        {
-            position = cursorPosition
-        };
+        if (!GamepadUIState.IsOpen && (inputManager == null || !inputManager.GamepadUIOpen))
+            return;
 
-        if (pressed)
-            state = state.WithButton(MouseButton.Left);
-
-        InputSystem.QueueStateEvent(virtualMouse, state);
+        confirmPressed = pressed;
+        UpdateVirtualMouse(Vector2.zero);
     }
 
     private void OnBack()
@@ -134,11 +177,7 @@ public class GamepadUICursor : MonoBehaviour
         if (virtualMouse == null || !virtualMouse.added)
             return;
 
-        MouseState state = new MouseState
-        {
-            position = cursorPosition
-        };
-
-        InputSystem.QueueStateEvent(virtualMouse, state);
+        confirmPressed = false;
+        UpdateVirtualMouse(Vector2.zero);
     }
 }
