@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Audio;
+using UnityEngine.EventSystems;
 
 public class SettingsUI : MonoBehaviour
 {
@@ -19,6 +20,11 @@ public class SettingsUI : MonoBehaviour
 
     [Header("Reset")]
     [SerializeField] private Button resetButton;
+    [SerializeField] private ConfirmationDialog confirmationDialog;
+
+    [Header("Navigation")]
+    [SerializeField] private Button settingsButton;
+    [SerializeField] private GameObject[] mainMenuButtons;
 
     private void Awake()
     {
@@ -27,8 +33,18 @@ public class SettingsUI : MonoBehaviour
 
     private void OnEnable()
     {
+        SetMainMenuButtons(false);
+
         GameSettings.Load();
         RefreshSettings();
+
+        if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+
+            if (masterVolumeSlider != null && masterVolumeSlider.gameObject.activeInHierarchy)
+                EventSystem.current.SetSelectedGameObject(masterVolumeSlider.gameObject);
+        }
     }
 
     private void Start()
@@ -52,9 +68,22 @@ public class SettingsUI : MonoBehaviour
             highQualityButton.onClick.AddListener(SetHighQuality);
 
         if (resetButton != null)
-            resetButton.onClick.AddListener(ResetSettings);
+            resetButton.onClick.AddListener(ShowResetConfirmation);
 
         RefreshSettings();
+    }
+
+    private void OnDisable()
+    {
+        SetMainMenuButtons(true);
+
+        if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+
+            if (settingsButton != null && settingsButton.gameObject.activeInHierarchy && settingsButton.interactable)
+                EventSystem.current.SetSelectedGameObject(settingsButton.gameObject);
+        }
     }
 
     private void OnDestroy()
@@ -78,7 +107,19 @@ public class SettingsUI : MonoBehaviour
             highQualityButton.onClick.RemoveListener(SetHighQuality);
 
         if (resetButton != null)
-            resetButton.onClick.RemoveListener(ResetSettings);
+            resetButton.onClick.RemoveListener(ShowResetConfirmation);
+    }
+
+    private void SetMainMenuButtons(bool active)
+    {
+        if (mainMenuButtons == null)
+            return;
+
+        foreach (GameObject button in mainMenuButtons)
+        {
+            if (button != null)
+                button.SetActive(active);
+        }
     }
 
     private void SetLowQuality()
@@ -99,9 +140,19 @@ public class SettingsUI : MonoBehaviour
         UpdateQualityButtons();
     }
 
+    private void ShowResetConfirmation()
+    {
+        if (confirmationDialog != null)
+            confirmationDialog.Show("Are you sure you want to reset all settings to default?", ResetSettings);
+    }
+
     private void ResetSettings()
     {
         GameSettings.ResetDefaults();
+
+        if (GameInputManager.Instance != null)
+            GameInputManager.Instance.ResetBindings();
+
         RefreshSettings();
 
         MobileControls[] controls = FindObjectsByType<MobileControls>(FindObjectsSortMode.None);

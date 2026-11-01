@@ -21,7 +21,6 @@ public class RebindButton : MonoBehaviour
 
         if (button != null)
         {
-            Debug.Log("Button found: " + button.gameObject.name);
             button.onClick.AddListener(StartRebinding);
         }
         else

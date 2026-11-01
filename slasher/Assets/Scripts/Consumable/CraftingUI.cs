@@ -35,12 +35,16 @@ public class CraftingUI : MonoBehaviour
 
         craftingPanel.SetActive(true);
 
+        GamepadUIState.Register(craftingPanel);
+
         ShowFood();
     }
 
     public void Close()
     {
         craftingPanel.SetActive(false);
+
+        GamepadUIState.Unregister(craftingPanel);
 
         currentCauldron = null;
     }
@@ -182,6 +186,8 @@ public class CraftingUI : MonoBehaviour
 
         if (craftingPanel != null)
             craftingPanel.SetActive(false);
+
+        GamepadUIState.Unregister(craftingPanel);
 
         if (recipeContent != null)
         {

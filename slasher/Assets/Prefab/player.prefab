@@ -1342,6 +1342,7 @@ GameObject:
   - component: {fileID: 729246992538734771}
   - component: {fileID: 9087064393115280335}
   - component: {fileID: 4943243879814894560}
+  - component: {fileID: -6291603661111529691}
   m_Layer: 3
   m_Name: player
   m_TagString: Player
@@ -1455,11 +1456,6 @@ MonoBehaviour:
   attackRange: 1.5
   defenseDamageReduction: 0.5
   blockAttackWhenPanelOpen: 1
-  panelsToCheckForAttackBlock:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   invulnerabilityTime: 0.3
   attackPoint: {fileID: 0}
   arrowPrefab: {fileID: 2441591654384667964, guid: 4d52780754f3daf408289931041f4529, type: 3}
@@ -1603,6 +1599,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 9087064393115280335}
   rb: {fileID: 6960502270734242771}
+--- !u!114 &-6291603661111529691
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8062126315278442476}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fe0c8a9a3e34dd4b9dded03b9b25799, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionRange: 1.5
+  interactableLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1 &8196524539096584180
 GameObject:
   m_ObjectHideFlags: 0

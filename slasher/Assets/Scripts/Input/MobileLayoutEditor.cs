@@ -9,6 +9,7 @@ public class MobileLayoutEditor : MonoBehaviour
     [SerializeField] private GameObject editorRoot;
     [SerializeField] private TMP_Dropdown controlDropdown;
     [SerializeField] private Slider sizeSlider;
+    [SerializeField] private ConfirmationDialog confirmationDialog;
 
     [Header("Joysticks")]
     [SerializeField] private RectTransform movementJoystick;
@@ -209,6 +210,12 @@ public class MobileLayoutEditor : MonoBehaviour
     }
 
     public void ResetLayout()
+    {
+        if (confirmationDialog != null)
+            confirmationDialog.Show("Are you sure you want to reset the mobile controls layout?", ApplyDefaultLayout);
+    }
+
+    private void ApplyDefaultLayout()
     {
         if (movementJoystick != null)
         {

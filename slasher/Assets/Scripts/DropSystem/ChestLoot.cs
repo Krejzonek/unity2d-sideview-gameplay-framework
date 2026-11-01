@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class ChestLoot : MonoBehaviour
+public class ChestLoot : MonoBehaviour, IInteractable
 {
     [Header("Interaction")]
     [SerializeField] private LayerMask chestLayer;
@@ -46,6 +46,11 @@ public class ChestLoot : MonoBehaviour
 
         if (hit != null && hit.transform == transform)
             OpenChest();
+    }
+
+    public void Interact()
+    {
+        OpenChest();
     }
 
     private void OpenChest()
