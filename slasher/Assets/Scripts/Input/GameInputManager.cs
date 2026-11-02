@@ -540,14 +540,4 @@ public class GameInputManager : MonoBehaviour
     {
         gamepadUIOpen = open;
     }
-
-    public void ResetMobileInput()
-    {
-        mobileMovement = Vector2.zero;
-        mobileMovementActive = false;
-        mobileAim = Vector2.zero;
-
-        foreach (GameInputAction gameAction in new List<GameInputAction>(mobileHeldActions))
-            SetActionState(mobileHeldActions, gameAction, false);
-    }
 }

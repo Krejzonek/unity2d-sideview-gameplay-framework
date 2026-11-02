@@ -1988,21 +1988,6 @@ public class EnemyAI : MonoBehaviour
         return damage;
     }
 
-    public Transform GetPlayer()
-    {
-        return player;
-    }
-
-    public Player GetPlayerScript()
-    {
-        return playerScript;
-    }
-
-    public float GetDetectionRange()
-    {
-        return detectionRange;
-    }
-
     private void ShowHealNumber(float amount)
     {
         if (damageNumberPrefab == null)

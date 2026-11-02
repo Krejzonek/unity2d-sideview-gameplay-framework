@@ -170,16 +170,6 @@ public class CharacterManager : MonoBehaviour
         pendingRespawn = false;
     }
 
-    public void ResetDeathState()
-    {
-        characterSwitchMode = false;
-        pendingRespawn = false;
-        ClearCharacterSwitchPosition();
-
-        for (int i = 0; i < characters.Count; i++)
-            SetCharacterDead(i, false);
-    }
-
     public bool AreAllCharactersDead()
     {
         if (characters.Count == 0)
