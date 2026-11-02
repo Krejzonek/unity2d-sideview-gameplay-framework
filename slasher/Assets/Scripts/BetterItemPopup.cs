@@ -63,11 +63,15 @@ public class BetterItemPopup : MonoBehaviour
             titleText.text = "This item is better for these characters:";
 
         popupPanel.SetActive(true);
+        GamepadUIState.Register(popupPanel);
     }
 
     public void Close()
     {
         if (popupPanel != null)
+        {
             popupPanel.SetActive(false);
+            GamepadUIState.Unregister(popupPanel);
+        }      
     }
 }
