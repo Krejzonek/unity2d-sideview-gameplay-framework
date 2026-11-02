@@ -1,0 +1,47 @@
+MIT License
+
+Copyright (c) 2026 Krejzonek
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of the original software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+THIRD-PARTY COMPONENTS
+
+This MIT License applies exclusively to original code and materials created by
+Krejzonek, unless a file or component is expressly identified as being
+subject to different terms.
+
+Third-party software, Unity packages, libraries, tools, assets, fonts,
+graphics, audio, and other externally developed materials are NOT relicensed
+under this MIT License. They remain subject to their respective copyright
+notices, licenses, terms of service, and distribution conditions.
+
+Nothing in this file grants permission to redistribute third-party materials
+beyond the permissions granted by their respective licenses.
+
+Unity packages and Unity-provided components remain subject to the applicable
+Unity license for the exact package and version. Some Unity packages are
+licensed under the Unity Companion License, while others may use different
+terms, including the Unity Package Distribution License.
+
+Users are responsible for complying with all applicable third-party terms
+when using, modifying, building, or distributing projects based on this
+repository.
+
+This notice does not amend, replace, or override any third-party license.

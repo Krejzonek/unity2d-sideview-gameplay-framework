@@ -5,12 +5,14 @@
 [Bb]uilds/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
 
 .vs/
 .idea/
+.vscode/
 
 *.csproj
-*.unityproj
 *.sln
 *.suo
 *.user
@@ -25,3 +27,8 @@
 
 .DS_Store
 Thumbs.db
+Desktop.ini
+
+# Keep Unity package manifests and lock files.
+!/[Pp]ackages/manifest.json
+!/[Pp]ackages/packages-lock.json
