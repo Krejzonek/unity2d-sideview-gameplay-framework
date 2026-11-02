@@ -59,6 +59,7 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float damage = 10f;
 
     [Header("Tank")]
+    [SerializeField] private bool useTankFrontDamageReduction = true;
     [SerializeField] private float tankDamageReduction = 0.5f;
 
     [Header("Experience")]
@@ -1420,7 +1421,7 @@ public class EnemyAI : MonoBehaviour
             TeamManager.Instance.RegisterComboHit();
         }
 
-        if (enemyClass == EnemyClass.Tank && IsTankFrontHit(hitPoint))
+        if (useTankFrontDamageReduction && enemyClass == EnemyClass.Tank && IsTankFrontHit(hitPoint))
             damageAmount *= 1f - tankDamageReduction;
 
         if (isElite && eliteAffix == EnemyAffix.Armored)
@@ -1458,7 +1459,7 @@ public class EnemyAI : MonoBehaviour
 
         float hitDirection = hitPoint.x - collider.bounds.center.x;
 
-        return hitDirection * facingDirection < 0f;
+        return hitDirection * facingDirection > 0f;
     }
 
     private float GetDodgeChance()

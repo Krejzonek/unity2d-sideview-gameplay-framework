@@ -86,11 +86,6 @@ public class RebindButton : MonoBehaviour
         }
     }
 
-    public GameInputAction GetAction()
-    {
-        return action;
-    }
-
     public InputDeviceType GetDevice()
     {
         return device;

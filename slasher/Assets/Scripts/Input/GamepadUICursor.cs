@@ -66,8 +66,6 @@ public class GamepadUICursor : MonoBehaviour
             InputSystem.RemoveDevice(virtualMouse);
     }
 
-    // Gdy kursor jest aktywny, wylaczamy akcje Submit modulu UI,
-    // zeby przycisk A nie klikal podwojnie (mysz wirtualna + Submit).
     private void SetSubmitSuppressed(bool suppress)
     {
         if (submitAction == null)
