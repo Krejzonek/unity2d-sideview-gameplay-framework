@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -58,7 +59,18 @@ public class RoomTrigger : MonoBehaviour
         if (generator != null)
             generator.SetCurrentRoom(room);
 
-        if (!room.IsCleared())
+        if (room.IsStartingRoom())
+        {
+            if (roomPoints == null)
+                roomPoints = GetComponentInParent<RoomPoints>();
+
+            if (roomPoints != null)
+                roomPoints.OpenTheDoor();
+
+            if (generator != null)
+                generator.OpenNextRoomEntry(room.GetRoomNumber());
+        }
+        else if (!room.IsCleared())
         {
             if (roomPoints == null)
                 roomPoints = GetComponentInParent<RoomPoints>();
@@ -78,6 +90,9 @@ public class RoomTrigger : MonoBehaviour
             }
 
             TeamManager.Instance.SetFormationMode(BotFormationMode.Combat);
+
+            room.BeginEncounter();
+            StartCoroutine(StartRoomSequence());
         }
         else
         {
@@ -90,6 +105,27 @@ public class RoomTrigger : MonoBehaviour
 
         if (generator != null)
             generator.GenerateNextRoom();
+    }
+
+    private IEnumerator StartRoomSequence()
+    {
+        while (room != null && room.AreEnemiesSpawning())
+            yield return null;
+
+        if (room == null || room.IsCleared())
+            yield break;
+
+        DialogueLine dialogue = room.GetDialogueLine();
+
+        if (dialogue != null && DialogueManager.Instance != null)
+        {
+            bool started = DialogueManager.Instance.PlayDialogue(dialogue, room.StartCombat);
+
+            if (started)
+                yield break;
+        }
+
+        room.StartCombat();
     }
 
     private void CloseWorldPanels()
@@ -110,7 +146,7 @@ public class RoomTrigger : MonoBehaviour
         foreach (ResurrectionStatue statue in statues)
         {
             if (statue != null)
-                statue.ClosePanel();    
+                statue.ClosePanel();
         }
     }
 }

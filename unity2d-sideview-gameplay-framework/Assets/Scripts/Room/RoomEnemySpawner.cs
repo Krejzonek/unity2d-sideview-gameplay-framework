@@ -16,7 +16,9 @@ public class RoomEnemySpawner : MonoBehaviour
     [SerializeField] private Transform enemyParent;
     [SerializeField] private float spacing = 2f;
 
-    public int SpawnPhase()
+    private bool hasEliteSpawned;
+
+    public int SpawnPhase(bool playSpawnAnimation = true)
     {
         if (enemyPrefabs == null || enemyPrefabs.Length == 0 || spawnPoint == null || enemyParent == null)
         {
@@ -104,17 +106,49 @@ public class RoomEnemySpawner : MonoBehaviour
             GameObject enemyObject = Instantiate(enemyPrefab, position, Quaternion.identity, enemyParent);
             EnemyAI enemy = enemyObject.GetComponent<EnemyAI>();
 
-            if (enemy != null)
-            {
-                StartCoroutine(SpawnEnemy(enemy));
-                spawnedEnemies++;
-            }
-            else
+            if (enemy == null)
             {
                 Destroy(enemyObject);
+                continue;
             }
+
+            bool makeElite = !playSpawnAnimation && !hasEliteSpawned && Random.value <= enemy.GetEliteChance();
+
+            enemy.InitializeElite(makeElite);
+
+            if (makeElite)
+                hasEliteSpawned = true;
+
+            if (playSpawnAnimation)
+                StartCoroutine(SpawnEnemy(enemy));
+            else
+                enemy.SetSpawning(false);
+
+            spawnedEnemies++;
         }
+
         return spawnedEnemies;
+    }
+
+    public bool HasEliteSpawned()
+    {
+        return hasEliteSpawned;
+    }
+
+    public bool AreEnemiesSpawning()
+    {
+        if (enemyParent == null)
+            return false;
+
+        EnemyAI[] enemies = enemyParent.GetComponentsInChildren<EnemyAI>(true);
+
+        foreach (EnemyAI enemy in enemies)
+        {
+            if (enemy != null && enemy.IsSpawning())
+                return true;
+        }
+
+        return false;
     }
 
     public List<MapSaveSystem.EnemySaveData> GetEnemySaveData()
@@ -137,6 +171,7 @@ public class RoomEnemySpawner : MonoBehaviour
             string prefabName = enemy.gameObject.name.Replace("(Clone)", "").Trim();
             savedEnemies.Add(enemy.GetSaveData(prefabName));
         }
+
         return savedEnemies;
     }
 
@@ -179,8 +214,13 @@ public class RoomEnemySpawner : MonoBehaviour
             }
 
             enemy.RestoreFromSave(saved);
+
+            if (saved.isElite)
+                hasEliteSpawned = true;
+
             restoredCount++;
         }
+
         return restoredCount;
     }
 

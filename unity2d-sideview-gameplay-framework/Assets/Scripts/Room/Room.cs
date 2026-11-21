@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -31,6 +30,9 @@ public class Room : MonoBehaviour
     private bool roomCleared;
     private bool restoreState;
     private bool entryClosed;
+    private bool encounterStarted;
+    private bool combatStarted;
+    private bool enemiesRestored;
     private List<MapSaveSystem.EnemySaveData> savedEnemies = new();
 
     private void Start()
@@ -54,6 +56,9 @@ public class Room : MonoBehaviour
 
                 if (roomPoints != null)
                     roomPoints.OpenTheDoor();
+
+                if (roomGenerator != null)
+                    roomGenerator.OpenNextRoomEntry(roomNumber);
             }
             else
             {
@@ -63,13 +68,14 @@ public class Room : MonoBehaviour
                 if (enemySpawner != null)
                     enemiesAlive = enemySpawner.RestoreEnemies(savedEnemies);
 
+                enemiesRestored = true;
+
+                if (enemySpawner != null && enemySpawner.HasEliteSpawned())
+                    totalPhases = 1;
+
                 if (enemiesAlive == 0)
                 {
                     roomCleared = false;
-
-                    if (exit != null)
-                        exit.SetActive(true);
-
                     Debug.LogWarning("[Room] Room " + roomNumber + " restored with 0 enemies but remains uncleared.");
                 }
             }
@@ -77,9 +83,27 @@ public class Room : MonoBehaviour
             return;
         }
 
+        if (roomNumber == 0)
+        {
+            roomCleared = true;
+            encounterStarted = true;
+            combatStarted = false;
+            enemiesAlive = 0;
+
+            if (exit != null)
+                exit.SetActive(false);
+
+            if (roomPoints != null)
+                roomPoints.OpenTheDoor();
+
+            if (roomGenerator != null)
+                roomGenerator.OpenNextRoomEntry(roomNumber);
+
+            return;
+        }
+
         if (roomPoints != null)
             roomPoints.OpenTheDoor();
-
 
         minPhases = Mathf.Max(1, minPhases);
         maxPhases = Mathf.Max(minPhases, maxPhases);
@@ -89,12 +113,81 @@ public class Room : MonoBehaviour
 
         if (exit != null)
             exit.SetActive(true);
+    }
 
-        if (enemySpawner != null)
-            enemiesAlive = enemySpawner.SpawnPhase();
+    public void BeginEncounter()
+    {
+        if (roomCleared || encounterStarted || roomNumber == 0)
+            return;
+
+        encounterStarted = true;
+
+        if (!enemiesRestored)
+        {
+            if (enemySpawner != null)
+                enemiesAlive = enemySpawner.SpawnPhase(false);
+        }
+
+        if (enemySpawner != null && enemySpawner.HasEliteSpawned())
+            totalPhases = 1;
 
         if (enemiesAlive == 0)
             RoomCleared();
+    }
+
+    public void StartCombat()
+    {
+        if (roomCleared || roomNumber == 0)
+            return;
+
+        combatStarted = true;
+    }
+
+    public bool IsCombatStarted()
+    {
+        return combatStarted;
+    }
+
+    public bool IsStartingRoom()
+    {
+        return roomNumber == 0;
+    }
+
+    public bool AreEnemiesSpawning()
+    {
+        return enemySpawner != null && enemySpawner.AreEnemiesSpawning();
+    }
+
+    public DialogueLine GetDialogueLine()
+    {
+        if (enemyParent == null)
+            return null;
+
+        EnemyAI[] enemies = enemyParent.GetComponentsInChildren<EnemyAI>(true);
+
+        foreach (EnemyAI enemy in enemies)
+        {
+            if (enemy == null || enemy.IsDead() || !enemy.IsElite())
+                continue;
+
+            DialogueLine dialogue = enemy.GetDialogueLine();
+
+            if (dialogue != null)
+                return dialogue;
+        }
+
+        foreach (EnemyAI enemy in enemies)
+        {
+            if (enemy == null || enemy.IsDead())
+                continue;
+
+            DialogueLine dialogue = enemy.GetDialogueLine();
+
+            if (dialogue != null)
+                return dialogue;
+        }
+
+        return null;
     }
 
     public void RestoreEntryDoorState(bool close)
@@ -105,7 +198,7 @@ public class Room : MonoBehaviour
         if (roomPoints == null)
             return;
 
-        bool shouldClose = close && !roomCleared;
+        bool shouldClose = close && !roomCleared && roomNumber != 0;
 
         if (shouldClose)
         {
@@ -121,13 +214,19 @@ public class Room : MonoBehaviour
 
     public void EnemyKilled()
     {
-        if (roomCleared || phaseChanging)
+        if (roomCleared || phaseChanging || !combatStarted)
             return;
 
         enemiesAlive = Mathf.Max(0, enemiesAlive - 1);
 
         if (enemiesAlive > 0)
             return;
+
+        if (enemySpawner != null && enemySpawner.HasEliteSpawned())
+        {
+            RoomCleared();
+            return;
+        }
 
         if (currentPhase >= totalPhases)
         {
@@ -139,7 +238,7 @@ public class Room : MonoBehaviour
         currentPhase++;
 
         if (enemySpawner != null)
-            enemiesAlive = enemySpawner.SpawnPhase();
+            enemiesAlive = enemySpawner.SpawnPhase(true);
 
         phaseChanging = false;
 
@@ -152,6 +251,7 @@ public class Room : MonoBehaviour
         roomCleared = true;
         enemiesAlive = 0;
         phaseChanging = false;
+        combatStarted = false;
 
         if (exit != null)
             exit.SetActive(false);
@@ -181,7 +281,7 @@ public class Room : MonoBehaviour
     public void SetRoomNumber(int number)
     {
         roomNumber = number;
-        isBossRoom = number % 10 == 0;
+        isBossRoom = number > 0 && number % 10 == 0;
     }
 
     public Collider2D GetMapBounds()

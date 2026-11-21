@@ -37,6 +37,12 @@ The project includes `ElementSystem`, `StatusEffect`, and `StatusEffectSystem`. 
 4. Add it to the appropriate room/spawn configuration.
 5. Test target acquisition, movement, attack range, damage reception, death and room completion.
 
+## Dialogue System
+
+The dialogue system uses `DialogueLine` ScriptableObjects containing ordered `DialogueEntry` objects with a speaker (`Player` or `Enemy`) and text. `DialogueManager` handles the UI, speaker names, dialogue progression and completion. Dialogues can be advanced using mouse, keyboard, gamepad or touch input.
+
+Enemy dialogues are assigned through `EnemyAI` using `dialogueLine`. The `dialogueOnlyIfElite` option restricts a dialogue to Elite enemies. When the team enters a room, `RoomTrigger` checks for available dialogue, prioritizes Elite dialogue and starts combat after the conversation ends. If no dialogue is available, combat starts immediately.
+
 ## Bosses
 
 `BossAI` uses boss-specific configuration, including `BossClassData` and `BossAttackData`. Attack data includes attack type, cooldown, windup/recovery, distance limits, damage multiplier, knockback and warning geometry/charge settings. `BossAttackWarning` displays the telegraph. Create a boss by duplicating a working boss prefab, assigning the boss data and attack assets, and testing the warning area against the actual attack hit area.
