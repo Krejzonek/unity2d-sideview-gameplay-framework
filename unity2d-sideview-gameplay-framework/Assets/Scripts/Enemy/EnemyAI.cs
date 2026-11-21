@@ -51,6 +51,7 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float eliteDamageMultiplier = 1.5f;
     [SerializeField] private float eliteKnockbackResistance = 0.5f;
     private bool isElite;
+    private bool allowEliteRoll = true;
     private EnemyAffix eliteAffix = EnemyAffix.None;
 
     [Header("Stats")]
@@ -141,6 +142,10 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private EnemySpawnType spawnType = EnemySpawnType.None;
     [SerializeField] private float spawnDistance = 3f;
     [SerializeField] private float spawnTime = 0.8f;
+
+    [Header("Dialogue")]
+    [SerializeField] private DialogueLine dialogueLine;
+    [SerializeField] private bool dialogueOnlyIfElite;
 
     private bool isSpawning;
     private bool isRestoring;
@@ -247,7 +252,7 @@ public class EnemyAI : MonoBehaviour
 
             StartCoroutine(FinishRestore());
         }
-        else if (enemyClass != EnemyClass.Boss && Random.value <= eliteChance)
+        else if (allowEliteRoll && enemyClass != EnemyClass.Boss && Random.value <= eliteChance)
         {
             MakeElite();
         }
@@ -255,6 +260,30 @@ public class EnemyAI : MonoBehaviour
         {
             health = maxHealth;
         }
+    }
+
+    public float GetEliteChance()
+    {
+        return enemyClass == EnemyClass.Boss ? 0f : eliteChance;
+    }
+
+    public void InitializeElite(bool value)
+    {
+        allowEliteRoll = false;
+
+        if (value && !isElite && enemyClass != EnemyClass.Boss)
+            MakeElite();
+    }
+
+    public DialogueLine GetDialogueLine()
+    {
+        if (dialogueLine == null)
+            return null;
+
+        if (dialogueOnlyIfElite && !isElite)
+            return null;
+
+        return dialogueLine;
     }
 
     private IEnumerator FinishRestore()
@@ -364,7 +393,7 @@ public class EnemyAI : MonoBehaviour
 
     private void Update()
     {
-        if (isRestoring)
+        if (isRestoring || (room != null && !room.IsCombatStarted()))
         {
             StopMoving();
             return;
@@ -463,6 +492,16 @@ public class EnemyAI : MonoBehaviour
     private void LateUpdate()
     {
         UpdateProjectilePositions();
+    }
+
+    public void SetEliteAllowed(bool value)
+    {
+        allowEliteRoll = value;
+    }
+
+    public bool IsElite()
+    {
+        return isElite;
     }
 
     private void UpdateEliteAffix()

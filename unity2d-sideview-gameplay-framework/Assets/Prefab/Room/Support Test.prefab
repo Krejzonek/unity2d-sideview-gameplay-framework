@@ -172,6 +172,7 @@ MonoBehaviour:
   maxHealth: 45
   health: 45
   damage: 0
+  useTankFrontDamageReduction: 1
   tankDamageReduction: 0.5
   baseExp: 5
   eliteExpMultiplier: 2.5
@@ -218,3 +219,5 @@ MonoBehaviour:
   spawnType: 1
   spawnDistance: 2
   spawnTime: 0.8
+  dialogueLine: {fileID: 0}
+  dialogueOnlyIfElite: 0
