@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class ClassSkillManager : MonoBehaviour
 {
+    [Header("Skill Popup")]
+    [SerializeField] private SkillNamePopup skillNamePopupPrefab;
+    [SerializeField] private Vector3 skillNameOffset = new Vector3(0f, 2f, 0f);
+
     private Stats stats;
 
     private int hitCount;
@@ -177,7 +181,24 @@ public class ClassSkillManager : MonoBehaviour
         activeSkillReady = false;
         activeCooldown = skill.cooldown;
 
+        ShowSkillName(skill.skillName);
+
         Debug.Log("Active Skill Used: " + skill.skillName);
+    }
+
+    private void ShowSkillName(string skillName)
+    {
+        if (skillNamePopupPrefab == null)
+            return;
+
+        SkillNamePopup popup = Instantiate(
+            skillNamePopupPrefab,
+            transform.position + skillNameOffset,
+            Quaternion.identity,
+            transform
+        );
+
+        popup.Initialize(skillName);
     }
 
     public void ConsumeAttackSkill()

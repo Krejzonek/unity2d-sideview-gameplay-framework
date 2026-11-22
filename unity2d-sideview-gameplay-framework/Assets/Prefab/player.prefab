@@ -1529,6 +1529,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcb355eb132584f428e726d65f952c2b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  skillNamePopupPrefab: {fileID: 5347869657297575572, guid: bc171d83ece54b9449357bfd49fe4e07, type: 3}
+  skillNameOffset: {x: 0, y: 2.5, z: 0}
 --- !u!114 &8906405906093625272
 MonoBehaviour:
   m_ObjectHideFlags: 0
